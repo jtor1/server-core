@@ -1,6 +1,6 @@
 import { IServer } from './server';
 
-export const initApp = (app: IServer) => {
+export const initApp = (app: IServer, port: number) => {
   let closeCalled = false;
   const gracefulClose = (reason: string): Promise<void> => {
     console.error(`\n${reason} starting`);
@@ -54,9 +54,9 @@ export const initApp = (app: IServer) => {
   process.once('SIGINT', () => gracefulShutdown('SIGINT'));
   process.once('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
-  app.init()
+  app.init(port)
     .then(config => {
-      console.log(`Server started on 9091`);
+      console.log(`Server started on ${config.port}`);
     })
     .catch(err => {
       console.error('Error starting server');
