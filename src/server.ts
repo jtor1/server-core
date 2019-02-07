@@ -6,7 +6,7 @@ import bodyParser from 'body-parser';
 import { ApolloServer } from 'apollo-server-express';
 
 export interface IServer {
-  init: () => Promise<void>;
+  init: (port: number) => Promise<{ port: number }>;
   close: () => Promise<void>;
 }
 
@@ -35,9 +35,10 @@ export class Server implements IServer {
     }
   }
 
-  public init = async () => {
-    await this.bootHttpServer();
+  public init = async (port: number) => {
+    await this.bootHttpServer(port);
     this.expressRoutes();
+    return { port };
   }
 
   public close = async () => {
@@ -48,10 +49,10 @@ export class Server implements IServer {
     }
   }
 
-  private bootHttpServer = () => {
+  private bootHttpServer = (port: number) => {
     return new Promise<http.Server>((resolve, reject) => {
       this.httpServer = http.createServer(this.express);
-      this.httpServer.listen(9091, (err: Error) => {
+      this.httpServer.listen(port, (err: Error) => {
         if (err) {
           console.error(err);
           if (this.httpServer) {
