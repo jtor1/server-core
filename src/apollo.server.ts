@@ -6,6 +6,7 @@ interface ApolloServerArgs {
   schema?: GraphQLSchema;
   typeDefs?: DocumentNode | DocumentNode[];
   resolvers?: IResolvers<any, any>;
+  mocks: boolean;
   contextFunc?: (ctx: unknown) => Context;
 }
 
@@ -14,6 +15,7 @@ export const createApolloServer = (args: ApolloServerArgs) => {
     schema: args.schema,
     typeDefs: args.typeDefs,
     resolvers: args.resolvers,
+    mocks: args.mocks || false,
     playground: true,
     tracing: true,
     context: (ctx: unknown) => {
