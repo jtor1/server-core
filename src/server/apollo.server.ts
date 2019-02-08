@@ -6,7 +6,7 @@ interface ApolloServerArgs {
   typeDefs?: DocumentNode | DocumentNode[];
   resolvers?: IResolvers<any, any>;
   mocks: boolean;
-  contextFunc?: <T>(ctx: any) => T;
+  contextFunc?: (ctx: any) => any;
 }
 
 export const createApolloServer = (args: ApolloServerArgs) => {
