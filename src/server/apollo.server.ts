@@ -1,13 +1,12 @@
 import { ApolloServer, IResolvers } from 'apollo-server-express';
 import { GraphQLSchema, DocumentNode } from 'graphql';
-import { Context } from './apollo.context';
 
 interface ApolloServerArgs {
   schema?: GraphQLSchema;
   typeDefs?: DocumentNode | DocumentNode[];
   resolvers?: IResolvers<any, any>;
   mocks: boolean;
-  contextFunc?: (ctx: unknown) => Context;
+  contextFunc?: <T>(ctx: any) => T;
 }
 
 export const createApolloServer = (args: ApolloServerArgs) => {
@@ -18,7 +17,7 @@ export const createApolloServer = (args: ApolloServerArgs) => {
     mocks: args.mocks || false,
     playground: true,
     tracing: true,
-    context: (ctx: unknown) => {
+    context: (ctx: any) => {
       if (args.contextFunc) {
         return args.contextFunc(ctx);
       } else {
