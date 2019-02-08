@@ -14,6 +14,7 @@ interface ServerConstructor {
   useDefaultMiddleware: boolean;
   middleware?: Array<RequestHandler>;
   apollo?: ApolloServer;
+  apolloMiddleware?: Array<RequestHandler>;
   routes?: Array<{ path: string, handlers: Array<RequestHandler> }>; 
 }
 
@@ -32,7 +33,7 @@ export class Server implements IServer {
     }
     this.middleware(args && args.middleware ? args.middleware : []);
     if (args && args.apollo) {
-      this.bootApollo(args.apollo);
+      this.bootApollo(args.apollo, args.apolloMiddleware);
     }
     if (args && args.routes) {
       this.expressRoutes(args.routes);
@@ -99,7 +100,10 @@ export class Server implements IServer {
     });
   }
 
-  private bootApollo = (apollo: ApolloServer) => {
+  private bootApollo = (apollo: ApolloServer, apolloMiddleware?: Array<RequestHandler>) => {
+    if (apolloMiddleware) {
+      this.express.use('/graphql', ...apolloMiddleware);
+    }
     apollo.applyMiddleware({
       app: this.express
     });
