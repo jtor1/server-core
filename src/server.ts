@@ -14,6 +14,7 @@ interface ServerConstructor {
   useDefaultMiddleware: boolean;
   middleware?: Array<RequestHandler>;
   apollo?: ApolloServer;
+  routes?: Array<{ path: string, handlers: Array<RequestHandler> }>; 
 }
 
 export class Server implements IServer {
@@ -33,11 +34,13 @@ export class Server implements IServer {
     if (args && args.apollo) {
       this.bootApollo(args.apollo);
     }
+    if (args && args.routes) {
+      this.expressRoutes(args.routes);
+    }
   }
 
   public init = async (port: number) => {
     await this.bootHttpServer(port);
-    this.expressRoutes();
     return { port };
   }
 
@@ -87,9 +90,12 @@ export class Server implements IServer {
     });
   }
 
-  private expressRoutes = () => {
-    this.express.use('/', (req: Request, res: Response) => {
-      res.send('derp');
+  private expressRoutes = (routes: Array<{ path: string, handlers: Array<RequestHandler> }>) => {
+    // this.express.use('/', (req: Request, res: Response) => {
+    //   res.send('derp');
+    // });
+    routes.forEach(route => {
+      this.express.use(route.path, ...route.handlers)
     });
   }
 
