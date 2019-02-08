@@ -1,7 +1,11 @@
-import { Context, createContext } from './apollo.context'
-import { createApolloServer } from './apollo.server'
-import { IServer, Server } from './server'
-import { initApp } from './server.init';
+import { Context, createContext } from './server/apollo.context'
+import { createApolloServer } from './server/apollo.server'
+import { IServer, Server } from './server/server'
+import { initApp } from './server/server.init';
+
+import { ControllerTemplate } from './templates/controller.template';
+import { EntityModelTemplate } from './templates/model.template';
+import { Template } from './templates/entity.template';
 
 export {
   Context,
@@ -9,5 +13,8 @@ export {
   createApolloServer,
   IServer,
   Server,
-  initApp
+  initApp,
+  ControllerTemplate,
+  EntityModelTemplate,
+  Template
 }
