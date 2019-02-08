@@ -8,7 +8,7 @@ export class Context {
   }
 }
 
-export const createContext = (context?: IContext): IContext => {
+export const createContext = <T>(context?: T): T | Context => {
   if (context) {
     return context;
   } else {
