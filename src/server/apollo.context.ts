@@ -1,6 +1,6 @@
-// import { HttpLink } from 'apollo-link-http';
 import gql from 'graphql-tag';
-import { HttpLink } from 'apollo-link-http';
+import fetch from 'node-fetch';
+import { HttpLink, createHttpLink } from 'apollo-link-http';
 import { execute, FetchResult } from 'apollo-link';
 import { GetMe, UserFragment } from '../graphql/types';
 
@@ -38,6 +38,7 @@ export class Context {
     this._userId = userId ? userId : 'no-user';
     if (identityUrL) {
       this.apolloLink = new HttpLink({
+        fetch: fetch as any,
         uri: identityUrL
       });
     }
