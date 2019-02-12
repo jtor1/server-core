@@ -75,15 +75,13 @@ interface EdgeWrapperInput {
 }
 
 export class EdgeWrapper<T extends EntityModelTemplate<any> & { index: number }> {
-  private context: Context;
   private ids: Array<string>;
-  private requestItems: (context: Context, ids: Array<string>) => Promise<Array<T>>;
+  private requestItems: (ids: Array<string>) => Promise<Array<T>>;
   private perPage: number;
   private offset?: number;
   private lastItemKey?: number;
 
-  constructor(context: Context, ids: Array<string>, args: EdgeWrapperInput, func: (context: Context, ids: Array<string>) => Promise<Array<T>>) {
-    this.context = context;
+  constructor(ids: Array<string>, args: EdgeWrapperInput, func: (ids: Array<string>) => Promise<Array<T>>) {
     this.ids = ids;
     this.requestItems = func;
     if (args.perPage) {
@@ -99,7 +97,7 @@ export class EdgeWrapper<T extends EntityModelTemplate<any> & { index: number }>
   }
 
   public data = async () => {
-    const nodes = await this.requestItems(this.context, this.ids);
+    const nodes = await this.requestItems(this.ids);
     const filteredNodes = this.filterKeys(nodes, this.lastItemKey, this.perPage, this.offset);
     return {
       pageInfo: {
