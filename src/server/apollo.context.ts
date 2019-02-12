@@ -70,6 +70,8 @@ export class Context {
           if (data.data && data.data.me) {
             this._currentUser = data.data.me;
             resolve();
+          } else {
+            resolve();
           }
         },
         error: (error: any) => resolve()
