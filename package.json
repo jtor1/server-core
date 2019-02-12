@@ -13,7 +13,7 @@
     "gentype": "apollo client:codegen --endpoint=http://localhost:9092/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/types.ts"
   },
   "peerDependencies": {
-    "graphql": "14.1.1"
+    "graphql": "14.0.2"
   },
   "dependencies": {
     "@types/cors": "2.8.4",
