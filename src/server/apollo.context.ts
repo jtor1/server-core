@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import fetch from 'node-fetch';
-import { HttpLink, createHttpLink } from 'apollo-link-http';
+import { HttpLink } from 'apollo-link-http';
 import { execute, FetchResult } from 'apollo-link';
 import { GetMe, UserFragment } from '../graphql/types';
 

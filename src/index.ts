@@ -8,6 +8,7 @@ import { TokenConfig, verifyAll } from './authentication/verify.token';
 import { ControllerTemplate } from './templates/controller.template';
 import { EntityModelTemplate, ModelTemplate } from './templates/model.template';
 import { Template } from './templates/entity.template';
+import { createGraphQLEnumValues } from './utils/graphql.enum';
 
 export {
   Context,
@@ -22,5 +23,6 @@ export {
   Template,
   tokenCheck,
   TokenConfig,
-  verifyAll
+  verifyAll,
+  createGraphQLEnumValues
 }
