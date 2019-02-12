@@ -1,22 +1,13 @@
-import { ApolloServer, IResolvers } from 'apollo-server-express';
-import { GraphQLSchema, DocumentNode } from 'graphql';
+import { ApolloServer } from 'apollo-server-express';
+import { Config } from 'apollo-server';
 
-interface ApolloServerArgs {
-  schema?: GraphQLSchema;
-  typeDefs?: DocumentNode | DocumentNode[];
-  resolvers?: IResolvers<any, any>;
-  mocks: boolean;
+interface ApolloServerArgs extends Config {
   contextFunc?: (ctx: any) => any;
 }
 
 export const createApolloServer = (args: ApolloServerArgs) => {
   const server = new ApolloServer({
-    schema: args.schema,
-    typeDefs: args.typeDefs,
-    resolvers: args.resolvers,
-    mocks: args.mocks || false,
-    playground: true,
-    tracing: true,
+    ...args,
     context: (ctx: any) => {
       if (args.contextFunc) {
         return args.contextFunc(ctx);
