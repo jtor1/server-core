@@ -9,6 +9,7 @@ import { ControllerTemplate } from './templates/controller.template';
 import { EntityModelTemplate, ModelTemplate } from './templates/model.template';
 import { Template } from './templates/entity.template';
 import { createGraphQLEnumValues } from './utils/graphql.enum';
+import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 
 export {
   Context,
@@ -24,5 +25,7 @@ export {
   tokenCheck,
   TokenConfig,
   verifyAll,
-  createGraphQLEnumValues
+  createGraphQLEnumValues,
+  EdgeWrapper,
+  edgeWrapperType
 }
