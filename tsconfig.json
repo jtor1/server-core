@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
-    "lib": ["es6", "es7", "esnext"],
+    "lib": ["es6", "es7", "esnext", "dom"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
