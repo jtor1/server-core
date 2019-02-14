@@ -1,4 +1,4 @@
-import { getConnection } from 'typeorm';
+import { getConnection, Connection } from 'typeorm';
 import DataLoader from 'dataloader';
 import _ from 'lodash';
 import { produce } from 'immer';
@@ -6,7 +6,7 @@ import { produce } from 'immer';
 export class ControllerTemplate<T> {
   public loader: DataLoader<string, T>;
 
-  public get connection() {
+  public get connection(): Connection {
     return getConnection()
   }
 
