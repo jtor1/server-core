@@ -1,14 +1,9 @@
-import { getConnection, Connection } from 'typeorm';
 import DataLoader from 'dataloader';
 import _ from 'lodash';
 import { produce } from 'immer';
 
 export class ControllerTemplate<T> {
   public loader: DataLoader<string, T>;
-
-  public get connection(): Connection {
-    return getConnection()
-  }
 
   public wrapQueryInDataLoader = (query: (keys: Array<string>) => Promise<Array<T>>) => {
     return new DataLoader(query);
