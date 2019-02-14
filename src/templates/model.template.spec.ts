@@ -1,16 +1,11 @@
 import 'jest';
 import * as TypeMoq from 'typemoq';
 
-// import { Template } from './entity.template';
 import { EntityModelTemplate } from './model.template';
-// import { Column, Entity } from 'typeorm';
 import { FakeEntity } from './fake.entity';
-// import { Context } from './context';
-// import { Vendor } from '../entity/vendor';
-// import { EventTravel } from '../entity/event.travel';
-// import { SurveyQuestion } from '../entity/survey/question';
+import { Context } from '../server/apollo.context';
 
-// const contextMock: TypeMoq.IMock<Context> = TypeMoq.Mock.ofType(Context);
+const contextMock: TypeMoq.IMock<Context> = TypeMoq.Mock.ofType(Context);
 
 describe(' EntityModelTemplate<T>', () => {
 
@@ -22,8 +17,9 @@ describe(' EntityModelTemplate<T>', () => {
       const fakeData2 = new FakeEntity();
       fakeData1.key = 2;
       fakeData2.id = '2';
-      const modelTemplate1 = new EntityModelTemplate(fakeData1);
-      const modelTemplate2 = new EntityModelTemplate(fakeData2);
+      const modelTemplate1 = new EntityModelTemplate(contextMock.object, fakeData1);
+      const modelTemplate2 = new EntityModelTemplate(contextMock.object, fakeData2);
+      expect(modelTemplate1.context).toBe(contextMock.object);
       expect(modelTemplate1.data).toBe(fakeData1);
       expect(modelTemplate1.key).toEqual(fakeData1.key);
       expect(modelTemplate1.id).toEqual(fakeData1.id);

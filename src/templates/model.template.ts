@@ -1,10 +1,17 @@
+import { Context } from '../server/apollo.context';
 import { Template } from './entity.template';
 
 export class ModelTemplate<T> {
   public data: T;
+  private _context: Context;
 
-  constructor(data: T) {
+  constructor(context: Context, data: T) {
+    this._context = context;
     this.data = data;
+  }
+
+  get context() {
+    return this._context;
   }
 }
 
