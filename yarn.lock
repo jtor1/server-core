@@ -443,7 +443,7 @@
   dependencies:
     "@types/express" "*"
 
-"@types/node-fetch@^2.1.6":
+"@types/node-fetch@2.1.6":
   version "2.1.6"
   resolved "https://registry.yarnpkg.com/@types/node-fetch/-/node-fetch-2.1.6.tgz#4326288b49f352a142f03c63526ebce0f4c50877"
   dependencies:
@@ -734,7 +734,7 @@ apollo-link-http-common@^0.2.10:
   dependencies:
     apollo-link "^1.2.8"
 
-apollo-link-http@^1.5.11, apollo-link-http@^1.5.5:
+apollo-link-http@1.5.11, apollo-link-http@^1.5.5:
   version "1.5.11"
   resolved "https://registry.yarnpkg.com/apollo-link-http/-/apollo-link-http-1.5.11.tgz#1f72a377d03e874a08bc9eadb1ce7ecb166f1e56"
   dependencies:
@@ -747,7 +747,7 @@ apollo-link-ws@^1.0.9:
   dependencies:
     apollo-link "^1.2.8"
 
-apollo-link@^1.2.3, apollo-link@^1.2.8:
+apollo-link@1.2.8, apollo-link@^1.2.3, apollo-link@^1.2.8:
   version "1.2.8"
   resolved "https://registry.yarnpkg.com/apollo-link/-/apollo-link-1.2.8.tgz#0f252adefd5047ac1a9f35ba9439d216587dcd84"
   dependencies:
@@ -3763,7 +3763,7 @@ no-case@^2.2.0, no-case@^2.3.2:
   dependencies:
     lower-case "^1.1.1"
 
-node-fetch@^2.1.2, node-fetch@^2.2.0, node-fetch@^2.3.0:
+node-fetch@2.3.0, node-fetch@^2.1.2, node-fetch@^2.2.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.3.0.tgz#1a1d940bbfb916a1d3e0219f037e89e71f8c5fa5"
 
