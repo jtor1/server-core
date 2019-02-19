@@ -3,9 +3,9 @@ import { Template } from './entity.template';
 
 export class ModelTemplate<T, C extends IContext> {
   public data: T;
-  private _context: C | IContext;
+  private _context: C;
 
-  constructor(context: C | IContext, data: T) {
+  constructor(context: C, data: T) {
     this._context = context;
     this.data = data;
   }
