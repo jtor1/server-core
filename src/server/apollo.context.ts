@@ -24,6 +24,8 @@ const IDENTITY_ME = gql`
 export interface IContext {
   token: string;
   userId: string;
+  currentUser: UserFragment;
+  me: () => Promise<void>;
 }
 
 export class Context {

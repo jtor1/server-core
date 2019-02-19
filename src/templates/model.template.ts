@@ -1,11 +1,11 @@
-import { Context } from '../server/apollo.context';
+import { IContext } from '../server/apollo.context';
 import { Template } from './entity.template';
 
-export class ModelTemplate<T> {
+export class ModelTemplate<T, C extends IContext> {
   public data: T;
-  private _context: Context;
+  private _context: C | IContext;
 
-  constructor(context: Context, data: T) {
+  constructor(context: C | IContext, data: T) {
     this._context = context;
     this.data = data;
   }
@@ -15,7 +15,7 @@ export class ModelTemplate<T> {
   }
 }
 
-export class EntityModelTemplate<T extends Template> extends ModelTemplate<T> {
+export class EntityModelTemplate<T extends Template, C extends IContext> extends ModelTemplate<T, C> {
 
   get key() {
     return this.data.key;
