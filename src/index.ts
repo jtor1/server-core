@@ -1,4 +1,4 @@
-import { Context, createContext } from './server/apollo.context'
+import { Context, IContext, createContext } from './server/apollo.context'
 import { createApolloServer } from './server/apollo.server'
 import { IServer, Server } from './server/server'
 import { initApp } from './server/server.init';
@@ -13,6 +13,7 @@ import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 
 export {
   Context,
+  IContext,
   createContext,
   createApolloServer,
   IServer,

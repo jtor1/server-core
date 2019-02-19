@@ -6,7 +6,7 @@ import {
   GraphQLBoolean,
   GraphQLObjectTypeConfig
 } from 'graphql';
-import { Context } from '../server/apollo.context';
+import { Context, IContext } from '../server/apollo.context';
 
 import { EntityModelTemplate } from '../templates/model.template';
 
@@ -28,7 +28,7 @@ const pageInfoType = new GraphQLObjectType({
   })
 });
 
-export const edgeWrapperType = <T extends GraphQLObjectType>(parentName: string, node: T) => {
+export const edgeWrapperType = <T extends GraphQLObjectType, C extends IContext>(parentName: string, node: T) => {
   const nodeType = <T extends GraphQLObjectType>(itemType: T) => new GraphQLObjectType({
     name: `${parentName}${node.name}sEdge`,
     fields: () => ({
@@ -40,7 +40,7 @@ export const edgeWrapperType = <T extends GraphQLObjectType>(parentName: string,
       }
     })
   });
-  const edgeWrapperConfig: GraphQLObjectTypeConfig<EdgeWrapper<any>, Context> = {
+  const edgeWrapperConfig: GraphQLObjectTypeConfig<EdgeWrapper<any>, C> = {
     name: `${parentName}${node.name}sConnection`,
     fields: () => ({
       edges: {
@@ -74,7 +74,7 @@ interface EdgeWrapperInput {
   cursor?: string;
 }
 
-export class EdgeWrapper<T extends EntityModelTemplate<any> & { index: number }> {
+export class EdgeWrapper<T extends EntityModelTemplate<any, any> & { index: number }> {
   private ids: Array<string>;
   private requestItems: (ids: Array<string>) => Promise<Array<T>>;
   private perPage: number;
