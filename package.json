@@ -6,6 +6,11 @@
   "types": "dist/index.d.ts",
   "license": "MIT",
   "private": true,
+  "files": ["dist/**/*"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joylifeinc/server-core.git"
+  },
   "scripts": {
     "build": "tsc",
     "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
@@ -28,7 +33,7 @@
     "@types/node-fetch": "2.1.6",
     "apollo": "2.4.4",
     "apollo-link": "1.2.8",
-    "apollo-link-http": "1.5.11",
+    "apollo-link-http": "1.5.11", 
     "apollo-server": "2.4.0",
     "apollo-server-express": "2.4.0",
     "cors": "2.8.5",
