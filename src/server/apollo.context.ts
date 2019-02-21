@@ -71,7 +71,8 @@ export class Context implements IContext {
         next: (data: FetchResult<GetMe>) => {
           if (data.data && data.data.me) {
             this._currentUser = data.data.me;
-            resolve();
+            this._userId = data.data.me.id;
+            resolve(data.data.me);
           } else {
             resolve();
           }
