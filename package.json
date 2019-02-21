@@ -1,6 +1,6 @@
 {
   "name": "@withjoy/server-core",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Joy Server Base and Utils",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,9 +8,11 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "postinstall": "npm run build",
     "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
-    "gentype": "apollo client:codegen --endpoint=http://localhost:9092/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/types.ts"
+    "gentype": "apollo client:codegen --endpoint=http://localhost:9092/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/types.ts",
+    "prepare": "npm run build",
+    "version": "git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "peerDependencies": {
     "graphql": "14.0.2"
