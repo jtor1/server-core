@@ -40,7 +40,7 @@ export const edgeWrapperType = <T extends GraphQLObjectType, C extends IContext>
       }
     })
   });
-  const edgeWrapperConfig: GraphQLObjectTypeConfig<EdgeWrapper<any>, C> = {
+  const edgeWrapperConfig: GraphQLObjectTypeConfig<EdgeWrapper<C, any>, C> = {
     name: `${parentName}${node.name}sConnection`,
     fields: () => ({
       edges: {
@@ -74,14 +74,16 @@ interface EdgeWrapperInput {
   cursor?: string;
 }
 
-export class EdgeWrapper<T extends EntityModelTemplate<any, any> & { index: number }> {
+export class EdgeWrapper<C extends IContext, T extends EntityModelTemplate<any, C> & { index: number }> {
+  private context: C;
   private ids: Array<string>;
-  private requestItems: (ids: Array<string>) => Promise<Array<T>>;
+  private requestItems: (context: C, ids: Array<string>) => Promise<Array<T>>;
   private perPage: number;
   private offset?: number;
   private lastItemKey?: number;
 
-  constructor(ids: Array<string>, args: EdgeWrapperInput, func: (ids: Array<string>) => Promise<Array<T>>) {
+  constructor(context: C, ids: Array<string>, args: EdgeWrapperInput, func: (context: C, ids: Array<string>) => Promise<Array<T>>) {
+    this.context = context;
     this.ids = ids;
     this.requestItems = func;
     if (args.perPage) {
@@ -97,7 +99,7 @@ export class EdgeWrapper<T extends EntityModelTemplate<any, any> & { index: numb
   }
 
   public data = async () => {
-    const nodes = await this.requestItems(this.ids);
+    const nodes = await this.requestItems(this.context, this.ids);
     const filteredNodes = this.filterKeys(nodes, this.lastItemKey, this.perPage, this.offset);
     return {
       pageInfo: {
