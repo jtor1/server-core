@@ -5,9 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
-  "private": true,
   "files": ["dist/**/*"],
   "scripts": {
+    "prebuild": "rm -r /dist || true",
     "build": "tsc",
     "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
     "gentype": "apollo client:codegen --endpoint=http://localhost:9091/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/types.ts",
