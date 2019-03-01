@@ -35,9 +35,7 @@ export class Server implements IServer {
     if (args && args.apollo) {
       this.bootApollo(args.apollo, args.apolloMiddleware);
     }
-    if (args && args.routes) {
-      this.expressRoutes(args.routes);
-    }
+    this.expressRoutes(args && args.routes ? [...args.routes] : []);
   }
 
   public init = async (port: number) => {
