@@ -90,7 +90,7 @@ export class Server implements IServer {
   }
 
   private expressRoutes = (routes: Array<{ path: string, handlers: Array<RequestHandler> }>) => {
-    this.express.use('/healthy', (_, res) => res.send(200));
+    this.express.use('/healthy', (_, res) => res.sendStatus(200));
     routes.forEach(route => {
       this.express.use(route.path, ...route.handlers)
     });
