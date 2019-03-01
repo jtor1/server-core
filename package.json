@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
-    "gentype": "apollo client:codegen --endpoint=http://localhost:9092/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/types.ts",
+    "gentype": "apollo client:codegen --endpoint=http://localhost:9091/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/types.ts",
     "prepare": "npm run build",
     "version": "git add -A src",
     "postversion": "git push && git push --tags"
