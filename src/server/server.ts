@@ -1,5 +1,5 @@
 import http from 'http';
-import express, { Request, Response, RequestHandler } from 'express';
+import express, { Request, Response, RequestHandler, Router } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
@@ -15,7 +15,7 @@ interface ServerConstructor {
   middleware?: Array<RequestHandler>;
   apollo?: ApolloServer;
   apolloMiddleware?: Array<RequestHandler>;
-  routes?: Array<{ path: string, handlers: Array<RequestHandler> }>; 
+  routes?: Array<{ path: string, router: Router }>; 
 }
 
 export class Server implements IServer {
@@ -89,10 +89,10 @@ export class Server implements IServer {
     });
   }
 
-  private expressRoutes = (routes: Array<{ path: string, handlers: Array<RequestHandler> }>) => {
+  private expressRoutes = (routes: Array<{ path: string, router: Router }>) => {
     this.express.use('/healthy', (_, res) => res.sendStatus(200));
     routes.forEach(route => {
-      this.express.use(route.path, ...route.handlers)
+      this.express.use(route.path, route.router)
     });
   }
 
