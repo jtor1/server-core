@@ -31,7 +31,7 @@ export class Server implements IServer {
       middlewareArray.push(bodyParser.json());
       middlewareArray.push(bodyParser.urlencoded({ extended: false }));
     }
-    this.middleware(args && args.middleware ? args.middleware : []);
+    this.middleware(args && args.middleware ? [...middlewareArray, ...args.middleware] : middlewareArray);
     if (args && args.apollo) {
       this.bootApollo(args.apollo, args.apolloMiddleware);
     }
