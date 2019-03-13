@@ -10,6 +10,7 @@ export interface GetMe_me {
   id: string;
   firstName: string;
   lastName: string;
+  email: string | null;
 }
 
 export interface GetMe {
@@ -28,6 +29,7 @@ export interface UserFragment {
   id: string;
   firstName: string;
   lastName: string;
+  email: string | null;
 }
 
 /* tslint:disable */
