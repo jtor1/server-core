@@ -9,6 +9,7 @@ const USER = gql`
     id
     firstName
     lastName
+    superAdmin
     email
   }
 `;

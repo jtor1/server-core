@@ -8,8 +8,9 @@
 export interface GetMe_me {
   __typename: "User";
   id: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
+  superAdmin: boolean;
   email: string | null;
 }
 
@@ -27,8 +28,9 @@ export interface GetMe {
 export interface UserFragment {
   __typename: "User";
   id: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
+  superAdmin: boolean;
   email: string | null;
 }
 
