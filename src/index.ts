@@ -1,5 +1,5 @@
 import { Context, IContext, createContext } from './server/apollo.context'
-import { createApolloServer } from './server/apollo.server'
+import { IApolloServerArgs, createApolloServer } from './server/apollo.server'
 import { IServer, Server } from './server/server'
 import { initApp } from './server/server.init';
 import { tokenCheck } from './authentication/token.check';
@@ -15,6 +15,7 @@ export {
   Context,
   IContext,
   createContext,
+  IApolloServerArgs,
   createApolloServer,
   IServer,
   Server,
