@@ -3,6 +3,7 @@ import express, { Request, Response, RequestHandler, Router } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
+import { bodyParserGraphql } from '../middleware/body.parser';
 import { ApolloServer } from 'apollo-server-express';
 
 export interface IServer {
@@ -15,25 +16,31 @@ interface ServerConstructor {
   middleware?: Array<RequestHandler>;
   apollo?: ApolloServer;
   apolloMiddleware?: Array<RequestHandler>;
-  routes?: Array<{ path: string, router: Router }>; 
+  routes?: Array<{ path: string, router: Router }>;
 }
 
 export class Server implements IServer {
   public httpServer?: http.Server;
-  private express: express.Application
+  public app: express.Application
 
   constructor(args?: ServerConstructor) {
     const middlewareArray: Array<RequestHandler> = [];
-    this.express = express();
+    const apolloMiddlewareArray: Array<RequestHandler> = [];
+
+    this.app = express();
+
     if (args && args.useDefaultMiddleware) {
       middlewareArray.push(cors());
       middlewareArray.push(morgan('dev'));
       middlewareArray.push(bodyParser.json());
       middlewareArray.push(bodyParser.urlencoded({ extended: false }));
+
+      apolloMiddlewareArray.push(bodyParserGraphql);
     }
+
     this.middleware(args && args.middleware ? [...middlewareArray, ...args.middleware] : middlewareArray);
     if (args && args.apollo) {
-      this.bootApollo(args.apollo, args.apolloMiddleware);
+      this.bootApollo(args.apollo, args.apolloMiddleware ? [ ...apolloMiddlewareArray, ...args.apolloMiddleware ] : apolloMiddlewareArray);
     }
     this.expressRoutes(args && args.routes ? [...args.routes] : []);
   }
@@ -53,31 +60,36 @@ export class Server implements IServer {
 
   private bootHttpServer = (port: number) => {
     return new Promise<http.Server>((resolve, reject) => {
-      this.httpServer = http.createServer(this.express);
-      this.httpServer.listen(port, (err: Error) => {
-        if (err) {
-          console.error(err);
-          if (this.httpServer) {
-            this.httpServer.close();
-          }
-          reject(err)
-        } else {
-          resolve(this.httpServer);
-        }
+      const httpServer = http.createServer(this.app);
+      this.httpServer = httpServer;
+
+      const onError = (err: Error) => {
+        console.error(err);
+        httpServer.close();
+        reject(err)
+      }
+      httpServer.addListener('error', onError);
+
+      httpServer.listen(port, () => {
+        httpServer.removeListener('error', onError);
+        resolve(httpServer);
       })
     })
   }
 
   private unbootHttpServer = () => {
     return new Promise((resolve, reject) => {
-      if (!this.httpServer) {
+      const { httpServer } = this;
+      if (! httpServer) {
         resolve();
         return;
       }
-      this.httpServer.close((err: Error) => {
-        if (err) {
-          return reject(err);
-        }
+
+      httpServer.addListener('error', reject);
+
+      httpServer.close(() => {
+        httpServer.removeListener('error', reject);
+        this.httpServer = undefined;
         resolve();
       });
     });
@@ -85,23 +97,23 @@ export class Server implements IServer {
 
   private middleware(middleware: Array<RequestHandler>) {
     middleware.forEach(middleware => {
-      this.express.use(middleware);
+      this.app.use(middleware);
     });
   }
 
   private expressRoutes = (routes: Array<{ path: string, router: Router }>) => {
-    this.express.use('/healthy', (_, res) => res.sendStatus(200));
+    this.app.use('/healthy', (_, res) => res.sendStatus(200));
     routes.forEach(route => {
-      this.express.use(route.path, route.router)
+      this.app.use(route.path, route.router)
     });
   }
 
   private bootApollo = (apollo: ApolloServer, apolloMiddleware?: Array<RequestHandler>) => {
     if (apolloMiddleware) {
-      this.express.use('/graphql', ...apolloMiddleware);
+      this.app.use('/graphql', ...apolloMiddleware);
     }
     apollo.applyMiddleware({
-      app: this.express
+      app: this.app
     });
   }
 }

@@ -1,11 +1,11 @@
 import { ApolloServer } from 'apollo-server-express';
 import { Config } from 'apollo-server';
 
-interface ApolloServerArgs extends Config {
+export interface IApolloServerArgs extends Config {
   contextFunc?: (ctx: any) => any;
 }
 
-export const createApolloServer = (args: ApolloServerArgs) => {
+export const createApolloServer = (args: IApolloServerArgs) => {
   const server = new ApolloServer({
     ...args,
     context: (ctx: any) => {
