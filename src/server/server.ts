@@ -1,9 +1,10 @@
 import http from 'http';
-import express, { Request, Response, RequestHandler, Router } from 'express';
+import express, { Request, Response, RequestHandler, ErrorRequestHandler, Router } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
 import { bodyParserGraphql } from '../middleware/body.parser';
+import { errorLoggingExpress } from '../middleware/error.logging';
 import { ApolloServer } from 'apollo-server-express';
 
 export interface IServer {
@@ -43,6 +44,7 @@ export class Server implements IServer {
       this.bootApollo(args.apollo, args.apolloMiddleware ? [ ...apolloMiddlewareArray, ...args.apolloMiddleware ] : apolloMiddlewareArray);
     }
     this.expressRoutes(args && args.routes ? [...args.routes] : []);
+    this.middleware([ errorLoggingExpress ]);
   }
 
   public init = async (port: number) => {
@@ -95,7 +97,7 @@ export class Server implements IServer {
     });
   }
 
-  private middleware(middleware: Array<RequestHandler>) {
+  private middleware(middleware: Array<RequestHandler | ErrorRequestHandler>) {
     middleware.forEach(middleware => {
       this.app.use(middleware);
     });

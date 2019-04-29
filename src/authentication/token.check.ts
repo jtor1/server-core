@@ -10,7 +10,7 @@ export const tokenCheck = (tokenConfig: TokenConfig) => async (req: Request, res
     if (decoded instanceof Error) {
       next();
     } else {
-      req.token = token;
+      (req as any).token = token;
       next();
     }
   } else {
