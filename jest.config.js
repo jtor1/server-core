@@ -4,16 +4,17 @@ const projectRoot = path.resolve('.');
 module.exports = {
   collectCoverage: true,
   collectCoverageFrom: [
-    `**/templates/**/*.{ts,tsx}`,
+    `src/**/*.{ts,tsx}`,
+    `typings/**/*.{ts,tsx}`,
   ],
   coverageDirectory: `${projectRoot}/test_reports/`,
   coverageReporters: ['json', 'lcov', 'text'],
   coverageThreshold: {
     global: {
-      branches: 0,
-      functions: 20,
-      lines: 50,
-      statements: 50,
+      statements: 29.3,
+      branches: 27.3,
+      functions: 23.5,
+      lines: 27,
     },
   },
   globals: {
