@@ -1,5 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
 import { Config } from 'apollo-server';
+import { errorFormattingApollo } from '../middleware/error.logging';
 
 export interface IApolloServerArgs extends Config {
   contextFunc?: (ctx: any) => any;
@@ -14,7 +15,8 @@ export const createApolloServer = (args: IApolloServerArgs) => {
       } else {
         return ctx;
       }
-    }
+    },
+    formatError: errorFormattingApollo,
   });
   return server;
 }

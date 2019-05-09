@@ -36,7 +36,7 @@ export class Context implements IContext {
   private _token: string;
   private _currentUser?: UserFragment;
   private apolloLink: HttpLink;
-  
+
   constructor(token?: string, userId?: string, identityUrL?: string) {
     this._token = token ? token : 'no-token';
     this._userId = userId ? userId : 'no-user';
@@ -61,9 +61,10 @@ export class Context implements IContext {
   }
 
   public async me() {
-    return new Promise((resolve, reject, ) => {
+    return new Promise((resolve, reject) => {
       if (!this.apolloLink) {
-        reject('apollo link no instantiated');
+        reject(new Error('apollo link not instantiated'));
+        return;
       }
       execute(this.apolloLink, { query: IDENTITY_ME, context: {
         headers: {
