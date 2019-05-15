@@ -5,6 +5,16 @@
 // GraphQL query operation: GetMe
 // ====================================================
 
+export interface GetMe_me_aliases {
+  __typename: "UserAlias";
+  id: string;
+  provider: string;
+  auth0: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+}
+
 export interface GetMe_me {
   __typename: "User";
   id: string;
@@ -12,6 +22,7 @@ export interface GetMe_me {
   lastName: string | null;
   superAdmin: boolean;
   email: string | null;
+  aliases: GetMe_me_aliases[];
 }
 
 export interface GetMe {
@@ -25,6 +36,16 @@ export interface GetMe {
 // GraphQL fragment: UserFragment
 // ====================================================
 
+export interface UserFragment_aliases {
+  __typename: "UserAlias";
+  id: string;
+  provider: string;
+  auth0: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+}
+
 export interface UserFragment {
   __typename: "User";
   id: string;
@@ -32,6 +53,7 @@ export interface UserFragment {
   lastName: string | null;
   superAdmin: boolean;
   email: string | null;
+  aliases: UserFragment_aliases[];
 }
 
 /* tslint:disable */

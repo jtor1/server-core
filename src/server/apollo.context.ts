@@ -11,6 +11,14 @@ const USER = gql`
     lastName
     superAdmin
     email
+    aliases {
+      id
+      provider
+      auth0
+      firstName
+      lastName
+      email
+    }
   }
 `;
 
@@ -60,13 +68,13 @@ export class Context implements IContext {
     return this._currentUser;
   }
 
-  public async me() {
+  public async me(query?: any) {
     return new Promise((resolve, reject) => {
       if (!this.apolloLink) {
         reject(new Error('apollo link not instantiated'));
         return;
       }
-      execute(this.apolloLink, { query: IDENTITY_ME, context: {
+      execute(this.apolloLink, { query: query ? query : IDENTITY_ME, context: {
         headers: {
           authorization: this.token
         }
