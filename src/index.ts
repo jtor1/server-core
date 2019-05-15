@@ -4,6 +4,13 @@ import { IServer, Server } from './server/server'
 import { initApp } from './server/server.init';
 import { tokenCheck } from './authentication/token.check';
 import { TokenConfig, verifyAll } from './authentication/verify.token';
+import {
+  AuthenticationError,
+  AuthorizationError,
+  BadRequestError,
+  GenericError,
+  NotFoundError
+} from './server/errors';
 
 import { ControllerTemplate } from './templates/controller.template';
 import { EntityModelTemplate, ModelTemplate } from './templates/model.template';
@@ -29,5 +36,10 @@ export {
   verifyAll,
   createGraphQLEnumValues,
   EdgeWrapper,
-  edgeWrapperType
+  edgeWrapperType,
+  AuthenticationError,
+  AuthorizationError,
+  BadRequestError,
+  GenericError,
+  NotFoundError
 }
