@@ -88,7 +88,11 @@ export class Context implements IContext {
             resolve();
           }
         },
-        error: (error: any) => resolve()
+        error: (err: any) => {
+          // TODO:  telemetry
+          console.error(err);
+          resolve();
+        }
       })
     });
   }
