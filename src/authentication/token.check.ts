@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyAll, TokenConfig } from './verify.token';
 
 /**
- * Derives the token value -- usually a JWT -- from the Authorization header.
+ * Derives the token value -- usually a JWT -- from the 'Authorization' header.
+ * What we call `req.token` is actually the full 'Authorization' header.
  *
  * eg. 'Authorization: Bearer TOKEN_VALUE' => TOKEN_VALUE
  */
