@@ -28,7 +28,7 @@ interface Auth0Token {
  * the most applicable error (not "invalid signature")
  *
  * @param config
- * @param token
+ * @param token a JWT token
  * @returns Auth0Token | Error
  */
 export const verifyAll = (tokenConfig: TokenConfig, token: string) => {
@@ -50,5 +50,5 @@ export const verifyAll = (tokenConfig: TokenConfig, token: string) => {
     } else {
       return curr;
     }
-  });
+  }, new Error('no matching provider in tokenConfig'));
 };
