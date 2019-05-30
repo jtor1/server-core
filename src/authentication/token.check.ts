@@ -7,20 +7,22 @@ import { verifyAll, TokenConfig } from './verify.token';
  *
  * eg. 'Authorization: Bearer TOKEN_VALUE' => TOKEN_VALUE
  */
-export const deriveTokenValue = (req: Request): string | null => {
+export const deriveTokenHeaderValue = (req: Request): string | null => {
   const header = req.headers.authorization;
   if (! header) {
     return null;
   }
   const [ tokenType, tokenValue ] = header.split(' ');
-  if (! tokenValue) {
-    return null;
-  }
-  return tokenValue;
+
+  return (
+    tokenValue || // 'Bearer TOKEN_VALUE'
+    tokenType || // 'TOKEN_VALUE'
+    null
+  );
 }
 
 export const tokenCheck = (tokenConfig: TokenConfig) => async (req: Request, res: Response, next: NextFunction) => {
-  const token = deriveTokenValue(req);
+  const token = deriveTokenHeaderValue(req);
   if (token) {
     const decoded = verifyAll(tokenConfig, token);
     if (decoded instanceof Error) {

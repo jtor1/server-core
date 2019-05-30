@@ -2,7 +2,10 @@ import { Context, IContext, createContext } from './server/apollo.context'
 import { IApolloServerArgs, createApolloServer } from './server/apollo.server'
 import { IServer, Server } from './server/server'
 import { initApp } from './server/server.init';
-import { tokenCheck } from './authentication/token.check';
+import {
+  deriveTokenHeaderValue,
+  tokenCheck,
+} from './authentication/token.check';
 import { TokenConfig, verifyAll } from './authentication/verify.token';
 import {
   AuthenticationError,
@@ -31,6 +34,7 @@ export {
   ModelTemplate,
   EntityModelTemplate,
   Template,
+  deriveTokenHeaderValue,
   tokenCheck,
   TokenConfig,
   verifyAll,
