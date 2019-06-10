@@ -35,7 +35,7 @@ export const verifyAll = (tokenConfig: TokenConfig, token: string) => {
   return Object.keys(tokenConfig.auth0).map(key => {
     try {
       const secretObj = tokenConfig.auth0[key].secret;
-      const buffer = Buffer.from(secretObj.data, secretObj.encoding);
+      const buffer = Buffer.from(secretObj.data, secretObj.encoding as any);
       return jwt.verify(token, buffer, tokenConfig.auth0[key].options) as Auth0Token;
     } catch (err) {
       return err as Error;

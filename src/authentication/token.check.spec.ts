@@ -59,7 +59,7 @@ describe('token.check', () => {
 
 
   describe('tokenCheck', () => {
-    const RESPONSE: Response = (<unknown>undefined as Response); // it's ignored
+    const RESPONSE: Response = (<any>undefined as Response); // it's ignored
     const TOKEN_CONFIG = <TokenConfig>{
       auth0: {
         MATCH: {
@@ -88,7 +88,7 @@ describe('token.check', () => {
       const { secret, options } = TOKEN_CONFIG.auth0.MATCH;
       return jwt.sign(
         { payload: true },
-        Buffer.from(secret.data, secret.encoding),
+        Buffer.from(secret.data, secret.encoding as any),
         options
       );
     })();
