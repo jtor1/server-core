@@ -5,8 +5,7 @@ describe('encodeForFirebaseKey', () => {
 
   it('actually alters the input string', () => {
     const TEST_STRING = "$ $$ $>.4..4 4.4.$### 3j#//l[p[p[[[p[p[[][]/a//a/asfdkjasdfjasio3####$$$>.4....4..[][$";
-    const theyAreDifferent = TEST_STRING !== encode(TEST_STRING);
-    expect(theyAreDifferent).toBe(true);
+    expect(TEST_STRING).not.toBe(encode(TEST_STRING));
   })
 
   it('provides an encode and decode operation that are inverses of each other', () => {

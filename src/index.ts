@@ -20,6 +20,7 @@ import { EntityModelTemplate, ModelTemplate } from './templates/model.template';
 import { Template } from './templates/entity.template';
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
+import encodeForFirebaseKey from './utils/encodeForFirebaseKey';
 
 export {
   Context,
@@ -45,5 +46,6 @@ export {
   AuthorizationError,
   BadRequestError,
   GenericError,
-  NotFoundError
+  NotFoundError,
+  encodeForFirebaseKey
 }

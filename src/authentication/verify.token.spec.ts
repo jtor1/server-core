@@ -44,7 +44,7 @@ const TOKEN_SIGNED: string = (function signedJWT(): string {
     const { secret, options } = TOKEN_CONFIG.auth0.MATCH;
     const token = jwt.sign(
       PAYLOAD,
-      Buffer.from(secret.data, secret.encoding),
+      Buffer.from(secret.data, secret.encoding as any),
       options
     );
     return token;

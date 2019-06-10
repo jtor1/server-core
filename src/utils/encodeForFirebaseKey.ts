@@ -30,3 +30,8 @@ const transform = (mapping: encodingMap[]) => (str: string): string =>
 
 export const encode = transform(forward);
 export const decode = transform(backward);
+
+export default {
+  encode,
+  decode
+};
