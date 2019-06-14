@@ -13,11 +13,12 @@
   ],
   "scripts": {
     "prebuild": "rm -rf ./dist",
+    "prepublishOnly": "yarn test",
     "build": "tsc",
     "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
     "gentype:local": "apollo client:codegen --endpoint=http://localhost:9091/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/types.ts",
     "gentype:dev": "apollo client:codegen --endpoint=https://bliss-gateway.withjoy.com/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/types.ts",
-    "prepare": "npm run build",
+    "prepare": "yarn build",
     "version": "git add -A src",
     "postversion": "git push && git push --tags"
   },
