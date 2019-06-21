@@ -72,7 +72,6 @@ export function errorFormattingApollo(enrichedError: any): any {
     // why are we even here?
     return enrichedError;
   }
-console.log('---', JSON.stringify(enrichedError));
 
   const { message, name } = enrichedError;
   const code = get(enrichedError, 'extensions.code')
