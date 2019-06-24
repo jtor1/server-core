@@ -1,11 +1,11 @@
-import { PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, VersionColumn, Column, Generated, Index } from 'typeorm';
+ import { PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, VersionColumn, Column, Generated, Index } from 'typeorm';
 
 export abstract class Template  {
 
   @PrimaryGeneratedColumn('increment')
   public key: number;
 
-  @Index()
+  @Index({ unique: true })
   @Column('uuid')
   @Generated('uuid')
   public id: string;
