@@ -54,13 +54,6 @@ export const systemTypeDefs = gql`
     unixTimestamp: Float!
   }
 
-  type Query {
-    _empty: String
-  }
-
-  type Mutation {
-    _empty: String
-  }
 `;
 
 const convertDate = (date: string | [string, string]) => {
