@@ -21,6 +21,8 @@ import { ModelTemplate } from './templates/model.template';
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import encodeForFirebaseKey from './utils/encodeForFirebaseKey';
+import { callService } from './graphql/interservice.communication';
+import { systemResolvers, systemTypeDefs  } from './graphql/system.types'
 
 export {
   Context,
@@ -47,5 +49,8 @@ export {
   BadRequestError,
   GenericError,
   NotFoundError,
-  encodeForFirebaseKey
+  encodeForFirebaseKey,
+  callService,
+  systemResolvers,
+  systemTypeDefs
 }
