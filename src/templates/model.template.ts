@@ -1,35 +1,24 @@
-import { IContext } from '../server/apollo.context';
-import { Template } from './entity.template';
+ import { PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, VersionColumn, Column, Generated, Index } from 'typeorm';
 
-export class ModelTemplate<T, C extends IContext> {
-  public data: T;
-  private _context: C;
+export abstract class ModelTemplate  {
 
-  constructor(context: C, data: T) {
-    this._context = context;
-    this.data = data;
-  }
+  @PrimaryGeneratedColumn('increment')
+  public key: number;
 
-  get context() {
-    return this._context;
-  }
-}
+  @Index({ unique: true })
+  @Column('uuid')
+  @Generated('uuid')
+  public id: string;
 
-export class EntityModelTemplate<T extends Template, C extends IContext> extends ModelTemplate<T, C> {
+  @CreateDateColumn()
+  public createAt: Date;
 
-  get key() {
-    return this.data.key;
-  }
+  @UpdateDateColumn()
+  public updateAt: Date;
 
-  get id() {
-    return this.data.id;
-  }
+  @VersionColumn({ default: 1 })
+  public version: number;
 
-  get createdAt() {
-    return this.data.createAt;
-  }
-
-  get updatedAt() {
-    return this.data.updateAt;
-  }
+  @Column('bool', { default: false})
+  public deleted: boolean;
 }

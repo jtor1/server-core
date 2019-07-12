@@ -16,8 +16,8 @@ import {
 } from './server/errors';
 
 import { ControllerTemplate } from './templates/controller.template';
-import { EntityModelTemplate, ModelTemplate } from './templates/model.template';
-import { Template } from './templates/entity.template';
+import { EntityViewTemplate, ViewTemplate } from './templates/view.template';
+import { ModelTemplate } from './templates/model.template';
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import encodeForFirebaseKey from './utils/encodeForFirebaseKey';
@@ -33,8 +33,8 @@ export {
   initApp,
   ControllerTemplate,
   ModelTemplate,
-  EntityModelTemplate,
-  Template,
+  EntityViewTemplate,
+  ViewTemplate,
   deriveTokenHeaderValue,
   tokenCheck,
   TokenConfig,
