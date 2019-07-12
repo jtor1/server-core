@@ -43,7 +43,7 @@ export interface IContext {
 interface ContextConstructor {
   token?: string;
   userId?: string;
-  identityUrL?: string;
+  identityUrl?: string;
   locale?: string;
 }
 
@@ -52,15 +52,15 @@ export class Context implements IContext {
   private _userId: string;
   private _token: string;
   private _currentUser?: UserFragment;
-  private _identityUrL?: string;
+  private _identityUrl?: string;
   private _locale: string;
 
   constructor(args?: ContextConstructor) {
     if (args) {
-      const { token, userId, identityUrL, locale } = args;
+      const { token, userId, identityUrl, locale } = args;
       this._token = token ? token : 'no-token';
       this._userId = userId ? userId : 'no-user'
-      this._identityUrL = identityUrL;
+      this._identityUrl = identityUrl;
       this._locale = locale || 'en_US';
     }
   }
@@ -82,11 +82,11 @@ export class Context implements IContext {
   }
 
   public me = async () => {
-    if (!this._identityUrL) {
+    if (!this._identityUrl) {
       return;
     }
     try {
-      const { data } = await callService<GetMe>(this._identityUrL, this.token, IDENTITY_ME)
+      const { data } = await callService<GetMe>(this._identityUrl, this.token, IDENTITY_ME)
       if (data && data.me) {
         this._currentUser = data.me;
         this._userId = data.me.id;
