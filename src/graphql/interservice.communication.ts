@@ -11,7 +11,7 @@ export const callService = <Query, Variables = undefined>(serviceUrl: string, to
     });
 
     return new Promise((resolve, reject) => {
-      if (apolloLink) {
+      if (!apolloLink) {
         reject(new Error('apollo link not instantiated'));
         return;
       }
