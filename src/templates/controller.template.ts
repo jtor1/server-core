@@ -2,8 +2,8 @@ import DataLoader from 'dataloader';
 import _ from 'lodash';
 import { produce } from 'immer';
 
-export class ControllerTemplate<T> {
-  public loader: DataLoader<string, T>;
+export class ControllerTemplate<T, U extends string> {
+  public loader: Record<U, DataLoader<string, T>> = {} as Record<U, DataLoader<string, T>>;
 
   public wrapQueryInDataLoader = (query: (keys: Array<string>) => Promise<Array<T>>) => {
     return new DataLoader(query);
