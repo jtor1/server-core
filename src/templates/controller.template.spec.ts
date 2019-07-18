@@ -12,7 +12,8 @@ describe('ControllerTemplate<T>', () => {
       const vendor3 = new FakeEntityWithIndex();
       vendor3.id = '3';
       const arrayOfStuff = [vendor1, vendor2, vendor3];
-      const controller = new ControllerTemplate<FakeEntityWithIndex>();
+      type QueryType = 'getVendor';
+      const controller = new ControllerTemplate<FakeEntityWithIndex, QueryType>();
       const list1 = controller.orderResultsByIds(['1', '2', '3'], arrayOfStuff);
       expect(list1[0]).toEqual(vendor1);
       expect(list1[1]).toEqual(vendor2);
@@ -39,7 +40,8 @@ describe('ControllerTemplate<T>', () => {
       q4.id = '4';
       q4.index = 3;
       const arrayOfStuff = [q1, q2, q3, q4];
-      const controller = new ControllerTemplate<FakeEntityWithIndex>();
+      type QueryType = 'getVendor';
+      const controller = new ControllerTemplate<FakeEntityWithIndex, QueryType>();
       const sortedItems1 = controller.updateIndexOrder(arrayOfStuff, -1, 2);
       expect(sortedItems1).toEqual(arrayOfStuff);
       const sortedItems2 = controller.updateIndexOrder(arrayOfStuff, 1, -2);
@@ -77,7 +79,8 @@ describe('ControllerTemplate<T>', () => {
       testTwoTravel4.id = '4';
       testTwoTravel4.index = 3;
       const arrayOfStuff2 = [testTwoTravel1, testTwoTravel2, testThreeTravel3, testTwoTravel4];
-      const controller = new ControllerTemplate<FakeEntityWithIndex>();
+      type QueryType = 'getVendor';
+      const controller = new ControllerTemplate<FakeEntityWithIndex, QueryType>();
       const sortedItems1 = controller.updateIndexOrder(arrayOfStuff1, 1, 2);
       expect(sortedItems1).toHaveLength(4);
       expect(sortedItems1[0].id).toEqual('1');
