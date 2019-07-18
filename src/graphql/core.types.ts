@@ -2,7 +2,7 @@ import { gql, IResolvers } from 'apollo-server';
 import moment from 'moment-timezone';
 import { Context } from 'src/server/apollo.context';
 
-export const systemTypeDefs = gql`
+export const coreTypeDefs = gql`
   input LocationInput {
     placeId: String
     latitude: Float
@@ -91,7 +91,7 @@ const convertEnumToMomentFormat = (format?: DateFormat | TimeFormat) => {
   }
 }
 
-export const systemResolvers: IResolvers = {
+export const coreResolvers: IResolvers = {
   Date: {
     timestamp: (date: string | [string, string]) => {
       const convertedDate = convertDate(date);

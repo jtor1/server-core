@@ -22,7 +22,7 @@ import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import encodeForFirebaseKey from './utils/encodeForFirebaseKey';
 import { callService } from './graphql/interservice.communication';
-import { systemResolvers, systemTypeDefs  } from './graphql/system.types'
+import { coreResolvers, coreTypeDefs } from './graphql/core.types'
 
 export {
   Context,
@@ -51,6 +51,6 @@ export {
   NotFoundError,
   encodeForFirebaseKey,
   callService,
-  systemResolvers,
-  systemTypeDefs
+  coreResolvers,
+  coreTypeDefs
 }
