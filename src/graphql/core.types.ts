@@ -1,8 +1,16 @@
 import { gql, IResolvers } from 'apollo-server';
 import moment from 'moment-timezone';
+import chroma from 'chroma-js';
 import { Context } from 'src/server/apollo.context';
 
 export const coreTypeDefs = gql`
+
+  type Color {
+    hex: String!
+    rgba: [Int!]!
+    isLight: Boolean!
+  }
+
   input LocationInput {
     placeId: String
     latitude: Float
@@ -124,5 +132,16 @@ export const coreResolvers: IResolvers = {
         return convertedDate.locale(context.locale).format('LLLL');
       }
     },
+  },
+  Color: {
+    hex: (color) => {
+      return chroma(color).hex();;
+    },
+    rgba: (color) => {
+      return chroma(color).rgba();
+    },
+    isLight: (color) => {
+      return (chroma.distance('#fff', color) < 50);
+    }
   }
 }
