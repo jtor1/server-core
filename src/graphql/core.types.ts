@@ -46,6 +46,7 @@ export const coreTypeDefs = gql`
     Numerical
     Short
     Long
+    Full
   }
 
   enum TimeFormat {
@@ -80,7 +81,8 @@ enum TimezoneFormat {
 enum DateFormat {
   Numerical = 'Numerical',
   Short = 'Short',
-  Long = 'Long'
+  Long = 'Long',
+  Full = 'Full',
 }
 
 enum TimeFormat {
@@ -95,6 +97,7 @@ const convertEnumToMomentFormat = (format?: DateFormat | TimeFormat) => {
     case DateFormat.Numerical: return 'l';
     case DateFormat.Short: return 'll';
     case DateFormat.Long: return 'LL';
+    case DateFormat.Full: return 'LLLL';
     default: return undefined;
   }
 }
@@ -129,7 +132,8 @@ export const coreResolvers: IResolvers = {
       } else if (timeFormat) {
         return convertedDate.locale(context.locale).format(timeFormat);
       } else {
-        return convertedDate.locale(context.locale).format('LLLL');
+        const full = convertEnumToMomentFormat(DateFormat.Full);
+        return convertedDate.locale(context.locale).format(full);
       }
     },
   },
