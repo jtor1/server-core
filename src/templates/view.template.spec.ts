@@ -1,24 +1,24 @@
 import 'jest';
 import * as TypeMoq from 'typemoq';
 
-import { EntityViewTemplate } from './view.template';
-import { FakeEntity } from './fake.entity';
+import { ModelViewTemplate } from './view.template';
+import { FakeModel } from './fake.model';
 import { Context } from '../server/apollo.context';
 
 const contextMock: TypeMoq.IMock<Context> = TypeMoq.Mock.ofType(Context);
 
-describe(' EntityViewTemplate<T>', () => {
+describe('ModelViewTemplate<T>', () => {
 
-  describe('getEntity', () => {
-    it('should return the entity used in the contructor', () => {
-      const fakeData1 = new FakeEntity();
+  describe('getter methods', () => {
+    it('should return data from the Model used in the contructor', () => {
+      const fakeData1 = new FakeModel();
       fakeData1.key = 1;
       fakeData1.id = '1';
-      const fakeData2 = new FakeEntity();
+      const fakeData2 = new FakeModel();
       fakeData1.key = 2;
       fakeData2.id = '2';
-      const viewTemplate1 = new EntityViewTemplate(contextMock.object, fakeData1);
-      const viewTemplate2 = new EntityViewTemplate(contextMock.object, fakeData2);
+      const viewTemplate1 = new ModelViewTemplate(contextMock.object, fakeData1);
+      const viewTemplate2 = new ModelViewTemplate(contextMock.object, fakeData2);
       expect(viewTemplate1.context).toBe(contextMock.object);
       expect(viewTemplate1.data).toBe(fakeData1);
       expect(viewTemplate1.key).toEqual(fakeData1.key);

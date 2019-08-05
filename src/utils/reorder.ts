@@ -1,9 +1,9 @@
 import { pick, difference } from 'lodash';
 
-import { Template } from '../templates/entity.template';
+import { ModelTemplate } from '../templates/model.template';
 
 
-export interface IEntityReorderArgs {
+export interface IModelReorderArgs {
   targetId: string;
   // one and only one of:
   beforeId?: string;
@@ -13,7 +13,7 @@ export interface IEntityReorderArgs {
   toFirst?: boolean;
 }
 
-export interface IEntityReorderNeighbors<T> extends IEntityReorderArgs {
+export interface IModelReorderNeighbors<T> extends IModelReorderArgs {
   target: T;
   before: T | null;
   toLast: boolean;
@@ -21,7 +21,7 @@ export interface IEntityReorderNeighbors<T> extends IEntityReorderArgs {
   toFirst: boolean;
 }
 
-export interface IEntityReorderBisection<T> {
+export interface IModelReorderBisection<T> {
   target: T;
   targetIndex: number,
   befores: T[];
@@ -32,16 +32,16 @@ export interface IEntityReorderBisection<T> {
  * This method also validates.
  * And you'll need your neighbors to make calls to other methods.
  */
-export function deriveEntityReorderNeighbors<T extends Template>(
+export function deriveModelReorderNeighbors<T extends ModelTemplate>(
   entities: T[],
-  args: IEntityReorderArgs
-): IEntityReorderNeighbors<T> {
+  args: IModelReorderArgs
+): IModelReorderNeighbors<T> {
   let before: T | null | undefined = undefined;
   let after: T | null | undefined = undefined;
 
-  // identify the Entity to be reordered
+  // identify the Model to be reordered
   const { targetId } = args;
-  const target: T | undefined = entities.find((entity: T) => (entity.id === targetId));
+  const target: T | undefined = entities.find((model: T) => (model.id === targetId));
   if (target === undefined) {
     throw new Error(`reorder operation cannot locate { targetId: "${ targetId }" }`);
   }
@@ -60,7 +60,7 @@ export function deriveEntityReorderNeighbors<T extends Template>(
     if (before !== undefined) {
       throw new Error(`reorder operation cannot specify both { beforeId: "${ args.beforeId }", toLast: true }`);
     }
-    before = entitiesWithoutTarget.find((entity: T) => (entity.id === args.beforeId)) || undefined;
+    before = entitiesWithoutTarget.find((model: T) => (model.id === args.beforeId)) || undefined;
   }
   if (before === undefined) {
     throw new Error(`reorder operation cannot locate { beforeId: "${ args.beforeId }" }`);
@@ -93,7 +93,7 @@ export function deriveEntityReorderNeighbors<T extends Template>(
       // there should be no current Neighbor after the "after"
       const afterIndex = entitiesWithoutTarget.indexOf(<T>after);
       if (afterIndex !== (entitiesWithoutTarget.length - 1)) {
-        throw new Error(`reorder operation expected { afterId: "${ args.afterId }" } to be the last Entity`);
+        throw new Error(`reorder operation expected { afterId: "${ args.afterId }" } to be the last Model`);
       }
     }
   }
@@ -102,11 +102,11 @@ export function deriveEntityReorderNeighbors<T extends Template>(
     if (after === null) {
       // reorder it to "first"; there should be no current Neighbor before the "before"
       if (beforeIndex !== 0) {
-        throw new Error(`reorder operation expected { beforeId: "${ args.beforeId }" } to be the first Entity`);
+        throw new Error(`reorder operation expected { beforeId: "${ args.beforeId }" } to be the first Model`);
       }
     }
     else {
-      // the two Neighbors must currently be adjacent for the new Entity to be reordered between them
+      // the two Neighbors must currently be adjacent for the new Model to be reordered between them
       const afterIndex = entitiesWithoutTarget.indexOf(<T>after);
       if (afterIndex !== (beforeIndex - 1)) {
         throw new Error(`reorder operation expected { beforeId: "${ args.beforeId }", afterId: "${ args.afterId }" } to be adjacent`);
@@ -115,7 +115,7 @@ export function deriveEntityReorderNeighbors<T extends Template>(
   }
 
   return {
-    ...args, // a superset of IEntityReorderArgs
+    ...args, // a superset of IModelReorderArgs
     target: <T>target,
     before: <T | null>before,
     toLast: (before === null),
@@ -124,10 +124,10 @@ export function deriveEntityReorderNeighbors<T extends Template>(
   };
 }
 
-export function bisectReorderEntities<T extends Template>(
+export function bisectReorderEntities<T extends ModelTemplate>(
   entities: T[],
-  neighbors: IEntityReorderNeighbors<T>
-): IEntityReorderBisection<T> {
+  neighbors: IModelReorderNeighbors<T>
+): IModelReorderBisection<T> {
   const { target, toFirst, after, afterId } = neighbors;
   const entitiesWithoutTarget: T[] = difference(entities, [ target ]);
 

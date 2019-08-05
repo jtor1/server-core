@@ -3,10 +3,10 @@ import * as TypeMoq from 'typemoq';
 import { noop, isEmpty } from 'lodash';
 import { Repository } from 'typeorm';
 
-import { Template } from '../templates/entity.template';
+import { ModelTemplate } from '../templates/model.template';
 import {
-  EntityDeltaType,
-  IEntityDelta,
+  ModelDeltaType,
+  IModelDelta,
 
   buildSnapshotDelta,
   buildCreateDelta,
@@ -19,12 +19,12 @@ import {
   mutateDelta,
   saveDelta,
 
-  primaryEntityOfDelta,
+  primaryModelOfDelta,
   deriveIsDirtyFlagsFromDelta,
   isDirtyDelta,
 } from './delta';
 
-class Entity extends Template {
+class Model extends ModelTemplate {
   public value: string;
 
   public another: String;
@@ -36,34 +36,34 @@ const MUTATED = 'MUTATED';
 
 
 describe('core/delta', () => {
-  let entity: Entity;
+  let model: Model;
 
   beforeEach(() => {
     // guaranteed fresh every time
-    entity = Object.assign(new Entity(), {
+    model = Object.assign(new Model(), {
       value: ORIGINAL,
     });
   });
 
 
   describe('buildSnapshotDelta', () => {
-    it('builds a delta with a snapshot of the Entity properties', () => {
-      const delta = buildSnapshotDelta(entity);
-      const { oldEntity, newEntity } = delta;
+    it('builds a delta with a snapshot of the Model properties', () => {
+      const delta = buildSnapshotDelta(model);
+      const { oldModel, newModel } = delta;
 
-      expect(oldEntity).not.toBe(entity);
-      expect(oldEntity).toBeInstanceOf(Entity);
-      expect(oldEntity.value).toBe(ORIGINAL);
+      expect(oldModel).not.toBe(model);
+      expect(oldModel).toBeInstanceOf(Model);
+      expect(oldModel.value).toBe(ORIGINAL);
 
-      expect(newEntity).toBe(entity);
-      expect(delta.type).toEqual(EntityDeltaType.update);
+      expect(newModel).toBe(model);
+      expect(delta.type).toEqual(ModelDeltaType.update);
 
       expect(isDirtyDelta(delta)).toBe(false);
 
-      // it('provides an "old" state not impacted by Entity mutation')
-      entity.value = MUTATED;
+      // it('provides an "old" state not impacted by Model mutation')
+      model.value = MUTATED;
 
-      expect(oldEntity.value).toBe(ORIGINAL);
+      expect(oldModel.value).toBe(ORIGINAL);
 
       expect(isDirtyDelta(delta)).toBe(true);
       expect(deriveIsDirtyFlagsFromDelta(delta)).toEqual({
@@ -74,15 +74,15 @@ describe('core/delta', () => {
 
   describe('buildCreateDelta', () => {
     it('builds a delta whose old state is empty', () => {
-      const delta = buildCreateDelta(entity);
-      const { oldEntity, newEntity } = delta;
+      const delta = buildCreateDelta(model);
+      const { oldModel, newModel } = delta;
 
-      expect(oldEntity).not.toBe(entity);
-      expect(oldEntity).not.toBeInstanceOf(Entity);
-      expect(isEmpty(oldEntity)).toBe(true);
+      expect(oldModel).not.toBe(model);
+      expect(oldModel).not.toBeInstanceOf(Model);
+      expect(isEmpty(oldModel)).toBe(true);
 
-      expect(newEntity).toBe(entity);
-      expect(delta.type).toEqual(EntityDeltaType.create);
+      expect(newModel).toBe(model);
+      expect(delta.type).toEqual(ModelDeltaType.create);
 
       // it('is dirty from the start')
       expect(isDirtyDelta(delta)).toBe(true);
@@ -90,42 +90,42 @@ describe('core/delta', () => {
         value: true,
       });
 
-      // it('provides an "old" state not impacted by Entity mutation')x
-      entity.value = MUTATED;
+      // it('provides an "old" state not impacted by Model mutation')x
+      model.value = MUTATED;
 
-      expect(oldEntity.value).toBeUndefined();
+      expect(oldModel.value).toBeUndefined();
     });
   });
 
   describe('isCreateDelta', () => {
-    it('returns true for EntityDeltaType.create', () => {
-      expect( isCreateDelta(buildCreateDelta(entity)) ).toBe(true); // obviously
+    it('returns true for ModelDeltaType.create', () => {
+      expect( isCreateDelta(buildCreateDelta(model)) ).toBe(true); // obviously
 
-      expect( isCreateDelta(buildSnapshotDelta(entity)) ).toBe(false);
-      expect( isCreateDelta(buildDeleteDelta(entity)) ).toBe(false);
-      expect( isCreateDelta(buildNoOpDelta(Entity)) ).toBe(false);
+      expect( isCreateDelta(buildSnapshotDelta(model)) ).toBe(false);
+      expect( isCreateDelta(buildDeleteDelta(model)) ).toBe(false);
+      expect( isCreateDelta(buildNoOpDelta(Model)) ).toBe(false);
     });
   });
 
   describe('buildDeleteDelta', () => {
     it('builds a delta whose new state is empty', () => {
-      const delta = buildDeleteDelta(entity);
-      const { oldEntity, newEntity } = delta;
+      const delta = buildDeleteDelta(model);
+      const { oldModel, newModel } = delta;
 
-      expect(oldEntity).toBe(entity);
+      expect(oldModel).toBe(model);
 
-      expect(newEntity).not.toBe(entity);
-      expect(newEntity).not.toBeInstanceOf(Entity);
-      expect(isEmpty(newEntity)).toBe(true);
+      expect(newModel).not.toBe(model);
+      expect(newModel).not.toBeInstanceOf(Model);
+      expect(isEmpty(newModel)).toBe(true);
 
-      expect(delta.type).toEqual(EntityDeltaType.delete);
+      expect(delta.type).toEqual(ModelDeltaType.delete);
 
       // it('is dirty from the start')
       expect(isDirtyDelta(delta)).toBe(true);
 
       // it('does not accept mutations to the "new" state')
       expect(() => {
-        newEntity.value = MUTATED;
+        newModel.value = MUTATED;
       }).toThrow(/object is not extensible/);
       expect(() => {
         mutateDelta(delta, { value: MUTATED });
@@ -134,35 +134,35 @@ describe('core/delta', () => {
   });
 
   describe('isDeleteDelta', () => {
-    it('returns true for EntityDeltaType.delete', () => {
-      expect( isDeleteDelta(buildDeleteDelta(entity)) ).toBe(true); // obviously
+    it('returns true for ModelDeltaType.delete', () => {
+      expect( isDeleteDelta(buildDeleteDelta(model)) ).toBe(true); // obviously
 
-      expect( isDeleteDelta(buildSnapshotDelta(entity)) ).toBe(false);
-      expect( isDeleteDelta(buildCreateDelta(entity)) ).toBe(false);
-      expect( isDeleteDelta(buildNoOpDelta(Entity)) ).toBe(false);
+      expect( isDeleteDelta(buildSnapshotDelta(model)) ).toBe(false);
+      expect( isDeleteDelta(buildCreateDelta(model)) ).toBe(false);
+      expect( isDeleteDelta(buildNoOpDelta(Model)) ).toBe(false);
     });
   });
 
   describe('buildNoOpDelta', () => {
     it('builds a delta with an empty state', () => {
-      const delta = buildNoOpDelta(Entity);
-      const { oldEntity, newEntity } = delta;
+      const delta = buildNoOpDelta(Model);
+      const { oldModel, newModel } = delta;
 
-      expect(oldEntity).not.toBeInstanceOf(Entity);
-      expect(isEmpty(oldEntity)).toBe(true);
+      expect(oldModel).not.toBeInstanceOf(Model);
+      expect(isEmpty(oldModel)).toBe(true);
 
-      expect(newEntity).not.toBeInstanceOf(Entity);
-      expect(isEmpty(newEntity)).toBe(true);
+      expect(newModel).not.toBeInstanceOf(Model);
+      expect(isEmpty(newModel)).toBe(true);
 
-      expect(delta.type).toEqual(EntityDeltaType.noop);
+      expect(delta.type).toEqual(ModelDeltaType.noop);
       expect(isDirtyDelta(delta)).toBe(false);
 
       // it('does not accept mutations to the state')
       expect(() => {
-        oldEntity.value = ORIGINAL;
+        oldModel.value = ORIGINAL;
       }).toThrow(/object is not extensible/);
       expect(() => {
-        newEntity.value = MUTATED;
+        newModel.value = MUTATED;
       }).toThrow(/object is not extensible/);
       expect(() => {
         mutateDelta(delta, { value: MUTATED });
@@ -172,12 +172,12 @@ describe('core/delta', () => {
 
   describe('isNoOpDelta', () => {
     it('returns true for any delta which requires no changes', () => {
-      expect( isNoOpDelta(buildNoOpDelta(Entity)) ).toBe(true); // obviously
+      expect( isNoOpDelta(buildNoOpDelta(Model)) ).toBe(true); // obviously
 
-      expect( isNoOpDelta(buildCreateDelta(entity)) ).toBe(false);
-      expect( isNoOpDelta(buildDeleteDelta(entity)) ).toBe(false);
+      expect( isNoOpDelta(buildCreateDelta(model)) ).toBe(false);
+      expect( isNoOpDelta(buildDeleteDelta(model)) ).toBe(false);
 
-      let delta = buildSnapshotDelta(entity);
+      let delta = buildSnapshotDelta(model);
       expect( isNoOpDelta(delta) ).toBe(true);
 
       delta = mutateDelta(delta, {
@@ -188,19 +188,19 @@ describe('core/delta', () => {
   });
 
   describe('mutateDelta', () => {
-    it('mutates the Entity', () => {
-      const delta = buildSnapshotDelta(entity);
-      expect(delta.newEntity).toBe(entity);
+    it('mutates the Model', () => {
+      const delta = buildSnapshotDelta(model);
+      expect(delta.newModel).toBe(model);
 
-      const { oldEntity, newEntity } = mutateDelta(delta, {
+      const { oldModel, newModel } = mutateDelta(delta, {
         value: MUTATED,
       });
 
-      expect(newEntity).toBe(entity);
-      expect(oldEntity.value).toBe(ORIGINAL);
+      expect(newModel).toBe(model);
+      expect(oldModel.value).toBe(ORIGINAL);
 
-      // it('mutates the Entity in-place')
-      expect(entity.value).toBe(MUTATED);
+      // it('mutates the Model in-place')
+      expect(model.value).toBe(MUTATED);
 
       // it('mutates the delta passed to it')
       expect(isDirtyDelta(delta)).toBe(true);
@@ -211,27 +211,27 @@ describe('core/delta', () => {
   });
 
   describe('saveDelta', () => {
-    let repositoryMock: TypeMoq.IMock<Repository<Entity>>;
-    let repository: Repository<Entity>;
+    let repositoryMock: TypeMoq.IMock<Repository<Model>>;
+    let repository: Repository<Model>;
 
     beforeEach(() => {
-      repositoryMock = (<unknown>TypeMoq.Mock.ofType(Repository, TypeMoq.MockBehavior.Strict) as TypeMoq.IMock<Repository<Entity>>);
+      repositoryMock = (<unknown>TypeMoq.Mock.ofType(Repository, TypeMoq.MockBehavior.Strict) as TypeMoq.IMock<Repository<Model>>);
       repository = repositoryMock.object;
     });
     afterEach(() => {
       repositoryMock.verifyAll();
     });
 
-    it('updates the Entity', async () => {
+    it('updates the Model', async () => {
       // emulate Repository<T>#save => Promise<T>
-      const saved: Entity = Object.assign(new Entity(), entity);
+      const saved: Model = Object.assign(new Model(), model);
 
-      repositoryMock.setup((x) => x.save(TypeMoq.It.isAnyObject(Entity)))
+      repositoryMock.setup((x) => x.save(TypeMoq.It.isAnyObject(Model)))
       .returns(() => Promise.resolve(saved))
       .verifiable(TypeMoq.Times.once());
 
-      let delta = buildSnapshotDelta(entity);
-      expect(delta.newEntity).toBe(entity);
+      let delta = buildSnapshotDelta(model);
+      expect(delta.newModel).toBe(model);
       expect(isDirtyDelta(delta)).toBe(false);
 
       delta = mutateDelta(delta, { value: MUTATED });
@@ -240,112 +240,112 @@ describe('core/delta', () => {
         value: true,
       });
 
-      const { oldEntity, newEntity } = await saveDelta(delta, repository);
+      const { oldModel, newModel } = await saveDelta(delta, repository);
 
       // it('provides the post-save state')
-      expect(newEntity).not.toBe(entity);
-      expect(newEntity).toBe(saved);
+      expect(newModel).not.toBe(model);
+      expect(newModel).toBe(saved);
 
       // it('leaves the "old" state alone')
-      expect(oldEntity).toBe(delta.oldEntity);
+      expect(oldModel).toBe(delta.oldModel);
 
       // it('mutates the delta passed to it')
-      expect(delta.newEntity).toBe(saved);
+      expect(delta.newModel).toBe(saved);
       expect(isDirtyDelta(delta)).toBe(false);
     });
 
-    it('does not save the Entity unless it is dirty', async () => {
-      const delta = buildSnapshotDelta(entity);
+    it('does not save the Model unless it is dirty', async () => {
+      const delta = buildSnapshotDelta(model);
       expect(isDirtyDelta(delta)).toBe(false);
 
-      const { oldEntity, newEntity } = await saveDelta(delta, repository);
-      expect(newEntity).toBe(entity);
+      const { oldModel, newModel } = await saveDelta(delta, repository);
+      expect(newModel).toBe(model);
     });
 
-    it('creates an Entity', async () => {
+    it('creates an Model', async () => {
       // emulate Repository<T>#save => Promise<T>
-      const saved: Entity = Object.assign(new Entity(), entity);
+      const saved: Model = Object.assign(new Model(), model);
 
-      repositoryMock.setup((x) => x.save(TypeMoq.It.isAnyObject(Entity)))
+      repositoryMock.setup((x) => x.save(TypeMoq.It.isAnyObject(Model)))
       .returns(() => Promise.resolve(saved))
       .verifiable(TypeMoq.Times.once());
 
-      const delta = buildCreateDelta(entity);
+      const delta = buildCreateDelta(model);
       const deltaDirtyFlags = deriveIsDirtyFlagsFromDelta(delta);
-      expect(delta.newEntity).toBe(entity);
+      expect(delta.newModel).toBe(model);
 
-      const { oldEntity, newEntity } = await saveDelta(delta, repository);
+      const { oldModel, newModel } = await saveDelta(delta, repository);
 
       // it('provides the post-save state')
-      expect(newEntity).not.toBe(entity);
-      expect(newEntity).toBe(saved);
+      expect(newModel).not.toBe(model);
+      expect(newModel).toBe(saved);
 
       // it('leaves the "old" state alone')
-      expect(oldEntity).toEqual(delta.oldEntity);
+      expect(oldModel).toEqual(delta.oldModel);
 
       // it('mutates the delta passed to it')
-      expect(delta.newEntity).toBe(saved);
-      expect(isEmpty(delta.oldEntity)).toBe(true);
+      expect(delta.newModel).toBe(saved);
+      expect(isEmpty(delta.oldModel)).toBe(true);
       expect(deriveIsDirtyFlagsFromDelta(delta)).toEqual(deltaDirtyFlags);
     });
 
-    it('removes an Entity', async () => {
+    it('removes an Model', async () => {
       // emulate Repository<T>#remove => Promise<void>
-      repositoryMock.setup((x) => x.remove(TypeMoq.It.isAnyObject(Entity)))
-      .returns(() => Promise.resolve(<unknown>null as Entity))
+      repositoryMock.setup((x) => x.remove(TypeMoq.It.isAnyObject(Model)))
+      .returns(() => Promise.resolve(<unknown>null as Model))
       .verifiable(TypeMoq.Times.once());
 
-      const delta = buildDeleteDelta(entity);
+      const delta = buildDeleteDelta(model);
       const deltaDirtyFlags = deriveIsDirtyFlagsFromDelta(delta);
-      expect(delta.oldEntity).toBe(entity);
+      expect(delta.oldModel).toBe(model);
 
-      const { oldEntity, newEntity } = await saveDelta(delta, repository);
+      const { oldModel, newModel } = await saveDelta(delta, repository);
 
       // it('leaves the state alone')
-      expect(oldEntity).toBe(entity);
-      expect(newEntity).toEqual(delta.newEntity);
+      expect(oldModel).toBe(model);
+      expect(newModel).toEqual(delta.newModel);
 
       // it('does not mutate the delta passed to it')
       //   which is incidental; there's nothing to update ¯\_(ツ)_/¯
-      expect(delta.oldEntity).toBe(entity);
-      expect(isEmpty(delta.newEntity)).toBe(true);
+      expect(delta.oldModel).toBe(model);
+      expect(isEmpty(delta.newModel)).toBe(true);
       expect(deriveIsDirtyFlagsFromDelta(delta)).toEqual(deltaDirtyFlags);
     });
   });
 
-  describe('primaryEntityOfDelta', () => {
-    it('returns the primary Entity of the delta', () => {
+  describe('primaryModelOfDelta', () => {
+    it('returns the primary Model of the delta', () => {
       expect(() => {
-        return primaryEntityOfDelta(buildNoOpDelta(Entity));
-      }).toThrow(/no primary Entity/);
+        return primaryModelOfDelta(buildNoOpDelta(Model));
+      }).toThrow(/no primary Model/);
 
-      expect( primaryEntityOfDelta(buildSnapshotDelta(entity)) ).toBe(entity);
-      expect( primaryEntityOfDelta(buildCreateDelta(entity)) ).toBe(entity);
-      expect( primaryEntityOfDelta(buildDeleteDelta(entity)) ).toBe(entity);
+      expect( primaryModelOfDelta(buildSnapshotDelta(model)) ).toBe(model);
+      expect( primaryModelOfDelta(buildCreateDelta(model)) ).toBe(model);
+      expect( primaryModelOfDelta(buildDeleteDelta(model)) ).toBe(model);
     });
   });
 
   describe('deriveIsDirtyFlagsFromDelta', () => {
-    it('expresses the changed properties of an Entity', () => {
-      entity = Object.assign(new Entity(), {
+    it('expresses the changed properties of an Model', () => {
+      model = Object.assign(new Model(), {
         value: ORIGINAL,
         another: 'ANOTHER',
       });
 
-      const delta = buildSnapshotDelta(entity);
-      expect(delta.newEntity).toBe(entity);
+      const delta = buildSnapshotDelta(model);
+      expect(delta.newModel).toBe(model);
 
       expect( deriveIsDirtyFlagsFromDelta(delta) ).toEqual({});
 
       // it('reflects the current state of the delta')
-      entity.value = MUTATED;
+      model.value = MUTATED;
       expect( deriveIsDirtyFlagsFromDelta(delta) ).toEqual({
         value: true,
       });
 
-      entity.value = ORIGINAL;
-      entity.another = MUTATED;
-      entity.added = 'ADDED';
+      model.value = ORIGINAL;
+      model.another = MUTATED;
+      model.added = 'ADDED';
       expect( deriveIsDirtyFlagsFromDelta(delta) ).toEqual({
         another: true,
         added: true,
@@ -353,33 +353,33 @@ describe('core/delta', () => {
     });
 
     it('treats a no-op as clean even if there are changes', () => {
-      const delta = buildNoOpDelta(Entity);
-      delta.newEntity = ({ value: MUTATED } as Entity);
-      expect(delta.newEntity.value).not.toEqual(delta.oldEntity.value);
+      const delta = buildNoOpDelta(Model);
+      delta.newModel = ({ value: MUTATED } as Model);
+      expect(delta.newModel.value).not.toEqual(delta.oldModel.value);
 
       expect( deriveIsDirtyFlagsFromDelta(delta) ).toEqual({});
     });
   });
 
   describe('isDirtyDelta', () => {
-    it('returns true if any property of an Entity has changed', () => {
-      const delta = buildSnapshotDelta(entity);
-      expect(delta.newEntity).toBe(entity);
+    it('returns true if any property of an Model has changed', () => {
+      const delta = buildSnapshotDelta(model);
+      expect(delta.newModel).toBe(model);
 
       expect(isDirtyDelta(delta)).toBe(false);
 
       // it('reflects the current state of the delta')
-      entity.value = MUTATED;
+      model.value = MUTATED;
       expect(isDirtyDelta(delta)).toBe(true);
 
-      entity.value = ORIGINAL;
+      model.value = ORIGINAL;
       expect(isDirtyDelta(delta)).toBe(false);
     });
 
     it('treats a no-op as clean even if there are changes', () => {
-      const delta = buildNoOpDelta(Entity);
-      delta.newEntity = ({ value: MUTATED } as Entity);
-      expect(delta.newEntity.value).not.toEqual(delta.oldEntity.value);
+      const delta = buildNoOpDelta(Model);
+      delta.newModel = ({ value: MUTATED } as Model);
+      expect(delta.newModel.value).not.toEqual(delta.oldModel.value);
 
       expect(isDirtyDelta(delta)).toBe(false);
     });

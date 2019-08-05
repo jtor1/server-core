@@ -1,28 +1,28 @@
 import 'jest';
-import { Template } from '../templates/entity.template';
+import { ModelTemplate } from '../templates/model.template';
 import {
-  IEntityReorderArgs,
-  IEntityReorderNeighbors,
-  IEntityReorderBisection,
+  IModelReorderArgs,
+  IModelReorderNeighbors,
+  IModelReorderBisection,
 
-  deriveEntityReorderNeighbors,
+  deriveModelReorderNeighbors,
   bisectReorderEntities,
 
 } from './reorder';
 
-class Entity extends Template {
+class Model extends ModelTemplate {
 }
 
-const target = Object.assign(new Entity(), { id: 'target' });
-const entityA = Object.assign(new Entity(), { id: 'A' });
-const entityB = Object.assign(new Entity(), { id: 'B' });
-const entityC = Object.assign(new Entity(), { id: 'C' });
+const target = Object.assign(new Model(), { id: 'target' });
+const modelA = Object.assign(new Model(), { id: 'A' });
+const modelB = Object.assign(new Model(), { id: 'B' });
+const modelC = Object.assign(new Model(), { id: 'C' });
 
 
 describe('core/reorder', () => {
-  describe('deriveEntityReorderNeighbors', () => {
+  describe('deriveModelReorderNeighbors', () => {
     it('validates a reordering to between new neighbors', () => {
-      const neighbors = deriveEntityReorderNeighbors([ entityA, entityB, target, entityC ], {
+      const neighbors = deriveModelReorderNeighbors([ modelA, modelB, target, modelC ], {
         targetId: 'target',
         beforeId: 'B',
         afterId: 'A',
@@ -32,16 +32,16 @@ describe('core/reorder', () => {
         targetId: 'target',
         target,
         beforeId: 'B',
-        before: entityB,
+        before: modelB,
         toLast: false,
         afterId: 'A',
-        after: entityA,
+        after: modelA,
         toFirst: false,
       });
     });
 
     it('validates a reordering to first', () => {
-      const neighbors = deriveEntityReorderNeighbors([ entityA, entityB, target, entityC ], {
+      const neighbors = deriveModelReorderNeighbors([ modelA, modelB, target, modelC ], {
         targetId: 'target',
         beforeId: 'A',
         toFirst: true,
@@ -51,7 +51,7 @@ describe('core/reorder', () => {
         targetId: 'target',
         target,
         beforeId: 'A',
-        before: entityA,
+        before: modelA,
         toLast: false,
         after: null,
         toFirst: true,
@@ -59,7 +59,7 @@ describe('core/reorder', () => {
     });
 
     it('validates a reordering to last', () => {
-      const neighbors = deriveEntityReorderNeighbors([ entityA, entityB, target, entityC ], {
+      const neighbors = deriveModelReorderNeighbors([ modelA, modelB, target, modelC ], {
         targetId: 'target',
         toLast: true,
         afterId: 'C',
@@ -71,13 +71,13 @@ describe('core/reorder', () => {
         before: null,
         toLast: true,
         afterId: 'C',
-        after: entityC,
+        after: modelC,
         toFirst: false,
       });
     });
 
     it('validates a reordering which is ultimately a no-op', () => {
-      const neighbors = deriveEntityReorderNeighbors([ entityA, entityB, target, entityC ], {
+      const neighbors = deriveModelReorderNeighbors([ modelA, modelB, target, modelC ], {
         targetId: 'target',
         beforeId: 'C',
         afterId: 'B',
@@ -87,17 +87,17 @@ describe('core/reorder', () => {
         targetId: 'target',
         target,
         beforeId: 'C',
-        before: entityC,
+        before: modelC,
         toLast: false,
         afterId: 'B',
-        after: entityB,
+        after: modelB,
         toFirst: false,
       });
     });
 
     it('validates a reordering into an Array which is empty except for the target', () => {
       // which is another no-op variant
-      const neighbors = deriveEntityReorderNeighbors([ target ], {
+      const neighbors = deriveModelReorderNeighbors([ target ], {
         targetId: 'target',
         toLast: true,
         toFirst: true,
@@ -113,9 +113,9 @@ describe('core/reorder', () => {
       });
     });
 
-    it('requires the target to be in the Entity Array', () => {
+    it('requires the target to be in the Model Array', () => {
       expect(() => {
-        return deriveEntityReorderNeighbors([], {
+        return deriveModelReorderNeighbors([], {
           targetId: 'target',
           beforeId: 'C',
           afterId: 'B',
@@ -123,9 +123,9 @@ describe('core/reorder', () => {
       }).toThrow(/cannot locate { targetId: "target" }/);
     });
 
-    it('requires { before } to be in the Entity Array', () => {
+    it('requires { before } to be in the Model Array', () => {
       expect(() => {
-        return deriveEntityReorderNeighbors([ entityA, entityB, target ], { // <= no entityC
+        return deriveModelReorderNeighbors([ modelA, modelB, target ], { // <= no modelC
           targetId: 'target',
           beforeId: 'C',
           afterId: 'B',
@@ -133,9 +133,9 @@ describe('core/reorder', () => {
       }).toThrow(/cannot locate { beforeId: "C" }/);
     });
 
-    it('rejects a conflict when determining the { before } Entity', () => {
+    it('rejects a conflict when determining the { before } Model', () => {
       expect(() => {
-        return deriveEntityReorderNeighbors([ entityA, entityB, target, entityC ], {
+        return deriveModelReorderNeighbors([ modelA, modelB, target, modelC ], {
           targetId: 'target',
           beforeId: 'C',
           toLast: true,
@@ -144,9 +144,9 @@ describe('core/reorder', () => {
       }).toThrow(/cannot specify both { beforeId: "C", toLast: true }/);
     });
 
-    it('requires { after } to be in the Entity Array', () => {
+    it('requires { after } to be in the Model Array', () => {
       expect(() => {
-        return deriveEntityReorderNeighbors([ entityA, target, entityC ], { // <= no entityB
+        return deriveModelReorderNeighbors([ modelA, target, modelC ], { // <= no modelB
           targetId: 'target',
           beforeId: 'C',
           afterId: 'B',
@@ -154,9 +154,9 @@ describe('core/reorder', () => {
       }).toThrow(/cannot locate { afterId: "B" }/);
     });
 
-    it('rejects a conflict when determining the { after } Entity', () => {
+    it('rejects a conflict when determining the { after } Model', () => {
       expect(() => {
-        return deriveEntityReorderNeighbors([ entityA, entityB, target, entityC ], {
+        return deriveModelReorderNeighbors([ modelA, modelB, target, modelC ], {
           targetId: 'target',
           beforeId: 'C',
           afterId: 'B',
@@ -167,7 +167,7 @@ describe('core/reorder', () => {
 
     it('rejects a reordering to between non-adjacent neighbors', () => {
       expect(() => {
-        return deriveEntityReorderNeighbors([ entityA, entityB, target, entityC ], {
+        return deriveModelReorderNeighbors([ modelA, modelB, target, modelC ], {
           targetId: 'target',
           beforeId: 'C',
           afterId: 'A',
@@ -175,25 +175,25 @@ describe('core/reorder', () => {
       }).toThrow(/expected { beforeId: "C", afterId: "A" } to be adjacent/);
 
       expect(() => {
-        return deriveEntityReorderNeighbors([ entityA, entityB, target, entityC ], {
+        return deriveModelReorderNeighbors([ modelA, modelB, target, modelC ], {
           targetId: 'target',
           beforeId: 'B',
           toFirst: true,
         });
-      }).toThrow(/{ beforeId: "B" } to be the first Entity/);
+      }).toThrow(/{ beforeId: "B" } to be the first Model/);
 
       expect(() => {
-        return deriveEntityReorderNeighbors([ entityA, entityB, target, entityC ], {
+        return deriveModelReorderNeighbors([ modelA, modelB, target, modelC ], {
           targetId: 'target',
           toLast: true,
           afterId: 'B',
         });
-      }).toThrow(/{ afterId: "B" } to be the last Entity/);
+      }).toThrow(/{ afterId: "B" } to be the last Model/);
     });
 
     it('rejects a first-and-last reordering unless the Array is empty except for the target', () => {
       expect(() => {
-        return deriveEntityReorderNeighbors([ entityA, target ], {
+        return deriveModelReorderNeighbors([ modelA, target ], {
           targetId: 'target',
           toLast: true,
           toFirst: true,
@@ -204,10 +204,10 @@ describe('core/reorder', () => {
 
 
   describe('bisectReorderEntities', () => {
-    const ENTITIES = [ entityA, entityB, target, entityC ];
+    const ENTITIES = [ modelA, modelB, target, modelC ];
 
     it('bisects when the target should be first', () => {
-      const neighbors = deriveEntityReorderNeighbors(ENTITIES, {
+      const neighbors = deriveModelReorderNeighbors(ENTITIES, {
         targetId: 'target',
         beforeId: 'A',
         toFirst: true,
@@ -217,12 +217,12 @@ describe('core/reorder', () => {
         target,
         targetIndex: 0,
         befores: [],
-        afters: [ entityA, entityB, entityC ],
+        afters: [ modelA, modelB, modelC ],
       });
     });
 
     it('bisects when the target should be last', () => {
-      const neighbors = deriveEntityReorderNeighbors(ENTITIES, {
+      const neighbors = deriveModelReorderNeighbors(ENTITIES, {
         targetId: 'target',
         toLast: true,
         afterId: 'C',
@@ -231,13 +231,13 @@ describe('core/reorder', () => {
       expect(bisectReorderEntities(ENTITIES, neighbors)).toEqual({
         target,
         targetIndex: 3,
-        befores: [ entityA, entityB, entityC ],
+        befores: [ modelA, modelB, modelC ],
         afters: [],
       });
     });
 
     it('bisects when the target should be reordering to between new neighbors', () => {
-      const neighbors = deriveEntityReorderNeighbors(ENTITIES, {
+      const neighbors = deriveModelReorderNeighbors(ENTITIES, {
         targetId: 'target',
         beforeId: 'B',
         afterId: 'A',
@@ -246,20 +246,20 @@ describe('core/reorder', () => {
       expect(bisectReorderEntities(ENTITIES, neighbors)).toEqual({
         target,
         targetIndex: 1,
-        befores: [ entityA ],
-        afters: [ entityB, entityC ],
+        befores: [ modelA ],
+        afters: [ modelB, modelC ],
       });
     });
 
-    it('must be able to find the { after } Entity', () => {
-      const neighbors = deriveEntityReorderNeighbors(ENTITIES, {
+    it('must be able to find the { after } Model', () => {
+      const neighbors = deriveModelReorderNeighbors(ENTITIES, {
         targetId: 'target',
         beforeId: 'B',
         afterId: 'A',
       });
 
       expect(() => {
-        return bisectReorderEntities([ entityB, target, entityC ], neighbors); // <= no entityA
+        return bisectReorderEntities([ modelB, target, modelC ], neighbors); // <= no modelA
       }).toThrow(/cannot locate { afterId: "A" }/);
     });
   });

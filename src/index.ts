@@ -16,7 +16,7 @@ import {
 } from './server/errors';
 
 import { ControllerTemplate } from './templates/controller.template';
-import { EntityViewTemplate, ViewTemplate } from './templates/view.template';
+import { ModelViewTemplate, ViewTemplate } from './templates/view.template';
 import { ModelTemplate } from './templates/model.template';
 import { coreResolvers, coreTypeDefs } from './graphql/core.types'
 import { createGraphQLEnumValues } from './utils/graphql.enum';
@@ -24,8 +24,8 @@ import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import { callService } from './graphql/interservice.communication';
 import encodeForFirebaseKey from './utils/encodeForFirebaseKey';
 import {
-  EntityDeltaType,
-  IEntityDelta,
+  ModelDeltaType,
+  IModelDelta,
   buildSnapshotDelta,
   buildCreateDelta,
   isCreateDelta,
@@ -35,15 +35,15 @@ import {
   isNoOpDelta,
   mutateDelta,
   saveDelta,
-  primaryEntityOfDelta,
+  primaryModelOfDelta,
   deriveIsDirtyFlagsFromDelta,
   isDirtyDelta,
 } from './utils/delta';
 import {
-  IEntityReorderArgs,
-  IEntityReorderNeighbors,
-  IEntityReorderBisection,
-  deriveEntityReorderNeighbors,
+  IModelReorderArgs,
+  IModelReorderNeighbors,
+  IModelReorderBisection,
+  deriveModelReorderNeighbors,
   bisectReorderEntities,
 } from './utils/reorder';
 import { SortKeyProvider } from './utils/sortKey/provider';
@@ -64,7 +64,7 @@ export {
 
   ControllerTemplate,
   ModelTemplate,
-  EntityViewTemplate,
+  ModelViewTemplate,
   ViewTemplate,
 
   deriveTokenHeaderValue,
@@ -87,8 +87,8 @@ export {
   GenericError,
   NotFoundError,
 
-  EntityDeltaType,
-  IEntityDelta,
+  ModelDeltaType,
+  IModelDelta,
   buildSnapshotDelta,
   buildCreateDelta,
   isCreateDelta,
@@ -98,14 +98,14 @@ export {
   isNoOpDelta,
   mutateDelta,
   saveDelta,
-  primaryEntityOfDelta,
+  primaryModelOfDelta,
   deriveIsDirtyFlagsFromDelta,
   isDirtyDelta,
 
-  IEntityReorderArgs,
-  IEntityReorderNeighbors,
-  IEntityReorderBisection,
-  deriveEntityReorderNeighbors,
+  IModelReorderArgs,
+  IModelReorderNeighbors,
+  IModelReorderBisection,
+  deriveModelReorderNeighbors,
   bisectReorderEntities,
 
   SortKeyProvider,

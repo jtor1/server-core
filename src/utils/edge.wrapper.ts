@@ -8,7 +8,7 @@ import {
 } from 'graphql';
 import { Context, IContext } from '../server/apollo.context';
 
-import { EntityViewTemplate } from '../templates/view.template';
+import { ModelViewTemplate } from '../templates/view.template';
 
 const pageInfoType = new GraphQLObjectType({
   name: 'PageInfo',
@@ -74,7 +74,7 @@ interface EdgeWrapperInput {
   cursor?: string;
 }
 
-export class EdgeWrapper<C extends IContext, T extends EntityViewTemplate<any, C> & { index: number }> {
+export class EdgeWrapper<C extends IContext, T extends ModelViewTemplate<any, C> & { index: number }> {
   private context: C;
   private ids: Array<string>;
   private requestItems: (context: C, ids: Array<string>) => Promise<Array<T>>;

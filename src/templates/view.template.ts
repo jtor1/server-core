@@ -15,7 +15,7 @@ export class ViewTemplate<T, C extends IContext> {
   }
 }
 
-export class EntityViewTemplate<T extends ModelTemplate, C extends IContext> extends ViewTemplate<T, C> {
+export class ModelViewTemplate<T extends ModelTemplate, C extends IContext> extends ViewTemplate<T, C> {
 
   get key() {
     return this.data.key;
