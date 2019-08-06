@@ -18,6 +18,7 @@ interface ServerConstructor {
   apollo?: ApolloServer;
   apolloMiddleware?: Array<RequestHandler>;
   routes?: Array<{ path: string, router: Router }>;
+  path?: string;
 }
 
 export class Server implements IServer {
@@ -41,7 +42,7 @@ export class Server implements IServer {
 
     this.middleware(args && args.middleware ? [...middlewareArray, ...args.middleware] : middlewareArray);
     if (args && args.apollo) {
-      this.bootApollo(args.apollo, args.apolloMiddleware ? [ ...apolloMiddlewareArray, ...args.apolloMiddleware ] : apolloMiddlewareArray);
+      this.bootApollo(args.apollo, args.apolloMiddleware ? [ ...apolloMiddlewareArray, ...args.apolloMiddleware ] : apolloMiddlewareArray, args.path);
     }
     this.expressRoutes(args && args.routes ? [...args.routes] : []);
     this.middleware([ errorLoggingExpress ]);
@@ -110,9 +111,9 @@ export class Server implements IServer {
     });
   }
 
-  private bootApollo = (apollo: ApolloServer, apolloMiddleware?: Array<RequestHandler>) => {
+  private bootApollo = (apollo: ApolloServer, apolloMiddleware?: Array<RequestHandler>, path?: string) => {
     if (apolloMiddleware) {
-      this.app.use('/graphql', ...apolloMiddleware);
+      this.app.use(path || '/graphql', ...apolloMiddleware);
     }
     apollo.applyMiddleware({
       app: this.app

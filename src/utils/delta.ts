@@ -1,136 +1,136 @@
 import { Repository, DeepPartial } from 'typeorm';
 
-import { Template } from '../templates/entity.template';
+import { ModelTemplate } from '../templates/model.template';
 
 
 const EMPTY_OBJECT = Object.freeze({});
 
-export enum EntityDeltaType {
+export enum ModelDeltaType {
   noop = 'noop',
   create = 'create',
   update = 'update',
   delete = 'delete',
 }
-export interface IEntityDelta<T extends Template> {
-  oldEntity: T;
-  newEntity: T;
-  type: EntityDeltaType;
+export interface IModelDelta<T extends ModelTemplate> {
+  oldModel: T;
+  newModel: T;
+  type: ModelDeltaType;
 }
 
 
-export function buildSnapshotDelta<T extends Template>(entity: T): IEntityDelta<T> {
+export function buildSnapshotDelta<T extends ModelTemplate>(model: T): IModelDelta<T> {
   // take a snapshot
   //   "Using Class Types in Generics"
   //   https://www.typescriptlang.org/docs/handbook/generics.html#using-class-types-in-generics
-  const Entity = (entity.constructor as { new(): T; });
-  const oldEntity = Object.assign(new Entity(), entity);
+  const Model = (model.constructor as { new(): T; });
+  const oldModel = Object.assign(new Model(), model);
 
   return {
-    oldEntity, // a snapshot
-    newEntity: entity, // the entity to be mutated
-    type: EntityDeltaType.update,
+    oldModel, // a snapshot
+    newModel: model, // the model to be mutated
+    type: ModelDeltaType.update,
   }
 }
 
-export function buildCreateDelta<T extends Template>(entity: T): IEntityDelta<T> {
+export function buildCreateDelta<T extends ModelTemplate>(model: T): IModelDelta<T> {
   return {
-    oldEntity: (EMPTY_OBJECT as T), // it didn't exist before; *everything* has changed
-    newEntity: entity, // the entity to be mutated
-    type: EntityDeltaType.create,
+    oldModel: (EMPTY_OBJECT as T), // it didn't exist before; *everything* has changed
+    newModel: model, // the model to be mutated
+    type: ModelDeltaType.create,
   }
 }
 
-export function isCreateDelta(delta: IEntityDelta<Template>): boolean {
-  return (delta.type === EntityDeltaType.create);
+export function isCreateDelta(delta: IModelDelta<ModelTemplate>): boolean {
+  return (delta.type === ModelDeltaType.create);
 }
 
-export function buildDeleteDelta<T extends Template>(entity: T): IEntityDelta<T> {
+export function buildDeleteDelta<T extends ModelTemplate>(model: T): IModelDelta<T> {
   return {
-    oldEntity: entity, // current state
-    newEntity: (EMPTY_OBJECT as T), // it no longer exists; *everything* has changed
-    type: EntityDeltaType.delete,
+    oldModel: model, // current state
+    newModel: (EMPTY_OBJECT as T), // it no longer exists; *everything* has changed
+    type: ModelDeltaType.delete,
   }
 }
 
-export function isDeleteDelta(delta: IEntityDelta<Template>): boolean {
-  return (delta.type === EntityDeltaType.delete);
+export function isDeleteDelta(delta: IModelDelta<ModelTemplate>): boolean {
+  return (delta.type === ModelDeltaType.delete);
 }
 
-export function buildNoOpDelta<T extends Template>(Entity: { new(): T; }): IEntityDelta<T> {
+export function buildNoOpDelta<T extends ModelTemplate>(Model: { new(): T; }): IModelDelta<T> {
   return {
-    oldEntity: (EMPTY_OBJECT as T),
-    newEntity: (EMPTY_OBJECT as T),
-    type: EntityDeltaType.noop,
+    oldModel: (EMPTY_OBJECT as T),
+    newModel: (EMPTY_OBJECT as T),
+    type: ModelDeltaType.noop,
   }
 }
 
-export function isNoOpDelta(delta: IEntityDelta<Template>): boolean {
+export function isNoOpDelta(delta: IModelDelta<ModelTemplate>): boolean {
   // any time no change is required
-  //   which also applies to the 'noop' EntityDeltaType
+  //   which also applies to the 'noop' ModelDeltaType
   return (! isDirtyDelta(delta));
 }
 
 
-export function mutateDelta<T extends Template>(delta: IEntityDelta<T>, changes: Record<string, any>): IEntityDelta<T> {
-  // apply updates directly to the Entity
+export function mutateDelta<T extends ModelTemplate>(delta: IModelDelta<T>, changes: Record<string, any>): IModelDelta<T> {
+  // apply updates directly to the Model
   //   eg. mutate in-place
-  delta.newEntity = Object.assign(delta.newEntity, changes);
+  delta.newModel = Object.assign(delta.newModel, changes);
   return delta;
 }
 
 // supports create, update and delete
-export async function saveDelta<T extends Template>(delta: IEntityDelta<T>, repository: Repository<T>): Promise<IEntityDelta<T>> {
+export async function saveDelta<T extends ModelTemplate>(delta: IModelDelta<T>, repository: Repository<T>): Promise<IModelDelta<T>> {
   if (! isDirtyDelta(delta)) {
     // so what's to save?
     return delta;
   }
 
   if (isDeleteDelta(delta)) {
-    const entity = delta.oldEntity;
-    await repository.remove(entity);
+    const model = delta.oldModel;
+    await repository.remove(model);
     return delta;
   }
 
-  // save the Entity and update it to the post-save state
-  const entity = (<unknown>delta.newEntity as DeepPartial<T>);
-  delta.newEntity = await repository.save(entity);
+  // save the Model and update it to the post-save state
+  const model = (<unknown>delta.newModel as DeepPartial<T>);
+  delta.newModel = await repository.save(model);
   return delta;
 }
 
 
-export function primaryEntityOfDelta<T extends Template>(delta: IEntityDelta<T>): T {
+export function primaryModelOfDelta<T extends ModelTemplate>(delta: IModelDelta<T>): T {
   switch (delta.type) {
-    case EntityDeltaType.noop:
-      throw new Error('a noop delta has no primary Entity');
-    case EntityDeltaType.delete:
-      return delta.oldEntity;
+    case ModelDeltaType.noop:
+      throw new Error('a noop delta has no primary Model');
+    case ModelDeltaType.delete:
+      return delta.oldModel;
     default:
-      return delta.newEntity; // also the mutable Entity
+      return delta.newModel; // also the mutable Model
   }
 }
 
-export function deriveIsDirtyFlagsFromDelta(delta: IEntityDelta<Template>): Record<string, boolean> {
+export function deriveIsDirtyFlagsFromDelta(delta: IModelDelta<ModelTemplate>): Record<string, boolean> {
   const { type } = delta;
-  if (delta.type === EntityDeltaType.noop) {
+  if (delta.type === ModelDeltaType.noop) {
     return EMPTY_OBJECT;
   }
 
-  const oldEntity: Record<string, any> = delta.oldEntity;
-  const newEntity: Record<string, any> = delta.newEntity;
+  const oldModel: Record<string, any> = delta.oldModel;
+  const newModel: Record<string, any> = delta.newModel;
   const keys = Array.from(new Set( // eg. distinct
-    Object.keys(oldEntity).concat( Object.keys(newEntity) )
+    Object.keys(oldModel).concat( Object.keys(newModel) )
   ));
 
   // a simple Object providing `true` for each modified property
   return keys.reduce((reduced: Record<string, boolean>, key) => {
-    if (oldEntity[key] !== newEntity[key]) {
+    if (oldModel[key] !== newModel[key]) {
       reduced[key] = true;
     }
     return reduced;
   }, {});
 }
 
-export function isDirtyDelta(delta: IEntityDelta<Template>): boolean {
+export function isDirtyDelta(delta: IModelDelta<ModelTemplate>): boolean {
   const isDirty = deriveIsDirtyFlagsFromDelta(delta);
 
   return Object.keys(isDirty).some((key) => (isDirty[key] === true));

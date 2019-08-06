@@ -2,7 +2,8 @@ import gql from 'graphql-tag';
 import fetch from 'node-fetch';
 import { HttpLink } from 'apollo-link-http';
 import { execute, FetchResult } from 'apollo-link';
-import { GetMe, UserFragment } from '../graphql/types';
+import { callService } from '../graphql/interservice.communication';
+import { GetMe, UserFragment } from '../graphql/generated.typings';
 
 const USER = gql`
   fragment UserFragment on User {
@@ -34,8 +35,16 @@ const IDENTITY_ME = gql`
 export interface IContext {
   token: string;
   userId: string;
+  locale: string;
   currentUser: UserFragment | undefined;
-  me: () => Promise<{}>;
+  me: () => void;
+}
+
+export interface ContextConstructorArgs {
+  token?: string;
+  userId?: string;
+  identityUrl?: string;
+  locale?: string;
 }
 
 export class Context implements IContext {
@@ -43,16 +52,16 @@ export class Context implements IContext {
   private _userId: string;
   private _token: string;
   private _currentUser?: UserFragment;
-  private apolloLink: HttpLink;
+  private _identityUrl?: string;
+  private _locale: string;
 
-  constructor(token?: string, userId?: string, identityUrL?: string) {
-    this._token = token ? token : 'no-token';
-    this._userId = userId ? userId : 'no-user';
-    if (identityUrL) {
-      this.apolloLink = new HttpLink({
-        fetch: fetch as any,
-        uri: identityUrL
-      });
+  constructor(args?: ContextConstructorArgs) {
+    if (args) {
+      const { token, userId, identityUrl, locale } = args;
+      this._token = token ? token : 'no-token';
+      this._userId = userId ? userId : 'no-user'
+      this._identityUrl = identityUrl;
+      this._locale = locale || 'en_US';
     }
   }
 
@@ -68,33 +77,23 @@ export class Context implements IContext {
     return this._currentUser;
   }
 
-  public async me(query?: any) {
-    return new Promise((resolve, reject) => {
-      if (!this.apolloLink) {
-        reject(new Error('apollo link not instantiated'));
-        return;
+  get locale() {
+    return this._locale;
+  }
+
+  public me = async () => {
+    if (!this._identityUrl) {
+      return;
+    }
+    try {
+      const { data } = await callService<GetMe>(this._identityUrl, this.token, IDENTITY_ME)
+      if (data && data.me) {
+        this._currentUser = data.me;
+        this._userId = data.me.id;
       }
-      execute(this.apolloLink, { query: query ? query : IDENTITY_ME, context: {
-        headers: {
-          authorization: this.token
-        }
-      }}).subscribe({
-        next: (data: FetchResult<GetMe>) => {
-          if (data.data && data.data.me) {
-            this._currentUser = data.data.me;
-            this._userId = data.data.me.id;
-            resolve(data.data.me);
-          } else {
-            resolve();
-          }
-        },
-        error: (err: any) => {
-          // TODO:  telemetry
-          console.error(err);
-          resolve();
-        }
-      })
-    });
+    } catch (err) {
+      console.error(err);
+    }
   }
 }
 

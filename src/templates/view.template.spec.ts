@@ -1,35 +1,35 @@
 import 'jest';
 import * as TypeMoq from 'typemoq';
 
-import { EntityModelTemplate } from './model.template';
-import { FakeEntity } from './fake.entity';
+import { ModelViewTemplate } from './view.template';
+import { FakeModel } from './fake.model';
 import { Context } from '../server/apollo.context';
 
 const contextMock: TypeMoq.IMock<Context> = TypeMoq.Mock.ofType(Context);
 
-describe(' EntityModelTemplate<T>', () => {
+describe('ModelViewTemplate<T>', () => {
 
-  describe('getEntity', () => {
-    it('should return the entity used in the contructor', () => {
-      const fakeData1 = new FakeEntity();
+  describe('getter methods', () => {
+    it('should return data from the Model used in the contructor', () => {
+      const fakeData1 = new FakeModel();
       fakeData1.key = 1;
       fakeData1.id = '1';
-      const fakeData2 = new FakeEntity();
+      const fakeData2 = new FakeModel();
       fakeData1.key = 2;
       fakeData2.id = '2';
-      const modelTemplate1 = new EntityModelTemplate(contextMock.object, fakeData1);
-      const modelTemplate2 = new EntityModelTemplate(contextMock.object, fakeData2);
-      expect(modelTemplate1.context).toBe(contextMock.object);
-      expect(modelTemplate1.data).toBe(fakeData1);
-      expect(modelTemplate1.key).toEqual(fakeData1.key);
-      expect(modelTemplate1.id).toEqual(fakeData1.id);
-      expect(modelTemplate1.createdAt).toEqual(fakeData1.createAt);
-      expect(modelTemplate1.updatedAt).toEqual(fakeData1.updateAt);
-      expect(modelTemplate2.data).toBe(fakeData2);
-      expect(modelTemplate2.key).toEqual(fakeData2.key);
-      expect(modelTemplate2.id).toEqual(fakeData2.id);
-      expect(modelTemplate2.createdAt).toEqual(fakeData2.createAt);
-      expect(modelTemplate2.updatedAt).toEqual(fakeData2.updateAt);
+      const viewTemplate1 = new ModelViewTemplate(contextMock.object, fakeData1);
+      const viewTemplate2 = new ModelViewTemplate(contextMock.object, fakeData2);
+      expect(viewTemplate1.context).toBe(contextMock.object);
+      expect(viewTemplate1.data).toBe(fakeData1);
+      expect(viewTemplate1.key).toEqual(fakeData1.key);
+      expect(viewTemplate1.id).toEqual(fakeData1.id);
+      expect(viewTemplate1.createdAt).toEqual(fakeData1.createAt);
+      expect(viewTemplate1.updatedAt).toEqual(fakeData1.updateAt);
+      expect(viewTemplate2.data).toBe(fakeData2);
+      expect(viewTemplate2.key).toEqual(fakeData2.key);
+      expect(viewTemplate2.id).toEqual(fakeData2.id);
+      expect(viewTemplate2.createdAt).toEqual(fakeData2.createAt);
+      expect(viewTemplate2.updatedAt).toEqual(fakeData2.updateAt);
     });
   });
 

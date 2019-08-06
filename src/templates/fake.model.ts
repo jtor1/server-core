@@ -1,14 +1,14 @@
 import { Column, Entity } from 'typeorm';
-import { Template } from './entity.template';
+import { ModelTemplate } from './model.template';
 
 @Entity()
-export class FakeEntity extends Template {
+export class FakeModel extends ModelTemplate {
   @Column('text')
   public fakeData: string;
 }
 
 @Entity()
-export class FakeEntityWithIndex extends Template {
+export class FakeModelWithIndex extends ModelTemplate {
   @Column('text')
   public fakeData: string;
 
