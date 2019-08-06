@@ -17,7 +17,7 @@ interface ITestSetupApollo {
 export async function testSetupApollo(options?: ITestSetupApollo) {
   const context: Context = new Context({
     // "convertedDate.locale(...).format is not a function"
-    locale: 'en',
+    locale: 'en_US',
   });
 
   const schema: GraphQLSchema = await makeExecutableSchema({

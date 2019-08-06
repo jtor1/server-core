@@ -40,7 +40,7 @@ export interface IContext {
   me: () => void;
 }
 
-interface ContextConstructor {
+export interface ContextConstructorArgs {
   token?: string;
   userId?: string;
   identityUrl?: string;
@@ -55,7 +55,7 @@ export class Context implements IContext {
   private _identityUrl?: string;
   private _locale: string;
 
-  constructor(args?: ContextConstructor) {
+  constructor(args?: ContextConstructorArgs) {
     if (args) {
       const { token, userId, identityUrl, locale } = args;
       this._token = token ? token : 'no-token';

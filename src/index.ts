@@ -1,4 +1,9 @@
-import { Context, IContext, createContext } from './server/apollo.context'
+import {
+  Context,
+  IContext,
+  ContextConstructorArgs,
+  createContext,
+} from './server/apollo.context'
 import { IApolloServerArgs, createApolloServer } from './server/apollo.server'
 import { IServer, Server } from './server/server'
 import { initApp } from './server/server.init';
@@ -44,7 +49,7 @@ import {
   IModelReorderNeighbors,
   IModelReorderBisection,
   deriveModelReorderNeighbors,
-  bisectReorderEntities,
+  bisectReorderModels,
 } from './utils/reorder';
 import { SortKeyProvider } from './utils/sortKey/provider';
 import * as sortKeyBase64 from './utils/sortKey/base64';
@@ -53,6 +58,7 @@ import * as sortKeyPaddedNumeric from './utils/sortKey/paddedNumeric';
 export {
   Context,
   IContext,
+  ContextConstructorArgs,
   createContext,
 
   IApolloServerArgs,
@@ -106,7 +112,7 @@ export {
   IModelReorderNeighbors,
   IModelReorderBisection,
   deriveModelReorderNeighbors,
-  bisectReorderEntities,
+  bisectReorderModels,
 
   SortKeyProvider,
   sortKeyBase64,

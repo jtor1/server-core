@@ -6,7 +6,7 @@ import {
   IModelReorderBisection,
 
   deriveModelReorderNeighbors,
-  bisectReorderEntities,
+  bisectReorderModels,
 
 } from './reorder';
 
@@ -203,17 +203,17 @@ describe('core/reorder', () => {
   });
 
 
-  describe('bisectReorderEntities', () => {
-    const ENTITIES = [ modelA, modelB, target, modelC ];
+  describe('bisectReorderModels', () => {
+    const MODELS = [ modelA, modelB, target, modelC ];
 
     it('bisects when the target should be first', () => {
-      const neighbors = deriveModelReorderNeighbors(ENTITIES, {
+      const neighbors = deriveModelReorderNeighbors(MODELS, {
         targetId: 'target',
         beforeId: 'A',
         toFirst: true,
       });
 
-      expect(bisectReorderEntities(ENTITIES, neighbors)).toEqual({
+      expect(bisectReorderModels(MODELS, neighbors)).toEqual({
         target,
         targetIndex: 0,
         befores: [],
@@ -222,13 +222,13 @@ describe('core/reorder', () => {
     });
 
     it('bisects when the target should be last', () => {
-      const neighbors = deriveModelReorderNeighbors(ENTITIES, {
+      const neighbors = deriveModelReorderNeighbors(MODELS, {
         targetId: 'target',
         toLast: true,
         afterId: 'C',
       });
 
-      expect(bisectReorderEntities(ENTITIES, neighbors)).toEqual({
+      expect(bisectReorderModels(MODELS, neighbors)).toEqual({
         target,
         targetIndex: 3,
         befores: [ modelA, modelB, modelC ],
@@ -237,13 +237,13 @@ describe('core/reorder', () => {
     });
 
     it('bisects when the target should be reordering to between new neighbors', () => {
-      const neighbors = deriveModelReorderNeighbors(ENTITIES, {
+      const neighbors = deriveModelReorderNeighbors(MODELS, {
         targetId: 'target',
         beforeId: 'B',
         afterId: 'A',
       });
 
-      expect(bisectReorderEntities(ENTITIES, neighbors)).toEqual({
+      expect(bisectReorderModels(MODELS, neighbors)).toEqual({
         target,
         targetIndex: 1,
         befores: [ modelA ],
@@ -252,14 +252,14 @@ describe('core/reorder', () => {
     });
 
     it('must be able to find the { after } Model', () => {
-      const neighbors = deriveModelReorderNeighbors(ENTITIES, {
+      const neighbors = deriveModelReorderNeighbors(MODELS, {
         targetId: 'target',
         beforeId: 'B',
         afterId: 'A',
       });
 
       expect(() => {
-        return bisectReorderEntities([ modelB, target, modelC ], neighbors); // <= no modelA
+        return bisectReorderModels([ modelB, target, modelC ], neighbors); // <= no modelA
       }).toThrow(/cannot locate { afterId: "A" }/);
     });
   });
