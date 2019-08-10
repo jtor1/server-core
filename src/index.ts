@@ -22,7 +22,7 @@ import {
 
 import { ControllerTemplate } from './templates/controller.template';
 import { ModelViewTemplate, ViewTemplate } from './templates/view.template';
-import { ModelTemplate } from './templates/model.template';
+import { ModelTemplate, ModelTemplateClass } from './templates/model.template';
 import { coreResolvers, coreTypeDefs } from './graphql/core.types'
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
@@ -70,6 +70,7 @@ export {
 
   ControllerTemplate,
   ModelTemplate,
+  ModelTemplateClass,
   ModelViewTemplate,
   ViewTemplate,
 

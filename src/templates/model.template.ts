@@ -22,3 +22,7 @@ export abstract class ModelTemplate  {
   @Column('bool', { default: false})
   public deleted: boolean;
 }
+
+export interface ModelTemplateClass<ModelTemplate> {
+  new(...args: any[]): ModelTemplate;
+};

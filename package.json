@@ -16,7 +16,7 @@
     "prepublishOnly": "yarn test",
     "build": "tsc",
     "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
-    "gentype:local": "apollo client:codegen --endpoint=http://localhost:9091/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/types.ts",
+    "gentype:local": "apollo client:codegen --endpoint=http://localhost:9091/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/generated.typings.ts",
     "gentype:dev": "apollo client:codegen --endpoint=https://bliss-gateway-staging.withjoy.com/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/generated.typings.ts",
     "prepare": "yarn build",
     "version": "git add -A src",
