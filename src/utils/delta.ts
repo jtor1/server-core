@@ -1,6 +1,6 @@
 import { Repository, DeepPartial } from 'typeorm';
 
-import { ModelTemplate } from '../templates/model.template';
+import { ModelTemplate, ModelTemplateClass } from '../templates/model.template';
 
 
 const EMPTY_OBJECT = Object.freeze({});
@@ -22,7 +22,7 @@ export function buildSnapshotDelta<T extends ModelTemplate>(model: T): IModelDel
   // take a snapshot
   //   "Using Class Types in Generics"
   //   https://www.typescriptlang.org/docs/handbook/generics.html#using-class-types-in-generics
-  const Model = (model.constructor as { new(): T; });
+  const Model = (model.constructor as ModelTemplateClass<T>);
   const oldModel = Object.assign(new Model(), model);
 
   return {
@@ -56,7 +56,7 @@ export function isDeleteDelta(delta: IModelDelta<ModelTemplate>): boolean {
   return (delta.type === ModelDeltaType.delete);
 }
 
-export function buildNoOpDelta<T extends ModelTemplate>(Model: { new(): T; }): IModelDelta<T> {
+export function buildNoOpDelta<T extends ModelTemplate>(Model: ModelTemplateClass<T>): IModelDelta<T> {
   return {
     oldModel: (EMPTY_OBJECT as T),
     newModel: (EMPTY_OBJECT as T),
