@@ -45,9 +45,10 @@ import {
   isDirtyDelta,
 } from './utils/delta';
 import {
-  IModelReorderArgs,
+  IModelReorderPayload,
   IModelReorderNeighbors,
   IModelReorderBisection,
+  reorderTypeDefs,
   deriveModelReorderNeighbors,
   bisectReorderModels,
 } from './utils/reorder';
@@ -109,9 +110,10 @@ export {
   deriveIsDirtyFlagsFromDelta,
   isDirtyDelta,
 
-  IModelReorderArgs,
+  IModelReorderPayload,
   IModelReorderNeighbors,
   IModelReorderBisection,
+  reorderTypeDefs,
   deriveModelReorderNeighbors,
   bisectReorderModels,
 

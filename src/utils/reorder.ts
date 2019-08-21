@@ -1,9 +1,12 @@
 import { pick, difference } from 'lodash';
+import { gql } from 'apollo-server';
+import { DocumentNode } from 'graphql';
 
 import { ModelTemplate } from '../templates/model.template';
 
 
-export interface IModelReorderArgs {
+// @see ReorderModelPayload
+export interface IModelReorderPayload {
   targetId: string;
   // one and only one of:
   beforeId?: string;
@@ -13,7 +16,7 @@ export interface IModelReorderArgs {
   toFirst?: boolean;
 }
 
-export interface IModelReorderNeighbors<T> extends IModelReorderArgs {
+export interface IModelReorderNeighbors<T> extends IModelReorderPayload {
   target: T;
   before: T | null;
   toLast: boolean;
@@ -28,13 +31,33 @@ export interface IModelReorderBisection<T> {
   afters: T[];
 }
 
+export const reorderTypeDefs: DocumentNode = gql`
+
+  "You must provide 3 of 5 properties; (1) \`targetId\`, (2) **either** \`beforeId\` or \`toLast\`, and (3) **either** \`afterId\` or \`toFirst\`"
+  input ReorderModelPayload {
+    # @see IModelReorderPayload
+    "The ID of the Model being moved to a new position in the list"
+    targetId: ID!
+    "The ID of the Model to the right of the Model's new position; *do not specify* \`toLast\`"
+    beforeId: ID
+    "The Model's new position will be at the end of the list; *do not specify* \`beforeId\`"
+    toLast: Boolean
+    "The ID of the Model to the left of the Model's new position; *do not specify* \`toFirst\`"
+    afterId: ID
+    "The Model's new position will be at the start of the list; *do not specify* \`afterId\`"
+    toFirst: Boolean
+  }
+
+`;
+
+
 /**
  * This method also validates.
  * And you'll need your neighbors to make calls to other methods.
  */
 export function deriveModelReorderNeighbors<T extends ModelTemplate>(
   models: T[],
-  args: IModelReorderArgs
+  args: IModelReorderPayload
 ): IModelReorderNeighbors<T> {
   let before: T | null | undefined = undefined;
   let after: T | null | undefined = undefined;
@@ -115,7 +138,7 @@ export function deriveModelReorderNeighbors<T extends ModelTemplate>(
   }
 
   return {
-    ...args, // a superset of IModelReorderArgs
+    ...args, // a superset of IModelReorderPayload
     target: <T>target,
     before: <T | null>before,
     toLast: (before === null),
