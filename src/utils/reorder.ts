@@ -5,7 +5,6 @@ import { DocumentNode } from 'graphql';
 import { ModelTemplate } from '../templates/model.template';
 
 
-// @see ReorderModelPayload
 export interface IModelReorderPayload {
   targetId: string;
   // one and only one of:
@@ -34,8 +33,7 @@ export interface IModelReorderBisection<T> {
 export const reorderTypeDefs: DocumentNode = gql`
 
   "You must provide 3 of 5 properties; (1) \`targetId\`, (2) **either** \`beforeId\` or \`toLast\`, and (3) **either** \`afterId\` or \`toFirst\`"
-  input ReorderModelPayload {
-    # @see IModelReorderPayload
+  input ModelReorderPayload {
     "The ID of the Model being moved to a new position in the list"
     targetId: ID!
     "The ID of the Model to the right of the Model's new position; *do not specify* \`toLast\`"
