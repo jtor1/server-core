@@ -64,7 +64,7 @@ export const coreTypeDefs = gql`
     dateString(dateFormat: DateFormat, timeFormat: TimeFormat): String!
     timezone(format: TimezoneFormat): String!
     timestamp: Timestamp!
-    "A Unix timestamp / epoch, with no sub-second precision"
+    "A Unix timestamp / epoch"
     unixTimestamp: Int!
     "A timestamp in milliseconds; Float is used here to avoid 32-bit precision limits on Int"
     milliseconds: Float!

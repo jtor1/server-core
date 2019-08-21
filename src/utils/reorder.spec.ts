@@ -1,7 +1,6 @@
 import 'jest';
 import { ModelTemplate } from '../templates/model.template';
 import {
-  IModelReorderArgs,
   IModelReorderNeighbors,
   IModelReorderBisection,
 
