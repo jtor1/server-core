@@ -3,6 +3,9 @@ import moment from 'moment-timezone';
 import chroma from 'chroma-js';
 import { Context } from 'src/server/apollo.context';
 
+const UTC_LONG = 'Etc/UTC';
+const UTC_SHORT = 'UTC';
+
 export const coreTypeDefs = gql`
 
   type Color {
@@ -54,13 +57,17 @@ export const coreTypeDefs = gql`
     TimeWithSeconds
   }
 
+  "An ISO-8601 timestamp"
   scalar Timestamp
 
   type Date {
     dateString(dateFormat: DateFormat, timeFormat: TimeFormat): String!
     timezone(format: TimezoneFormat): String!
     timestamp: Timestamp!
-    unixTimestamp: Float!
+    "A Unix timestamp / epoch, with no sub-second precision"
+    unixTimestamp: Int!
+    "A timestamp in milliseconds; Float is used here to avoid 32-bit precision limits on Int"
+    milliseconds: Float!
   }
 
 `;
@@ -69,7 +76,7 @@ const convertDate = (date: string | [string, string]) => {
   if (Array.isArray(date)) {
     return moment.tz(date[0], date[1]);
   } else {
-    return moment.tz(date, 'Etc/GMT');
+    return moment.tz(date, UTC_LONG);
   }
 }
 
@@ -112,14 +119,18 @@ export const coreResolvers: IResolvers = {
       const { format } = args;
       const convertedDate = convertDate(date);
       if (format === TimezoneFormat.Short) {
-        return convertedDate.zoneAbbr() || moment.utc();
+        return convertedDate.zoneAbbr() || UTC_SHORT;
       } else {
-        return convertedDate.tz() || moment.utc();
+        return convertedDate.tz() || UTC_LONG;
       }
     },
     unixTimestamp: (date: string | [string, string]) => {
       const convertedDate = convertDate(date);
       return convertedDate.unix();
+    },
+    milliseconds: (date: string | [string, string]) => {
+      const convertedDate = convertDate(date);
+      return convertedDate.valueOf();
     },
     dateString: (date: string | [string, string], args: { dateFormat?: DateFormat, timeFormat?: TimeFormat }, context: Context) => {
       const convertedDate = convertDate(date);
