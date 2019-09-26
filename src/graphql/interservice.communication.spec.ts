@@ -6,7 +6,13 @@ import { gql } from 'apollo-server';
 
 import {
   callService,
+
   ServiceCaller,
+  createServiceCaller,
+
+  IServiceCallerBuilder,
+  IServiceCallerBuilderCaller,
+  serviceCallBuilder,
 } from './interservice.communication';
 
 const SERVICE_URL = 'https://SERVICE_URL';
@@ -23,7 +29,7 @@ const TEST_QUERY: DocumentNode = gql`
 interface TestOutput {
   property: string;
 };
-interface TestCall {
+interface TestQuery {
   queryMethod: TestOutput | null;
 };
 interface TestVariables {
@@ -46,22 +52,15 @@ describe('graphql/interservice.communication', () => {
       token: TOKEN,
       variables: { variable: VARIABLE },
     };
-    let serviceCaller: ServiceCaller<TestOutput, TestCall, TestVariables>;
+    let serviceCaller: ServiceCaller<TestOutput, TestQuery, TestVariables>;
 
     beforeEach(() => {
-      // nock.recorder.rec({
-      //   enable_reqheaders_recording: true,
-      //   output_objects: true,
-      // });
-
       nock.disableNetConnect();
 
-      serviceCaller = new ServiceCaller<TestOutput, TestCall, TestVariables>(OPTIONS);
+      serviceCaller = createServiceCaller<TestOutput, TestQuery, TestVariables>(OPTIONS);
     });
 
     afterEach(() => {
-      // nock.restore();
-
       nock.isDone();
       nock.cleanAll();
       nock.enableNetConnect();
@@ -70,6 +69,8 @@ describe('graphql/interservice.communication', () => {
 
     describe('constructor', () => {
       it('sets properties on the instance', () => {
+        serviceCaller = new ServiceCaller<TestOutput, TestQuery, TestVariables>(OPTIONS);
+
         expect(serviceCaller.options).toBe(OPTIONS);
       });
     });
@@ -143,8 +144,8 @@ describe('graphql/interservice.communication', () => {
           },
         });
 
-        const output = await serviceCaller.fetch(ARGS);
-        expect(output).toEqual({
+        const fetchResult = await serviceCaller.fetch(ARGS);
+        expect(fetchResult).toEqual({
           data: {
             queryMethod: {
               property: PROPERTY,
@@ -364,7 +365,7 @@ describe('graphql/interservice.communication', () => {
             }
           }
         `;
-        serviceCaller = new ServiceCaller<TestOutput, TestCall, TestVariables>({
+        serviceCaller = createServiceCaller<TestOutput, TestQuery, TestVariables>({
           serviceUrl: SERVICE_URL,
           query: QUERY,
         });
@@ -392,7 +393,7 @@ describe('graphql/interservice.communication', () => {
           },
         });
 
-        const serviceCallerNoVariables = new ServiceCaller<TestOutput, TestCall>({
+        const serviceCallerNoVariables = createServiceCaller<TestOutput, TestQuery>({
           serviceUrl: SERVICE_URL,
           query: QUERY,
         });
@@ -423,13 +424,136 @@ describe('graphql/interservice.communication', () => {
           },
         });
 
-        const serviceCallerNoVariables = new ServiceCaller<String, Call>({
+        const serviceCallerNoVariables = createServiceCaller<String, Call>({
           serviceUrl: SERVICE_URL,
           query: QUERY,
         });
 
         const output = await serviceCaller.execute(ARGS);
         expect(output).toEqual('STRING');
+      });
+    });
+  });
+
+
+  describe('createServiceCaller', () => {
+    it('constructs a ServiceCaller', () => {
+      const serviceCaller = createServiceCaller<TestOutput, TestQuery, TestVariables>({
+        serviceUrl: SERVICE_URL,
+        query: TEST_QUERY,
+      });
+
+      expect(serviceCaller).toBeInstanceOf(ServiceCaller);
+      expect(serviceCaller.options).toEqual({
+        serviceUrl: SERVICE_URL,
+        query: TEST_QUERY,
+      });
+    });
+  });
+
+
+  describe('serviceCallBuilder', () => {
+    let builder: IServiceCallerBuilder<TestOutput, TestQuery, TestVariables>;
+
+    beforeEach(() => {
+      builder = serviceCallBuilder({
+        serviceUrl: SERVICE_URL,
+        query: TEST_QUERY,
+      });
+    });
+
+    it('returns a builder Function', () => {
+      expect(builder).toBeInstanceOf(Function);
+      expect(builder.length).toBe(1); // arity
+    });
+
+    it('builds a Caller', () => {
+      const caller: IServiceCallerBuilderCaller<TestOutput, TestQuery, TestVariables> = builder({
+        token: TOKEN,
+        variables: { variable: VARIABLE },
+      });
+
+      expect(caller).toMatchObject({
+        fetch: expect.any(Function),
+        execute: expect.any(Function),
+      })
+    });
+
+    it('performs a fetch', async () => {
+      nock(SERVICE_URL)
+      .post('/')
+      .reply(200, {
+        data: {
+          queryMethod: {
+            property: PROPERTY,
+          },
+        },
+      });
+
+      const fetchResult = await builder({
+        token: TOKEN,
+        variables: { variable: VARIABLE },
+      }).fetch();
+
+      expect(fetchResult).toEqual({
+        data: {
+          queryMethod: {
+            property: PROPERTY,
+          },
+        },
+      });
+    });
+
+    it('performs an execute', async () => {
+      nock(SERVICE_URL)
+      .post('/')
+      .reply(200, {
+        data: {
+          queryMethod: {
+            property: PROPERTY,
+          },
+        },
+      });
+
+      const output = await builder({
+        token: TOKEN,
+        variables: { variable: VARIABLE },
+      }).execute();
+
+      expect(output).toEqual({
+        property: PROPERTY,
+      });
+    });
+
+    it('does not require variables', async () => {
+      const QUERY: DocumentNode = gql`
+        query {
+          queryMethod {
+            property
+          }
+        }
+      `;
+      nock(SERVICE_URL)
+      .post('/')
+      .reply(200, {
+        data: {
+          queryMethod: {
+            property: PROPERTY,
+          },
+        },
+      });
+
+      const builderNoVariables = serviceCallBuilder<TestOutput, TestQuery>({
+        serviceUrl: SERVICE_URL,
+        query: QUERY,
+      });
+
+      const output = await builderNoVariables({
+        token: TOKEN,
+      }).execute();
+
+      expect(output).toEqual({
+        property: PROPERTY,
       });
     });
   });
