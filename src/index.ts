@@ -26,7 +26,10 @@ import { ModelTemplate, ModelTemplateClass } from './templates/model.template';
 import { coreResolvers, coreTypeDefs } from './graphql/core.types'
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
-import { callService } from './graphql/interservice.communication';
+import {
+  callService,
+  ServiceCaller,
+} from './graphql/interservice.communication';
 import encodeForFirebaseKey from './utils/encodeForFirebaseKey';
 import {
   ModelDeltaType,
@@ -88,6 +91,7 @@ export {
   EdgeWrapper,
   edgeWrapperType,
   callService,
+  ServiceCaller,
 
   AuthenticationError,
   AuthorizationError,
