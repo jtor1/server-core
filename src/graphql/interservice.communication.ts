@@ -222,9 +222,9 @@ export function serviceCallBuilder<Output, Query, Variables = undefined>(
   ): IServiceCallerBuilderCaller<Output, Query, Variables> {
     const serviceCaller: ServiceCaller<Output, Query, Variables> = createServiceCaller(options);
 
-    return {
-      fetch: async () => serviceCaller.fetch(args),
-      execute: async () => serviceCaller.execute(args),
-    };
+    return Object.assign(serviceCaller, {
+      fetch: serviceCaller.fetch.bind(serviceCaller, args),
+      execute: serviceCaller.execute.bind(serviceCaller, args),
+    });
   }
 }
