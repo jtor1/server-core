@@ -74,6 +74,31 @@ function _deriveError<Query>(fetchResult: FetchResult<Query>): IServiceCallerErr
   return _enrichError(error, fetchResult);
 }
 
+/**
+ * ## Generics
+ *
+ * - `<Output>` = interface defining the shape of the query response
+ * - `<Query>` = interface mapping the query method to its output shape
+ * - `<Variables>` = *optional* interface defining the arguments passed to the query method
+ *
+ * For simple applied examples, see the Test Suite.
+ *
+ * ## Usage:
+ *
+ * ```
+ * const serviceCaller = createServiceCaller<Output, Query, Variables>({
+ *   serviceUrl: 'https://<GATEWAY>.withjoy.com/graphql',
+ *   query: GQL_FOR_QUERY,
+ * });
+ *
+ * const output = await serviceCaller.execute({
+ *   token: AUTHENTICATION_TOKEN,
+ *   variables: {
+ *     argument: 'VALUE',
+ *   },
+ * });
+ * ```
+ */
 export class ServiceCaller<Output, Query, Variables = undefined> {
   public readonly options: IServiceCallerOptions<Query>;
 
@@ -147,6 +172,59 @@ export class ServiceCaller<Output, Query, Variables = undefined> {
           resolve(<Output>output);
         },
       });
+    });
+  }
+}
+
+export function createServiceCaller<Output, Query, Variables = undefined>(
+  options: IServiceCallerOptions<Query>
+): ServiceCaller<Output, Query, Variables> {
+  return new ServiceCaller(options);
+}
+
+
+export interface IServiceCallerBuilder<Output, Query, Variables = undefined> {
+  (args: IServiceCallerArgs<Variables>): IServiceCallerBuilderCaller<Output, Query, Variables>;
+};
+export interface IServiceCallerBuilderCaller<Output, Query, Variables = undefined> {
+  fetch: () => Promise<FetchResult<Query>>;
+  execute: () => Promise<Output>;
+};
+
+/**
+ * A currying API for ServiceCaller.
+ *
+ * For simple applied examples, see the Test Suite.
+ *
+ * Usage:
+ *
+ * ```
+ * const builder = serviceCallBuilder<Output, Query, Variables>({
+ *   serviceUrl: 'https://<GATEWAY>.withjoy.com/graphql',
+ *   query: GQL_FOR_QUERY,
+ * });
+ *
+ * const caller = builder({
+ *   token: AUTHENTICATION_TOKEN,
+ *   variables: {
+ *     argument: 'VALUE',
+ *   },
+ * });
+ *
+ * const output = await caller.execute();
+ * ```
+ */
+export function serviceCallBuilder<Output, Query, Variables = undefined>(
+  options: IServiceCallerOptions<Query>
+): IServiceCallerBuilder<Output, Query, Variables> {
+  return function(
+    args: IServiceCallerArgs<Variables>
+  ): IServiceCallerBuilderCaller<Output, Query, Variables> {
+    const serviceCaller: ServiceCaller<Output, Query, Variables> = createServiceCaller(options);
+
+    return Object.assign(serviceCaller, {
+      fetch: serviceCaller.fetch.bind(serviceCaller, args),
+      execute: serviceCaller.execute.bind(serviceCaller, args),
     });
   }
 }
