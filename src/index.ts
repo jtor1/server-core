@@ -29,6 +29,8 @@ import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import {
   callService,
   ServiceCaller,
+  createServiceCaller,
+  serviceCallBuilder,
 } from './graphql/interservice.communication';
 import encodeForFirebaseKey from './utils/encodeForFirebaseKey';
 import {
@@ -90,8 +92,11 @@ export {
 
   EdgeWrapper,
   edgeWrapperType,
+
   callService,
   ServiceCaller,
+  createServiceCaller,
+  serviceCallBuilder,
 
   AuthenticationError,
   AuthorizationError,
