@@ -3,8 +3,17 @@ import fetch from 'node-fetch';
 import { HttpLink } from 'apollo-link-http';
 import { execute, FetchResult } from 'apollo-link';
 import { DocumentNode } from 'graphql';
+import { telemetry, deriveTelemetryContextFromError } from '@withjoy/telemetry';
 
-export const callService = <Query, Variables = undefined>(serviceUrl: string, token: string, query: DocumentNode, variables?: Variables): Promise<FetchResult<Query>> => {
+
+export const callService = <Query, Variables = undefined>(
+  // TODO:  `export interface ICallServiceOptions`
+  serviceUrl: string,
+  token: string,
+  query: DocumentNode,
+  variables?: Variables,
+  headers?: Record<string, any>
+): Promise<FetchResult<Query>> => {
   try {
     const apolloLink = new HttpLink({
       fetch: fetch as any,
@@ -21,16 +30,22 @@ export const callService = <Query, Variables = undefined>(serviceUrl: string, to
         variables,
         context: {
           headers: {
-            authorization: token
-          }
-        }
+            ...headers,
+            authorization: token,
+          },
+        },
       }).subscribe({
         next: (data: FetchResult<Query>) => {
           resolve(data);
         },
         error: (err: any) => {
-          // TODO:  telemetry
-          console.error(err);
+          // absorb & log vs. throw
+          telemetry.error('callService', {
+            ...deriveTelemetryContextFromError(err),
+            serviceUrl,
+            query,
+            variables,
+          });
           resolve();
         }
       })
@@ -48,10 +63,17 @@ export interface IServiceCallerOptions<Query> {
 export interface IServiceCallerArgs<Variables = undefined> {
   token: string;
   variables?: Variables;
+  headers?: Record<string, any>;
 }
 export interface IServiceCallerError<Query> extends Error {
   fetchResult: FetchResult<Query>
 };
+
+export interface IServiceCallerOverrides {
+  token?: string;
+  headers?: Record<string, any>;
+}
+
 
 function _enrichError<Query>(error: Error, fetchResult: FetchResult<Query>): IServiceCallerError<Query> {
   const enrichedError = (<unknown>error as IServiceCallerError<Query>);
@@ -96,6 +118,9 @@ function _deriveError<Query>(fetchResult: FetchResult<Query>): IServiceCallerErr
  *   variables: {
  *     argument: 'VALUE',
  *   },
+ *   headers: {
+ *     'x-joy-header': 'VALUE',
+ *   },
  * });
  * ```
  */
@@ -108,9 +133,9 @@ export class ServiceCaller<Output, Query, Variables = undefined> {
 
   async fetch(args: IServiceCallerArgs<Variables>): Promise<FetchResult<Query>> {
     const { serviceUrl, query } = this.options;
-    const { token, variables } = args;
+    const { token, variables, headers } = args;
 
-    return callService(serviceUrl, token, query, variables);
+    return callService(serviceUrl, token, query, variables, headers);
   }
 
   /**
@@ -123,7 +148,7 @@ export class ServiceCaller<Output, Query, Variables = undefined> {
    */
   async execute(args: IServiceCallerArgs<Variables>): Promise<Output> {
     const { serviceUrl, query } = this.options;
-    const { token, variables } = args;
+    const { token, variables, headers } = args;
 
     const querySelections = getProperty(query, 'definitions.0.selectionSet.selections', []);
     if (! (Array.isArray(querySelections) && (querySelections.length === 1))) {
@@ -148,6 +173,7 @@ export class ServiceCaller<Output, Query, Variables = undefined> {
         variables,
         context: {
           headers: {
+            ...headers,
             authorization: token,
           },
         },

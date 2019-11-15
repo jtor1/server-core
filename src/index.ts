@@ -3,11 +3,14 @@ import {
   IContext,
   ContextConstructorArgs,
   createContext,
+  logContextRequest,
 } from './server/apollo.context'
 import { IApolloServerArgs, createApolloServer } from './server/apollo.server'
 import { IServer, Server } from './server/server'
 import { initApp } from './server/server.init';
 import {
+  NO_USER,
+  NO_TOKEN,
   deriveTokenHeaderValue,
   tokenCheck,
 } from './authentication/token.check';
@@ -66,6 +69,7 @@ export {
   IContext,
   ContextConstructorArgs,
   createContext,
+  logContextRequest,
 
   IApolloServerArgs,
   createApolloServer,
@@ -80,6 +84,8 @@ export {
   ModelViewTemplate,
   ViewTemplate,
 
+  NO_USER,
+  NO_TOKEN,
   deriveTokenHeaderValue,
   tokenCheck,
 

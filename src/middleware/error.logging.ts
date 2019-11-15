@@ -2,7 +2,7 @@ import urlLib from 'url';
 import {
   isError,
   pick,
-  get,
+  get as getProperty,
 } from 'lodash';
 import {
   Request,
@@ -10,6 +10,16 @@ import {
   NextFunction,
   ErrorRequestHandler,
 } from 'express'
+import { ApolloServerPlugin, GraphQLRequestListener } from 'apollo-server-plugin-base';
+import {
+  Telemetry,
+  telemetry as telemetrySingleton,
+  deriveTelemetryContextFromError,
+} from '@withjoy/telemetry';
+
+function _deriveTelemetryContextFromError(err: Error) {
+  return (deriveTelemetryContextFromError(err).error || {}); // Error context = { error: { ... } }
+}
 
 
 export const errorLoggingExpress: ErrorRequestHandler = function errorLoggingExpress(
@@ -28,19 +38,18 @@ export const errorLoggingExpress: ErrorRequestHandler = function errorLoggingExp
   const requested = pick(req, 'path', 'params', 'query', 'body');
 
   const { statusCode, code } = (err as any); // "Property 'FOO' does not exist on type 'Error'."
-  let responded: object;
-  let logged: object;
+  let responded: Record<string, any>;
+  let logged: Record<string, any>;
 
   if (isError(err)) {
-    // how we respond
-    const { message, name, stack } = err;
-    responded = { message, name, code, statusCode };
-
     // what we log
     logged = {
-      ...responded,
-      stack,
+      ..._deriveTelemetryContextFromError(err),
+      statusCode,
     };
+
+    // how we respond
+    responded = pick(logged, 'message', 'name', 'code', 'statusCode');
   }
   else {
     responded = {
@@ -49,16 +58,19 @@ export const errorLoggingExpress: ErrorRequestHandler = function errorLoggingExp
     logged = responded;
   }
 
-  console.error(JSON.stringify({
+  telemetrySingleton.error('errorLoggingExpress', {
+    source: 'express',
+    action: 'error',
     error: logged,
     request: requested,
-  }));
+  });
 
   // we handle the response
   res.status(statusCode || 500).json({
     error: responded,
   });
 }
+
 
 /**
  * "enrichedError" is from private `enrichError` in `apollo-server-errors`
@@ -67,20 +79,53 @@ export const errorLoggingExpress: ErrorRequestHandler = function errorLoggingExp
  *
  * @see https://www.apollographql.com/docs/apollo-server/features/errors
  */
-export function errorFormattingApollo(enrichedError: any): any {
+export function logApolloEnrichedError(enrichedError: any, telemetry: Telemetry): any {
   if (! enrichedError) {
     // why are we even here?
     return enrichedError;
   }
 
-  const { message, name } = enrichedError;
-  const code = get(enrichedError, 'extensions.code')
-  const stacktrace = get(enrichedError, 'extensions.exception.stacktrace');
+  const code = getProperty(enrichedError, 'extensions.code')
+  const stacktrace = getProperty(enrichedError, 'extensions.exception.stacktrace');
   const stack = (Array.isArray(stacktrace) ? stacktrace.join('\n') : stacktrace);
-  console.error(JSON.stringify({
-    error: { message, name, code, stack },
-  }));
+
+  telemetry.error('logApolloEnrichedError', {
+    source: 'apollo',
+    action: 'error',
+    error: {
+      ..._deriveTelemetryContextFromError(enrichedError),
+      code,
+      stack,
+    },
+  });
 
   // pass-thru, no re-formatting
   return enrichedError;
 }
+
+// Plugins bridge the gap for us
+//   we need both Context#telemetry + the Errors
+//   https://www.apollographql.com/docs/apollo-server/integrations/plugins/#creating-a-plugin
+//   https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts
+
+export const errorLoggingApolloListener: GraphQLRequestListener = {
+  didEncounterErrors({ context, errors }) {
+    if (! Array.isArray(errors)) {
+      return;
+    }
+
+    // we have the Context *and* its Errors
+    //   which are not both available to `ApolloServer#formatError`
+    //   so here's where we do our logging
+    const telemetry: Telemetry = getProperty(context, 'telemetry') || telemetrySingleton;
+    errors.forEach((err) => {
+      logApolloEnrichedError(err, telemetry);
+    });
+  },
+};
+
+export const errorLoggingApolloPlugin: ApolloServerPlugin = {
+  requestDidStart(ctx: any) {
+    return errorLoggingApolloListener; // yeah; this is how it works
+  },
+};

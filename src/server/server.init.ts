@@ -1,12 +1,22 @@
+import { telemetry, deriveTelemetryContextFromError } from '@withjoy/telemetry';
+
 import { IServer } from './server';
+
 
 export const initApp = (app: IServer, port: number) => {
   let closeCalled = false;
   const gracefulClose = (reason: string): Promise<void> => {
-    console.error(`\n${reason} starting`);
+    telemetry.info('initApp', {
+      action: 'starting',
+      reason,
+    });
 
     if (closeCalled) {
-      console.error('App is already being shut down!');
+      telemetry.warn('initApp: App is already being shut down!', {
+        action: 'skip',
+        reason,
+      });
+
       /**
        * Return a promise which will never be completed,
        * as in parallel someone has already initiated another call to close
@@ -18,11 +28,17 @@ export const initApp = (app: IServer, port: number) => {
     closeCalled = true;
     return app.close()
       .then(() => {
-        console.error(`${reason} complete`);
+        telemetry.info('initApp', {
+          action: 'complete',
+          reason,
+        });
       })
       .catch(err => {
-        console.error(`${reason} error!`);
-        console.error(err);
+        telemetry.error('initApp', {
+          ...deriveTelemetryContextFromError(err),
+          action: 'error',
+          reason,
+        });
         throw err;
       });
   };
@@ -30,13 +46,27 @@ export const initApp = (app: IServer, port: number) => {
   const gracefulRestart = (signalName: string) => {
     gracefulClose(`${signalName}: Graceful restart`)
       .then(() => process.kill(process.pid, signalName))
-      .catch(() => process.exit(1));
+      .catch(err => {
+        telemetry.error('initApp.gracefulRestart', {
+          ...deriveTelemetryContextFromError(err),
+          action: 'error',
+          signalName,
+        });
+        process.exit(1);
+      });
   };
 
   const gracefulShutdown = (signalName: string) => {
     gracefulClose(`${signalName}: Graceful shutdown`)
       .then(() => process.exit(0))
-      .catch(() => process.exit(1));
+      .catch(err => {
+        telemetry.error('initApp.gracefulShutdown', {
+          ...deriveTelemetryContextFromError(err),
+          action: 'error',
+          signalName,
+        });
+        process.exit(1);
+      });
   };
 
   /**
@@ -56,11 +86,16 @@ export const initApp = (app: IServer, port: number) => {
 
   app.init(port)
     .then(config => {
-      console.log(`Server started on ${config.port}`);
+      telemetry.info('initApp', {
+        action: 'started',
+        port: config.port,
+      });
     })
     .catch(err => {
-      console.error('Error starting server');
-      console.error(err);
+      telemetry.error('initApp', {
+        ...deriveTelemetryContextFromError(err),
+        action: 'error',
+      });
       process.exit(1);
     });
 }

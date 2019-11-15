@@ -1,9 +1,29 @@
+import { get as getProperty, pick } from 'lodash';
+import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import fetch from 'node-fetch';
+import { Request, Response, NextFunction } from 'express';
 import { HttpLink } from 'apollo-link-http';
 import { execute, FetchResult } from 'apollo-link';
-import { callService } from '../graphql/interservice.communication';
+import {
+  Telemetry,
+  telemetry as telemetrySingleton,
+  deriveTelemetryContextFromRequest,
+  enrichTelemetryContext,
+  deriveTelemetryContextFromError,
+  deriveTelemetryHeadersFromContext,
+} from '@withjoy/telemetry';
+
+import {
+  NO_USER,
+  NO_TOKEN,
+  deriveTokenHeaderValue,
+} from '../authentication/token.check';
+import { callService, IServiceCallerOverrides } from '../graphql/interservice.communication';
 import { GetMe, UserFragment } from '../graphql/generated.typings';
+
+
+const EMPTY_ARRAY = Object.freeze([]);
 
 const USER = gql`
   fragment UserFragment on User {
@@ -32,38 +52,122 @@ const IDENTITY_ME = gql`
   }
 `;
 
+
+export function logContextRequest(context: Context): void {
+  const req = context.req!;
+  if (! req) {
+    return;
+  }
+
+  const { telemetry, token, userId } = context;
+  const { method, path, body } = req;
+
+  const operations: Record<string, any>[] = [];
+  if (method.toUpperCase() === 'POST') {
+    let query: DocumentNode | undefined = undefined;
+    try {
+      // assuming there's a query *and* its value is parseable GraphQL
+      query = gql`${ body.query }`;
+    }
+    catch (err) { }
+
+    // a high-level sketch of the GraphQL request
+    (getProperty(query, 'definitions') || EMPTY_ARRAY).forEach((definition: Record<string, any>): void => {
+      const { operation } = definition;
+      const definitionName = getProperty(definition, 'name.value');
+
+      (getProperty(definition, 'selectionSet.selections') || EMPTY_ARRAY).forEach((selection: Record<string, any>): void => {
+        const selectionName = getProperty(selection, 'name.value');
+
+        operations.push({
+          definitionName,
+          operation,
+          selectionName,
+        });
+      });
+    });
+  }
+
+  telemetry.info('logContextRequest', {
+    source: 'express',
+    action: 'request',
+    req: {
+      token,
+      userId,
+      method,
+      path,
+    },
+    graphql: {
+      operations,
+    },
+  });
+}
+
+
 export interface IContext {
+  req: Request | undefined;
   token: string;
   userId: string;
   locale: string;
+  identityUrl: string | undefined;
   currentUser: UserFragment | undefined;
   me: () => void;
 }
 
 export interface ContextConstructorArgs {
+  req?: Request;
   token?: string;
   userId?: string;
   identityUrl?: string;
   locale?: string;
 }
 
-export class Context implements IContext {
-
+export class Context
+  implements IContext, ContextConstructorArgs // instances can be used as contructor args
+{
+  public readonly req: Request | undefined;
+  public readonly telemetry: Telemetry;
+  public readonly identityUrl: string | undefined;
+  public readonly locale: string;
   private _userId: string;
   private _token: string;
   private _currentUser?: UserFragment;
-  private _identityUrl?: string;
-  private _locale: string;
 
   constructor(args?: ContextConstructorArgs) {
+    this.telemetry = telemetrySingleton.clone();
+    const telemetryContext = this.telemetry.context(); // to be mutated in-place
+
+    // defaults
+    this.locale = 'en_US';
+    this._token = NO_TOKEN;
+    this._userId = NO_USER;
+
     if (args) {
-      const { token, userId, identityUrl, locale } = args;
-      this._token = token ? token : 'no-token';
-      this._userId = userId ? userId : 'no-user'
-      this._identityUrl = identityUrl;
-      this._locale = locale || 'en_US';
+      const { req, token, userId, identityUrl, locale } = args;
+      const reqAsAny = (<any>req);
+
+      this.req = req;
+      this.identityUrl = identityUrl;
+      this.locale = locale || this.locale;
+
+      // TODO:  derive `locale`
+      //   @mcorrigan: "a header in stitch service in the future"
+      //   Accept-Language header, if present
+      //   can we derive it from `context.currentUser`?
+
+      // precedence
+      //   (1) what we were given
+      //   (2) what we can inherit or derive with minimum effort
+      //   (3) defaults
+      this._token = token || (reqAsAny && reqAsAny.token) || deriveTokenHeaderValue(req) || this._token;
+      this._userId = userId || (reqAsAny && reqAsAny.userId) || this._userId;
+
+      Object.assign(telemetryContext, deriveTelemetryContextFromRequest(req)); // enrich from request headers
     }
+
+    enrichTelemetryContext(telemetryContext); // back-fill the rest
   }
+
 
   get token() {
     return this._token;
@@ -77,22 +181,43 @@ export class Context implements IContext {
     return this._currentUser;
   }
 
-  get locale() {
-    return this._locale;
-  }
 
-  public me = async () => {
-    if (!this._identityUrl) {
+  public me = async (overrides?: IServiceCallerOverrides): Promise<void> => {
+    const { identityUrl } = this;
+    if (! identityUrl) {
       return;
     }
+
+    // pass along Telemetry headers
+    const { telemetry } = this;
+    const telemetryHeaders = deriveTelemetryHeadersFromContext(telemetry.context());
+
+    const token = (overrides && overrides.token) || this.token;
+    const headers = Object.assign(telemetryHeaders, (overrides && overrides.headers));
+
     try {
-      const { data } = await callService<GetMe>(this._identityUrl, this.token, IDENTITY_ME)
+      const result = await callService<GetMe>(
+        identityUrl,
+        token,
+        IDENTITY_ME,
+        undefined, // no variables
+        headers
+      );
+      if (! result) {
+        throw new Error('received empty result from Service');
+      }
+
+      const { data } = result;
       if (data && data.me) {
         this._currentUser = data.me;
         this._userId = data.me.id;
       }
     } catch (err) {
-      console.error(err);
+      telemetry.error('Context#me', {
+        ...deriveTelemetryContextFromError(err),
+        identityUrl,
+        token,
+      });
     }
   }
 }
@@ -104,4 +229,3 @@ export const createContext = <T>(context?: T): T | Context => {
     return new Context();
   }
 }
-

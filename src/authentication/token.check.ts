@@ -1,13 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyAll, TokenConfig } from './verify.token';
 
+
+export const NO_USER = 'no-user';
+export const NO_TOKEN = 'no-token';
+
 /**
  * Derives the token value -- usually a JWT -- from the 'Authorization' header.
  * What we call `req.token` is actually the full 'Authorization' header.
  *
  * eg. 'Authorization: Bearer TOKEN_VALUE' => TOKEN_VALUE
  */
-export const deriveTokenHeaderValue = (req: Request): string | null => {
+export const deriveTokenHeaderValue = (req: Request | undefined): string | null => {
+  if (! req) {
+    return null;
+  }
+
   const header = req.headers.authorization;
   if (! header) {
     return null;
