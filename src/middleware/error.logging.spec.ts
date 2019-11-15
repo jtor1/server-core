@@ -228,7 +228,7 @@ describe('error.logging', () => {
       }
 
       telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', {
-        source: 'express',
+        source: 'apollo',
         action: 'error',
         error: {
           message: 'BOOM',
@@ -247,7 +247,7 @@ describe('error.logging', () => {
       enrichedError = Object.create(null);
 
       telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', {
-        source: 'express',
+        source: 'apollo',
         action: 'error',
         error: {
           message: undefined,
@@ -307,7 +307,7 @@ describe('error.logging', () => {
 
       it('logs Errors with the global Telemetry singleton', () => {
         telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({
-          source: 'express',
+          source: 'apollo',
           action: 'error',
           error: {
             message: 'BOOM',
@@ -332,7 +332,7 @@ describe('error.logging', () => {
         .verifiable(TypeMoq.Times.never());
 
         contextTelemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({
-          source: 'express',
+          source: 'apollo',
           action: 'error',
           error: {
             message: 'BOOM',
