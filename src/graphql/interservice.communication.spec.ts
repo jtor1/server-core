@@ -18,6 +18,9 @@ import {
 const SERVICE_URL = 'https://SERVICE_URL';
 const TOKEN = 'TOKEN';
 const VARIABLE = 'VARIABLE';
+const HEADERS = Object.freeze({
+  'x-joy-header': 'X-JOY-HEADER',
+});
 const PROPERTY = 'PRECIOUS';  // "my property!!!"
 const TEST_QUERY: DocumentNode = gql`
   query ($variable: String!) {
@@ -51,6 +54,7 @@ describe('graphql/interservice.communication', () => {
     const ARGS = {
       token: TOKEN,
       variables: { variable: VARIABLE },
+      headers: HEADERS,
     };
     let serviceCaller: ServiceCaller<TestOutput, TestQuery, TestVariables>;
 
@@ -79,8 +83,10 @@ describe('graphql/interservice.communication', () => {
     describe('#fetch', () => {
       it('returns the FetchResult from a successful execution', async () => {
         nock(SERVICE_URL, {
-          // it('provides the token for authorization')
           reqheaders: {
+            // it('provides the headers passed in args')
+            ...HEADERS,
+            // it('provides the token for authorization')
             authorization: TOKEN,
           },
         })
@@ -167,8 +173,10 @@ describe('graphql/interservice.communication', () => {
     describe('#execute', () => {
       it('returns the output from a successful execution', async () => {
         nock(SERVICE_URL, {
-          // it('provides the token for authorization')
           reqheaders: {
+            // it('provides the headers passed in args')
+            ...HEADERS,
+            // it('provides the token for authorization')
             authorization: TOKEN,
           },
         })
@@ -471,6 +479,7 @@ describe('graphql/interservice.communication', () => {
       const caller: IServiceCallerBuilderCaller<TestOutput, TestQuery, TestVariables> = builder({
         token: TOKEN,
         variables: { variable: VARIABLE },
+        headers: HEADERS,
       });
 
       expect(caller).toMatchObject({
@@ -493,6 +502,7 @@ describe('graphql/interservice.communication', () => {
       const fetchResult = await builder({
         token: TOKEN,
         variables: { variable: VARIABLE },
+        headers: HEADERS,
       }).fetch();
 
       expect(fetchResult).toEqual({
@@ -518,6 +528,7 @@ describe('graphql/interservice.communication', () => {
       const output = await builder({
         token: TOKEN,
         variables: { variable: VARIABLE },
+        headers: HEADERS,
       }).execute();
 
       expect(output).toEqual({

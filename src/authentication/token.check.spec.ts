@@ -55,6 +55,10 @@ describe('token.check', () => {
         })
       )).toBeNull();
     });
+
+    it('derives from nothing', () => {
+      expect( deriveTokenHeaderValue(undefined) ).toBeNull();
+    });
   });
 
 

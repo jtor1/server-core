@@ -3,9 +3,12 @@ import express, { Request, Response, RequestHandler, ErrorRequestHandler, Router
 import cors from 'cors';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
+import { telemetry, deriveTelemetryContextFromError } from '@withjoy/telemetry';
+
 import { bodyParserGraphql } from '../middleware/body.parser';
 import { errorLoggingExpress } from '../middleware/error.logging';
 import { ApolloServer } from 'apollo-server-express';
+
 
 export interface IServer {
   init: (port: number) => Promise<{ port: number }>;
@@ -67,7 +70,10 @@ export class Server implements IServer {
       this.httpServer = httpServer;
 
       const onError = (err: Error) => {
-        console.error(err);
+        telemetry.error('Server#bootHttpServer', {
+          ...deriveTelemetryContextFromError(err),
+          port,
+        });
         httpServer.close();
         reject(err)
       }

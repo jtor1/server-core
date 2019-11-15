@@ -31,7 +31,7 @@ interface Auth0Token {
  * @param token a JWT token
  * @returns Auth0Token | Error
  */
-export const verifyAll = (tokenConfig: TokenConfig, token: string) => {
+export const verifyAll = (tokenConfig: TokenConfig, token: string): Auth0Token | Error => {
   return Object.keys(tokenConfig.auth0).map(key => {
     try {
       const secretObj = tokenConfig.auth0[key].secret;
