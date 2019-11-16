@@ -153,6 +153,44 @@ describe('server/apollo.context', () => {
         });
       });
     });
+
+    it('can be used as its own constructor args', () => {
+      const USER = { user: 'CURRENT' };
+      const req = createRequest({
+        headers: {
+          [ TELEMETRY_HEADER_HOSTNAME ]: 'HOSTNAME',
+          [ TELEMETRY_HEADER_PERSON_ID ]: 'PERSON_ID',
+          [ TELEMETRY_HEADER_REQUEST_ID ]: 'REQUEST_ID',
+        },
+      });
+      const args = new Context({
+        req,
+        token: TOKEN,
+        userId: USER_ID,
+        identityUrl: IDENTITY_URL,
+        locale: LOCALE,
+      });
+
+      // not directly mutable
+      Reflect.set(args, '_currentUser', USER);
+      expect(args.currentUser).toBe(USER);
+
+      context = new Context(args);
+
+      expect(context.req).toBe(req);
+      expect(context.token).toBe(TOKEN);
+      expect(context.userId).toBe(USER_ID);
+      expect(context.identityUrl).toBe(IDENTITY_URL);
+      expect(context.locale).toBe(LOCALE);
+
+      // it derives the same Telemetry context into a new instance
+      const { telemetry } = context;
+      expect(telemetry).not.toBe(args.telemetry);
+      expect(telemetry.context()).toEqual(args.telemetry.context());
+
+      // it('does not copy over everything')
+      expect(context.currentUser).toBeUndefined();
+    });
   });
 
 
@@ -352,7 +390,7 @@ describe('server/apollo.context', () => {
       Reflect.set(context, 'telemetry', telemetryMock.object);
 
       telemetryMock.setup((mocked) => mocked.info('logContextRequest', {
-        source: 'express',
+        source: 'apollo',
         action: 'request',
         req: {
           method: 'POST',
@@ -398,7 +436,7 @@ describe('server/apollo.context', () => {
       Reflect.set(context, 'telemetry', telemetryMock.object);
 
       telemetryMock.setup((mocked) => mocked.info('logContextRequest', {
-        source: 'express',
+        source: 'apollo',
         action: 'request',
         req: {
           method: 'GET',
@@ -428,7 +466,7 @@ describe('server/apollo.context', () => {
       Reflect.set(context, 'telemetry', telemetryMock.object);
 
       telemetryMock.setup((mocked) => mocked.info('logContextRequest', {
-        source: 'express',
+        source: 'apollo',
         action: 'request',
         req: {
           method: 'POST',
