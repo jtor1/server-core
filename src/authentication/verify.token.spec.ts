@@ -4,6 +4,7 @@ import lolex, { InstalledClock, NodeClock } from 'lolex';
 
 import {
   TokenConfig,
+  decodeUnverifiedToken,
   verifyAll,
 } from './verify.token';
 
@@ -56,6 +57,26 @@ const TOKEN_SIGNED: string = (function signedJWT(): string {
 
 
 describe('verify.token', () => {
+  describe('decodeUnverifiedToken', () => {
+    it('decodes a token value', () => {
+      const result = decodeUnverifiedToken(TOKEN_SIGNED);
+
+      expect(result).toEqual({
+        aud: TOKEN_CONFIG.auth0.MATCH.options.audience,
+        iat: EPOCH,
+        iss: TOKEN_CONFIG.auth0.MATCH.options.issuer,
+
+        ...PAYLOAD,
+      });
+    });
+
+    it('returns null on a malformed token', () => {
+      expect( decodeUnverifiedToken('MALFORMED') ).toBeNull();
+      expect( decodeUnverifiedToken(<any>null) ).toBeNull();
+      expect( decodeUnverifiedToken(<any>undefined) ).toBeNull();
+    });
+  });
+
   describe('verifyAll', () => {
     it('verifies a token value', () => {
       const result = verifyAll(TOKEN_CONFIG, TOKEN_SIGNED);
@@ -85,6 +106,7 @@ describe('verify.token', () => {
       }, TOKEN_SIGNED);
 
       // it('returns an Error, rather than throwing it')
+      //   WAT?
       expect(result).toBeInstanceOf(Error);
       expect((<Error>result).message).toMatch(/no matching provider/);
     });

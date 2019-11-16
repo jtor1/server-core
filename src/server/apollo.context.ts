@@ -19,11 +19,18 @@ import {
   NO_TOKEN,
   deriveTokenHeaderValue,
 } from '../authentication/token.check';
+import { decodeUnverifiedToken } from '../authentication/verify.token';
 import { callService, IServiceCallerOverrides } from '../graphql/interservice.communication';
 import { GetMe, UserFragment } from '../graphql/generated.typings';
 
 
 const EMPTY_ARRAY = Object.freeze([]);
+const SAFE_JWT_PROPERTIES = [
+  'exp', // expires at
+  'iat', // issued at
+  'sub', // subject
+  // everything else is secret-ish
+];
 
 const USER = gql`
   fragment UserFragment on User {
@@ -74,6 +81,10 @@ export function logContextRequest(context: Context): void {
     // a high-level sketch of the GraphQL request
     (getProperty(query, 'definitions') || EMPTY_ARRAY).forEach((definition: Record<string, any>): void => {
       const { operation } = definition;
+      if ((operation !== 'query') && (operation !== 'mutation')) {
+        return; // omit inline Fragments, etc.
+      }
+
       const definitionName = getProperty(definition, 'name.value');
 
       (getProperty(definition, 'selectionSet.selections') || EMPTY_ARRAY).forEach((selection: Record<string, any>): void => {
@@ -91,9 +102,7 @@ export function logContextRequest(context: Context): void {
   telemetry.info('logContextRequest', {
     source: 'apollo',
     action: 'request',
-    req: {
-      token,
-      userId,
+    req: { // merged into { req } subcontext
       method,
       path,
     },
@@ -162,10 +171,25 @@ export class Context
       this._token = token || (reqAsAny && reqAsAny.token) || deriveTokenHeaderValue(req) || this._token;
       this._userId = userId || (reqAsAny && reqAsAny.userId) || this._userId;
 
-      Object.assign(telemetryContext, deriveTelemetryContextFromRequest(req)); // enrich from request headers
+      // enrich Telemetry from request headers
+      Object.assign(telemetryContext, deriveTelemetryContextFromRequest(req));
     }
 
     enrichTelemetryContext(telemetryContext); // back-fill the rest
+
+    // provide Telemetry introspection into live state;
+    //   we have little control over how sub-Classes will mutate these values
+    //   but they are critical for debugging.
+    //   NOTE: Telemetry does a deep merge; { req: { foo } }
+    const context = this;
+    telemetryContext.req = {
+      get token() { return context._token },
+      get userId() { return context._userId },
+      get jwt() {
+        const decoded = decodeUnverifiedToken(context._token);
+        return decoded && pick(decoded, SAFE_JWT_PROPERTIES);
+      },
+    };
   }
 
 
