@@ -4,6 +4,7 @@ import nock from 'nock';
 import { createRequest } from 'node-mocks-http';
 import { DocumentNode } from 'graphql';
 import { gql } from 'apollo-server';
+import jwt from 'jsonwebtoken';
 import {
   TELEMETRY_HEADER_HOSTNAME,
   TELEMETRY_HEADER_PERSON_ID,
@@ -20,7 +21,14 @@ import {
 } from './apollo.context';
 
 const IDENTITY_URL = 'http://IDENTITY_URL';
-const TOKEN = 'TOKEN';
+const JWT_PAYLOAD = {
+  payload: 'IGNORED', // ... for now
+};
+const TOKEN = jwt.sign(JWT_PAYLOAD, '__secret__', { // IRL, it's a parseable token
+  audience: '__secret__', // does not get exposed
+  expiresIn: 1, // second
+  subject: 'AUTH0_ID',
+});
 const USER_ID = 'USER_ID';
 const LOCALE = 'LOCALE';
 const HEADERS = Object.freeze({
@@ -99,9 +107,16 @@ describe('server/apollo.context', () => {
       });
 
       it('assumes a Telemetry context when the request does not provide headers', () => {
+        context = new Context({});
+
         expect(context.telemetry.context()).toEqual({
           hostname: expect.any(String),
           requestId: expect.any(String),
+          req: {
+            token: NO_TOKEN,
+            userId: NO_USER,
+            jwt: null,
+          },
         });
       });
 
@@ -121,11 +136,25 @@ describe('server/apollo.context', () => {
         });
 
         const telemetryContext = context.telemetry.context();
-        expect(context.telemetry.context()).toEqual({
+        expect(telemetryContext).toEqual({
           hostname: expect.any(String),
           personId: 'PERSON_ID',
           requestId: 'REQUEST_ID',
+          req: {
+            token: TOKEN,
+            userId: USER_ID,
+
+            // it('decodes a well-formed JWT token payload')
+            jwt: {
+              exp: expect.any(Number),
+              iat: expect.any(Number),
+              sub: 'AUTH0_ID',
+
+              // and nothing from JWT_PAYLOAD ... for now
+            },
+          },
         });
+
         expect(telemetryContext.hostname).not.toBe('HOSTNAME'); // Server-generated vs. derived
       });
     });
@@ -150,6 +179,11 @@ describe('server/apollo.context', () => {
         expect(context.telemetry.context()).toEqual({
           hostname: expect.any(String),
           requestId: expect.any(String),
+          req: {
+            token: NO_TOKEN,
+            userId: NO_USER,
+            jwt: null,
+          },
         });
       });
     });
@@ -365,6 +399,9 @@ describe('server/apollo.context', () => {
 
     it('logs a GraphQL request', () => {
       const query = `
+        fragment Ignored on SomeType {
+          id
+        }
         query DEFINITION_1 {
           selection_1A(param: "value") {
             property
@@ -392,11 +429,9 @@ describe('server/apollo.context', () => {
       telemetryMock.setup((mocked) => mocked.info('logContextRequest', {
         source: 'apollo',
         action: 'request',
-        req: {
+        req: { // deep-merged into Telemetry context
           method: 'POST',
           path: '/PATH',
-          token: TOKEN,
-          userId: USER_ID,
         },
         graphql: {
           operations: [
@@ -441,8 +476,6 @@ describe('server/apollo.context', () => {
         req: {
           method: 'GET',
           path: '/PATH',
-          token: TOKEN,
-          userId: USER_ID,
         },
         graphql: {
           operations: [],
@@ -471,8 +504,6 @@ describe('server/apollo.context', () => {
         req: {
           method: 'POST',
           path: '/PATH',
-          token: TOKEN,
-          userId: USER_ID,
         },
         graphql: {
           operations: [],

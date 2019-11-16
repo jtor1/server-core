@@ -23,6 +23,18 @@ interface Auth0Token {
   azp: string;
 }
 
+
+export const decodeUnverifiedToken = (token: string): Auth0Token | null => {
+  try {
+    return jwt.decode(token, {
+      complete: false, // payload only
+    }) as Auth0Token;
+  }
+  catch (err) {
+    return null; // seems to be what #decode does on its own
+  }
+}
+
 /**
  * Iterates through all of the signatures in the config and returns a decoded token if possible or
  * the most applicable error (not "invalid signature")
