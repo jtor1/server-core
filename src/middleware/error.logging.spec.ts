@@ -203,7 +203,7 @@ describe('error.logging', () => {
   describe('logApolloEnrichedError', () => {
     let enrichedError: any;
 
-    it('logs an Error', () => {
+    it('logs an enriched Error', () => {
       enrichedError = {
         message: 'BOOM',
         name: 'ENRICHED_ERROR',
@@ -225,7 +225,7 @@ describe('error.logging', () => {
             ],
           },
         },
-      }
+      };
 
       telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', {
         source: 'apollo',
@@ -235,6 +235,27 @@ describe('error.logging', () => {
           name: 'ENRICHED_ERROR',
           code: 'INTERNAL_SERVER_ERROR',
           stack: 'Error: BOOM\n    STACK',
+        },
+      }))
+      .verifiable(TypeMoq.Times.exactly(1));
+
+      const returned = logApolloEnrichedError(enrichedError, telemetryMock.object);
+      expect(returned).toBe(enrichedError);
+    });
+
+    it('logs a plain old Error', () => {
+      enrichedError = new Error('BOOM');
+      (enrichedError as any).code = 'INTERNAL_SERVER_ERROR';
+      enrichedError.stack = 'STACK'; // for reproducibility
+
+      telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', {
+        source: 'apollo',
+        action: 'error',
+        error: {
+          message: 'BOOM',
+          name: 'Error',
+          code: 'INTERNAL_SERVER_ERROR',
+          stack: 'STACK',
         },
       }))
       .verifiable(TypeMoq.Times.exactly(1));
@@ -274,7 +295,6 @@ describe('error.logging', () => {
 
   describe('errorLoggingApolloListener', () => {
     describe('#didEncounterErrors', () => {
-      const ERRORS = [ new Error('BOOM') ];
       const didEncounterErrors = errorLoggingApolloListener.didEncounterErrors!;
       let contextTelemetryMock: TypeMoq.IMock<Telemetry>;
       let context: Context;
@@ -293,6 +313,7 @@ describe('error.logging', () => {
         contextTelemetryMock.verifyAll();
       });
 
+
       it('expects Errors', () => {
         telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({})))
         .verifiable(TypeMoq.Times.never());
@@ -306,14 +327,23 @@ describe('error.logging', () => {
       });
 
       it('logs Errors with the global Telemetry singleton', () => {
+        // the global Telemetry singleton can also log enriched Errors
+
+        const ERRORS = [
+          Object.assign(new Error('BOOM'), {
+            code: 'INTERNAL_SERVER_ERROR',
+            stack: 'STACK',
+          }),
+        ];
+
         telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({
           source: 'apollo',
           action: 'error',
           error: {
             message: 'BOOM',
             name: 'Error',
-            code: undefined,
-            stack: undefined,
+            code: 'INTERNAL_SERVER_ERROR',
+            stack: 'STACK',
           },
         })))
         .verifiable(TypeMoq.Times.exactly(1));
@@ -327,7 +357,25 @@ describe('error.logging', () => {
         });
       });
 
-      it('logs Errors with Context#telemetry', () => {
+      it('logs enriched Errors with Context#telemetry', () => {
+        // Context#telemetry can also log plain old Errors
+
+        const ENRICHED_ERRORS = [
+          {
+            message: 'BOOM',
+            name: 'Error',
+            extensions: {
+              code: 'INTERNAL_SERVER_ERROR',
+              exception: {
+                stacktrace: [
+                  'Error: BOOM',
+                  '    STACK',
+                ],
+              },
+            },
+          },
+        ];
+
         telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({})))
         .verifiable(TypeMoq.Times.never());
 
@@ -337,15 +385,15 @@ describe('error.logging', () => {
           error: {
             message: 'BOOM',
             name: 'Error',
-            code: undefined,
-            stack: undefined,
+            code: 'INTERNAL_SERVER_ERROR',
+            stack: 'Error: BOOM\n    STACK',
           },
         })))
         .verifiable(TypeMoq.Times.exactly(1));
 
         didEncounterErrors(<any>{
           context,
-          errors: ERRORS,
+          errors: ENRICHED_ERRORS,
         });
       });
     });

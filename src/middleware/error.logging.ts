@@ -89,13 +89,14 @@ export function logApolloEnrichedError(enrichedError: any, telemetry: Telemetry)
   const stacktrace = getProperty(enrichedError, 'extensions.exception.stacktrace');
   const stack = (Array.isArray(stacktrace) ? stacktrace.join('\n') : stacktrace);
 
+  const derived = _deriveTelemetryContextFromError(enrichedError);
   telemetry.error('logApolloEnrichedError', {
     source: 'apollo',
     action: 'error',
     error: {
-      ..._deriveTelemetryContextFromError(enrichedError),
-      code,
-      stack,
+      ...derived,
+      code: code || derived.code,
+      stack: stack || derived.stack,
     },
   });
 

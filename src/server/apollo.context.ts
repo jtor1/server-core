@@ -89,7 +89,7 @@ export function logContextRequest(context: Context): void {
   }
 
   telemetry.info('logContextRequest', {
-    source: 'express',
+    source: 'apollo',
     action: 'request',
     req: {
       token,
