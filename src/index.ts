@@ -5,6 +5,11 @@ import {
   createContext,
   logContextRequest,
 } from './server/apollo.context'
+import {
+  ApolloEnvironmentConfig,
+  ApolloEnvironmentVariant,
+  deriveApolloEnvironmentConfig,
+} from './server/apollo.config'
 import { IApolloServerArgs, createApolloServer } from './server/apollo.server'
 import { IServer, Server } from './server/server'
 import { initApp } from './server/server.init';
@@ -70,6 +75,10 @@ export {
   ContextConstructorArgs,
   createContext,
   logContextRequest,
+
+  ApolloEnvironmentConfig,
+  ApolloEnvironmentVariant,
+  deriveApolloEnvironmentConfig,
 
   IApolloServerArgs,
   createApolloServer,
