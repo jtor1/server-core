@@ -54,11 +54,18 @@ export enum ApolloEnvironmentVariant {
 
 function _enumerateApolloEnvironmentVariant(variant: ApolloEnvironmentVariant | string): ApolloEnvironmentVariant | undefined {
   switch (variant) {
-    case 'local':  return ApolloEnvironmentVariant.local;
-    case 'development':  return ApolloEnvironmentVariant.development;
-    case 'staging':  return ApolloEnvironmentVariant.staging;
-    case 'production':  return ApolloEnvironmentVariant.production;
-    default:  return undefined;
+    case 'test':
+    case 'ci':
+    case 'local':
+      return ApolloEnvironmentVariant.local;
+    case 'development':
+      return ApolloEnvironmentVariant.development;
+    case 'staging':
+      return ApolloEnvironmentVariant.staging;
+    case 'production':
+      return ApolloEnvironmentVariant.production;
+    default:
+      return undefined;
   }
 }
 

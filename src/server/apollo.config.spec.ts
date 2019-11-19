@@ -25,35 +25,28 @@ describe('server/apollo.config', () => {
 
 
   describe('deriveApolloEnvironmentConfig', () => {
-    it('expects a known variant', () => {
-      expect(() => {
-        return deriveApolloEnvironmentConfig({
-          ...DEFAULT_CONFIG_ARGS,
-          variant: <ApolloEnvironmentVariant>'local',
-        });
-      }).not.toThrow();
+    it('expects known variants', () => {
+      [
+        // it('does some translation for Test-related environments')
+        { asString: 'test', asEnum: ApolloEnvironmentVariant.local },
+        { asString: 'ci', asEnum: ApolloEnvironmentVariant.local },
 
-      expect(() => {
-        return deriveApolloEnvironmentConfig({
+        { asString: 'local', asEnum: ApolloEnvironmentVariant.local },
+        { asString: 'development', asEnum: ApolloEnvironmentVariant.development },
+        { asString: 'staging', asEnum: ApolloEnvironmentVariant.staging },
+        { asString: 'production', asEnum: ApolloEnvironmentVariant.production },
+      ]
+      .forEach(({ asString, asEnum }) => {
+        const config = deriveApolloEnvironmentConfig({
           ...DEFAULT_CONFIG_ARGS,
-          variant: <ApolloEnvironmentVariant>'development',
+          variant: <ApolloEnvironmentVariant>asString,
         });
-      }).not.toThrow();
 
-      expect(() => {
-        return deriveApolloEnvironmentConfig({
-          ...DEFAULT_CONFIG_ARGS,
-          variant: <ApolloEnvironmentVariant>'staging',
-        });
-      }).not.toThrow();
+        expect(config.variant).toBe(asEnum);
+      });
+    });
 
-      expect(() => {
-        return deriveApolloEnvironmentConfig({
-          ...DEFAULT_CONFIG_ARGS,
-          variant: <ApolloEnvironmentVariant>'production',
-        });
-      }).not.toThrow();
-
+    it('hates all over an unknown variant', () => {
       expect(() => {
         return deriveApolloEnvironmentConfig({
           ...DEFAULT_CONFIG_ARGS,
