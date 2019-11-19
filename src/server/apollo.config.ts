@@ -1,6 +1,7 @@
 import { Config as ApolloServerConfig } from 'apollo-server';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 import { ServiceConfigFormat } from 'apollo-language-server';
+import { telemetry } from '@withjoy/telemetry';
 
 
 const FEDERATING_SERVICE_NAME = 'stitch';
@@ -69,7 +70,8 @@ export interface ApolloEnvironmentConfigArgs {
 
 
 export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs): ApolloEnvironmentConfig {
-  const { serviceName, servicePort } = args;
+  const serviceName = args.serviceName;
+  const servicePort = parseInt(String(args.servicePort), 10);
   const isFederatingService = (serviceName === FEDERATING_SERVICE_NAME);
   const env = process.env;
   const apiKey = env.ENGINE_API_KEY || '';
@@ -182,10 +184,11 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     variant // Object lookup
   ];
 
-  return {
+  const endpointUrl = VARIANT_CONFIG.endpoint.url;
+  const derived = {
     variant,
     serviceName,
-    servicePort: parseInt(String(servicePort), 10),
+    servicePort,
 
     apiKey,
     schemaTags: VARIANT_CONFIG.schemaTags,
@@ -193,19 +196,19 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
       list: _cleanCLIArguments(`
         --key=${ apiKey }
         --tag=${ VARIANT_CONFIG.schemaTags.current }
-        --endpoint=${ VARIANT_CONFIG.endpoint.url }
+        --endpoint=${ endpointUrl }
       `),
       check: _cleanCLIArguments(`
         --key=${ apiKey }
         --serviceName=${ serviceName }
         --tag=${ VARIANT_CONFIG.schemaTags.future }
-        --endpoint=${ VARIANT_CONFIG.endpoint.url }
+        --endpoint=${ endpointUrl }
       `),
       push: _cleanCLIArguments(`
         --key=${ apiKey }
         --serviceName=${ serviceName }
         --tag=${ VARIANT_CONFIG.schemaTags.current }
-        --endpoint=${ VARIANT_CONFIG.endpoint.url }
+        --endpoint=${ endpointUrl }
         --serviceURL=${ VARIANT_CONFIG.federatingService.url }
       `),
     },
@@ -231,7 +234,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     serviceConfig: {
       endpoint: {
         name: serviceName,
-        url: VARIANT_CONFIG.endpoint.url,
+        url: endpointUrl,
         skipSSLValidation: VARIANT_CONFIG.endpoint.skipSSLValidation,
       },
       localSchemaFile: undefined,
@@ -239,4 +242,15 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
       excludes: [],
     },
   };
+
+  telemetry.info('deriveApolloEnvironmentConfig', {
+    source: 'apollo',
+    action: 'config',
+
+    variant,
+    serviceName,
+    servicePort,
+    endpointUrl,
+  });
+  return derived;
 }
