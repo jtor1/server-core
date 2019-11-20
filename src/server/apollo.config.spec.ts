@@ -17,6 +17,9 @@ describe('server/apollo.config', () => {
 
   beforeEach(() => {
     env = Object.assign({}, process.env);
+
+    // things everyone needs
+    process.env.ENGINE_API_KEY = 'ENGINE_API_KEY';
   });
 
   afterEach(() => {
@@ -25,7 +28,7 @@ describe('server/apollo.config', () => {
 
 
   describe('deriveApolloEnvironmentConfig', () => {
-    it('expects known variants', () => {
+    it('expects known variants and translates some of them', () => {
       [
         // it('does some translation for Test-related environments')
         { asString: 'test', asEnum: ApolloEnvironmentVariant.local },
@@ -79,9 +82,14 @@ describe('server/apollo.config', () => {
         servicePort: 90210, // it('coerces the port into a Number')
 
         cliArguments: {
-          list: expect.stringMatching(/--tag=development.+--endpoint=http:\/\/localhost:90210\/graphql/),
-          check: expect.stringMatching(/--tag=development.+--endpoint=http:\/\/localhost:90210\/graphql/),
-          push: expect.stringMatching(/--tag=development.+--serviceURL=https:\/\/bliss-gateway-dev.withjoy.com\/graphql/),
+          // expectations:
+          //   specify your Service name
+          //   consume the schema from your local Service
+          //   current variant = 'development'
+          //   future variant = 'development'
+          list: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
+          check: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql --serviceName=testSuite',
+          push: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-dev.withjoy.com/graphql --serviceName=testSuite',
         },
         schemaTags: {
           current: 'development',
@@ -106,9 +114,14 @@ describe('server/apollo.config', () => {
         servicePort: 90210,
 
         cliArguments: {
-          list: expect.stringMatching(/--tag=staging.+--endpoint=https:\/\/bliss-gateway-staging.withjoy.com\/testSuite\/graphql/),
-          check: expect.stringMatching(/--tag=production.+--endpoint=https:\/\/bliss-gateway-staging.withjoy.com\/testSuite\/graphql/),
-          push: expect.stringMatching(/--tag=staging.+--serviceURL=https:\/\/bliss-gateway-staging.withjoy.com\/graphql/),
+          // expectations:
+          //   specify your Service name
+          //   consume the schema from the Service code deployed to Staging, as proxied by the Federating Service
+          //   current variant = 'staging'
+          //   future variant = 'production'
+          list: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql',
+          check: '--key=ENGINE_API_KEY --tag=production --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceName=testSuite',
+          push: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceURL=https://bliss-gateway-staging.withjoy.com/graphql --serviceName=testSuite',
         },
         schemaTags: {
           current: 'staging',
@@ -137,9 +150,14 @@ describe('server/apollo.config', () => {
         servicePort: 90210, // it('coerces the port into a Number')
 
         cliArguments: {
-          list: expect.stringMatching(/--tag=development.+--endpoint=http:\/\/localhost:90210\/graphql/),
-          check: expect.stringMatching(/--tag=development.+--endpoint=http:\/\/localhost:90210\/graphql/),
-          push: expect.stringMatching(/--tag=development.+--serviceURL=https:\/\/bliss-gateway-dev.withjoy.com\/graphql/),
+          // expectations:
+          //   no Service name; the Federating Service registers its schema as the 'default' service
+          //   consume the schema from your local Service
+          //   current variant = 'development'
+          //   future variant = 'development'
+          list: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
+          check: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
+          push: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-dev.withjoy.com/graphql',
         },
         schemaTags: {
           current: 'development',
@@ -157,7 +175,7 @@ describe('server/apollo.config', () => {
         ...DEFAULT_CONFIG_ARGS,
         variant: ApolloEnvironmentVariant.staging,
 
-        serviceName: 'stitch',
+        serviceName: 'stitch', // the Federator
       });
 
       expect(configStaging).toMatchObject({
@@ -166,9 +184,14 @@ describe('server/apollo.config', () => {
         servicePort: 90210,
 
         cliArguments: {
-          list: expect.stringMatching(/--tag=staging.+--endpoint=https:\/\/bliss-gateway-staging.withjoy.com\/graphql/),
-          check: expect.stringMatching(/--tag=production.+--endpoint=https:\/\/bliss-gateway-staging.withjoy.com\/graphql/),
-          push: expect.stringMatching(/--tag=staging.+--serviceURL=https:\/\/bliss-gateway-staging.withjoy.com\/graphql/),
+          // expectations:
+          //   no Service name; the Federating Service registers its schema as the 'default' service
+          //   consume the Federated schema from the Service code deployed to Staging
+          //   current variant = 'staging'
+          //   future variant = 'production'
+          list: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
+          check: '--key=ENGINE_API_KEY --tag=production --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
+          push: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/graphql --serviceURL=https://bliss-gateway-staging.withjoy.com/graphql',
         },
         schemaTags: {
           current: 'staging',
@@ -178,6 +201,43 @@ describe('server/apollo.config', () => {
           endpoint: {
             name: 'stitch',
             url: 'https://bliss-gateway-staging.withjoy.com/graphql',
+          },
+        },
+      });
+    });
+
+    it.only('can be asked to always consume the schema from your local Service', () => {
+      const configStaging = deriveApolloEnvironmentConfig({
+        ...DEFAULT_CONFIG_ARGS,
+        variant: ApolloEnvironmentVariant.staging,
+
+        serviceName: 'testCase',
+        useLocalEndpoint: true,
+      });
+
+      expect(configStaging).toMatchObject({
+        variant: ApolloEnvironmentVariant.staging,
+        serviceName: 'testCase',
+        servicePort: 90210,
+
+        cliArguments: {
+          // expectations:
+          //   no Service name; the Federating Service registers its schema as the 'default' service
+          //   consume the Federated schema from the Service code deployed to Staging
+          //   current variant = 'staging'
+          //   future variant = 'production'
+          list: '--key=ENGINE_API_KEY --tag=staging --endpoint=http://localhost:90210/graphql',
+          check: '--key=ENGINE_API_KEY --tag=production --endpoint=http://localhost:90210/graphql --serviceName=testCase',
+          push: '--key=ENGINE_API_KEY --tag=staging --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-staging.withjoy.com/graphql --serviceName=testCase',
+        },
+        schemaTags: {
+          current: 'staging',
+          future: 'production',
+        },
+        serviceConfig: {
+          endpoint: {
+            name: 'testCase',
+            url: 'http://localhost:90210/graphql',
           },
         },
       });

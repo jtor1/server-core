@@ -6,10 +6,6 @@ import { telemetry } from '@withjoy/telemetry';
 
 const FEDERATING_SERVICE_NAME = 'stitch';
 
-function _cleanCLIArguments(args: string) {
-  return args.trim().replace(/\s+/g, ' ');
-}
-
 
 export interface ApolloEnvironmentConfig {
   // like ApolloEnvironmentConfigArgs
@@ -71,6 +67,8 @@ function _enumerateApolloEnvironmentVariant(variant: ApolloEnvironmentVariant | 
 
 export interface ApolloEnvironmentConfigArgs {
   variant?: ApolloEnvironmentVariant; // defaults to environment settings
+  useLocalEndpoint?: boolean; // use your local service as the `endpointUrl` for every variant
+
   serviceName: string,
   servicePort: string | number;
 };
@@ -79,6 +77,7 @@ export interface ApolloEnvironmentConfigArgs {
 export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs): ApolloEnvironmentConfig {
   const serviceName = args.serviceName;
   const servicePort = parseInt(String(args.servicePort), 10);
+  const useLocalEndpoint = args.useLocalEndpoint || false;
   const isFederatingService = (serviceName === FEDERATING_SERVICE_NAME);
   const env = process.env;
   const apiKey = env.ENGINE_API_KEY || '';
@@ -89,6 +88,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     throw new Error(`unrecognized variant: "${ variantAsString }"`);
   }
 
+  const endpointUrlLocal = `http://localhost:${ servicePort }/graphql`;
   const endpointRoute = (isFederatingService
     ? '/graphql'
     : `/${ serviceName }/graphql` // proxied by the Federating Service
@@ -99,7 +99,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
       // "The url of your service"
       //   from which your schema can be derived
       endpoint: {
-        url: `http://localhost:${ servicePort }/graphql`, // provides the pending schema
+        url: endpointUrlLocal, // provides the pending schema
         skipSSLValidation: true,
       },
       // "the url to the location of the implementing service for a federated graph"
@@ -123,7 +123,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     },
     [ ApolloEnvironmentVariant.development ]: {
       endpoint: {
-        url: `https://bliss-gateway-dev.withjoy.com${ endpointRoute }`,
+        url: (useLocalEndpoint ? endpointUrlLocal : `https://bliss-gateway-dev.withjoy.com${ endpointRoute }`),
         skipSSLValidation: false,
       },
       federatingService: {
@@ -145,7 +145,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     },
     [ ApolloEnvironmentVariant.staging ]: {
       endpoint: {
-        url: `https://bliss-gateway-staging.withjoy.com${ endpointRoute }`,
+        url: (useLocalEndpoint ? endpointUrlLocal : `https://bliss-gateway-staging.withjoy.com${ endpointRoute }`),
         skipSSLValidation: false,
       },
       federatingService: {
@@ -167,7 +167,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     },
     [ ApolloEnvironmentVariant.production ]: {
       endpoint: {
-        url: `https://bliss-gateway-prod.withjoy.com${ endpointRoute }`,
+        url: (useLocalEndpoint ? endpointUrlLocal : `https://bliss-gateway-prod.withjoy.com${ endpointRoute }`),
         skipSSLValidation: false,
       },
       federatingService: {
@@ -200,24 +200,28 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     apiKey,
     schemaTags: VARIANT_CONFIG.schemaTags,
     cliArguments: {
-      list: _cleanCLIArguments(`
-        --key=${ apiKey }
-        --tag=${ VARIANT_CONFIG.schemaTags.current }
-        --endpoint=${ endpointUrl }
-      `),
-      check: _cleanCLIArguments(`
-        --key=${ apiKey }
-        --serviceName=${ serviceName }
-        --tag=${ VARIANT_CONFIG.schemaTags.future }
-        --endpoint=${ endpointUrl }
-      `),
-      push: _cleanCLIArguments(`
-        --key=${ apiKey }
-        --serviceName=${ serviceName }
-        --tag=${ VARIANT_CONFIG.schemaTags.current }
-        --endpoint=${ endpointUrl }
-        --serviceURL=${ VARIANT_CONFIG.federatingService.url }
-      `),
+      list: [
+        `--key=${ apiKey }`,
+        `--tag=${ VARIANT_CONFIG.schemaTags.current }`,
+        `--endpoint=${ endpointUrl }`,
+      ].join(' ').trim(),
+
+      check: [
+        `--key=${ apiKey }`,
+        `--tag=${ VARIANT_CONFIG.schemaTags.future }`,
+        `--endpoint=${ endpointUrl }`,
+        // the Federating Service registers its schema as the 'default' service
+        (isFederatingService ? '' : `--serviceName=${ serviceName }`),
+      ].join(' ').trim(),
+
+      push: [
+        `--key=${ apiKey }`,
+        `--tag=${ VARIANT_CONFIG.schemaTags.current }`,
+        `--endpoint=${ endpointUrl }`,
+        `--serviceURL=${ VARIANT_CONFIG.federatingService.url }`,
+        // the Federating Service registers its schema as the 'default' service
+        (isFederatingService ? '' : `--serviceName=${ serviceName }`),
+      ].join(' ').trim(),
     },
 
     serverOptions: {
