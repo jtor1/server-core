@@ -155,9 +155,10 @@ describe('server/apollo.config', () => {
           //   consume the schema from your local Service
           //   current variant = 'development'
           //   future variant = 'development'
+          //   you can check the Federated schema, but you cannot push
           list: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
           check: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
-          push: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-dev.withjoy.com/graphql',
+          push: '',
         },
         schemaTags: {
           current: 'development',
@@ -189,9 +190,10 @@ describe('server/apollo.config', () => {
           //   consume the Federated schema from the Service code deployed to Staging
           //   current variant = 'staging'
           //   future variant = 'production'
+          //   you can check the Federated schema, but you cannot push
           list: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
           check: '--key=ENGINE_API_KEY --tag=production --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
-          push: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/graphql --serviceURL=https://bliss-gateway-staging.withjoy.com/graphql',
+          push: '',
         },
         schemaTags: {
           current: 'staging',
@@ -206,7 +208,7 @@ describe('server/apollo.config', () => {
       });
     });
 
-    it.only('can be asked to always consume the schema from your local Service', () => {
+    it('can be asked to always consume the schema from your local Service', () => {
       const configStaging = deriveApolloEnvironmentConfig({
         ...DEFAULT_CONFIG_ARGS,
         variant: ApolloEnvironmentVariant.staging,
