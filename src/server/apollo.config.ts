@@ -1,3 +1,4 @@
+import { identity } from 'lodash';
 import { Config as ApolloServerConfig } from 'apollo-server';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 import { ServiceConfigFormat } from 'apollo-language-server';
@@ -5,6 +6,10 @@ import { telemetry } from '@withjoy/telemetry';
 
 
 const FEDERATING_SERVICE_NAME = 'stitch';
+
+function _makeCLIArgs(lines: string[]) {
+  return lines.filter(identity).join(' ').trim();
+}
 
 
 export interface ApolloEnvironmentConfig {
@@ -200,28 +205,35 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     apiKey,
     schemaTags: VARIANT_CONFIG.schemaTags,
     cliArguments: {
-      list: [
+      list: _makeCLIArgs([
         `--key=${ apiKey }`,
         `--tag=${ VARIANT_CONFIG.schemaTags.current }`,
         `--endpoint=${ endpointUrl }`,
-      ].join(' ').trim(),
+      ]),
 
-      check: [
+      check: _makeCLIArgs([
         `--key=${ apiKey }`,
         `--tag=${ VARIANT_CONFIG.schemaTags.future }`,
         `--endpoint=${ endpointUrl }`,
-        // the Federating Service registers its schema as the 'default' service
+        // you *can* check the schema from the Federating Service perspective;
+        //   it'll check the federated schema as a whole.
+        //   the Federating Service exposes its schema as the 'default' service, so no `serviceName`
         (isFederatingService ? '' : `--serviceName=${ serviceName }`),
-      ].join(' ').trim(),
+      ]),
 
-      push: [
-        `--key=${ apiKey }`,
-        `--tag=${ VARIANT_CONFIG.schemaTags.current }`,
-        `--endpoint=${ endpointUrl }`,
-        `--serviceURL=${ VARIANT_CONFIG.federatingService.url }`,
-        // the Federating Service registers its schema as the 'default' service
-        (isFederatingService ? '' : `--serviceName=${ serviceName }`),
-      ].join(' ').trim(),
+      push: _makeCLIArgs(isFederatingService
+        // you *cannot* push from the Federating Service perspective;
+        //   you can only push the schema for the individual Services.
+        //   "The model of the service registry is that the graph's schema is computed by composing underlying services."
+        ? [] // => "Error: No service found to link to Engine" (because you should never do this)
+        : [
+          `--key=${ apiKey }`,
+          `--tag=${ VARIANT_CONFIG.schemaTags.current }`,
+          `--endpoint=${ endpointUrl }`,
+          `--serviceURL=${ VARIANT_CONFIG.federatingService.url }`,
+          `--serviceName=${ serviceName }`,
+        ]
+      ),
     },
 
     serverOptions: {
