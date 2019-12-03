@@ -615,10 +615,10 @@
   resolved "https://registry.yarnpkg.com/@withjoy/error/-/error-0.0.2.tgz#f67d608d9be50ef1d313a91397950212f4fe0803"
   integrity sha512-BnJEt8/2tafn9KtHzS1O8ZMtxz3jVYXKkaLvbKltD0LjUA4z6Iq74XqMY4X3sy/TLx6UmUGBQfPXv1xrTDjiPQ==
 
-"@withjoy/telemetry@^0.4.3":
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/@withjoy/telemetry/-/telemetry-0.4.3.tgz#6a3bdd1126136ada3ee2f658d38544cd1e500e40"
-  integrity sha512-qvXa6RnN1QsBxo1EpLofZ+Fp9EsQTo1tUjgzlH+sbc7tWmmFoLcGlwDo5QdUt0Fnpu3bK6fhYM5YbtIBCFvsxA==
+"@withjoy/telemetry@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@withjoy/telemetry/-/telemetry-0.5.0.tgz#0e5a66cd56c746445fb858d9f38625afb429e9f4"
+  integrity sha512-RotfU57Xxx4aQjSyQxgsVkP5gXEeSPLlzLX0S7F06sfThcN4KVntxauEaWakXtx9KU0JneTK19EqVoGhUxZq0w==
   dependencies:
     "@types/node" "*"
     "@withjoy/error" "*"

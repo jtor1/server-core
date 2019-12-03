@@ -89,6 +89,7 @@ describe('server/apollo.config', () => {
           //   future variant = 'development'
           list: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
           check: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql --serviceName=testSuite',
+          diff: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql --serviceName=testSuite',
           push: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-dev.withjoy.com/graphql --serviceName=testSuite',
         },
         schemaTags: {
@@ -121,6 +122,7 @@ describe('server/apollo.config', () => {
           //   future variant = 'production'
           list: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql',
           check: '--key=ENGINE_API_KEY --tag=production --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceName=testSuite',
+          diff: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceName=testSuite',
           push: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceURL=https://bliss-gateway-staging.withjoy.com/graphql --serviceName=testSuite',
         },
         schemaTags: {
@@ -158,6 +160,7 @@ describe('server/apollo.config', () => {
           //   you can check the Federated schema, but you cannot push
           list: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
           check: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
+          diff: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
           push: '',
         },
         schemaTags: {
@@ -193,6 +196,7 @@ describe('server/apollo.config', () => {
           //   you can check the Federated schema, but you cannot push
           list: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
           check: '--key=ENGINE_API_KEY --tag=production --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
+          diff: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
           push: '',
         },
         schemaTags: {
@@ -230,6 +234,7 @@ describe('server/apollo.config', () => {
           //   future variant = 'production'
           list: '--key=ENGINE_API_KEY --tag=staging --endpoint=http://localhost:90210/graphql',
           check: '--key=ENGINE_API_KEY --tag=production --endpoint=http://localhost:90210/graphql --serviceName=testCase',
+          diff: '--key=ENGINE_API_KEY --tag=staging --endpoint=http://localhost:90210/graphql --serviceName=testCase',
           push: '--key=ENGINE_API_KEY --tag=staging --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-staging.withjoy.com/graphql --serviceName=testCase',
         },
         schemaTags: {

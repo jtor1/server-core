@@ -27,9 +27,10 @@ export interface ApolloEnvironmentConfig {
 
   // for use in package.json 'script's
   cliArguments: {
-    list: string; // https://github.com/apollographql/apollo-tooling#apollo-servicelist
-    check: string; // https://github.com/apollographql/apollo-tooling#apollo-servicecheck
-    push: string; // https://github.com/apollographql/apollo-tooling#apollo-servicepush
+    list: string; // "who are my peers?"
+    check: string; // "is it safe to promote this schema?"
+    diff: string; // "what's new in the schema i've deployed?"
+    push: string; // "register the deployed schema"
   };
 
   // https://www.apollographql.com/docs/apollo-server/api/apollo-server/
@@ -205,12 +206,18 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     apiKey,
     schemaTags: VARIANT_CONFIG.schemaTags,
     cliArguments: {
+      // "who are my peers?"
+      //   `apollo service:list` for current Environment
+      //   https://github.com/apollographql/apollo-tooling#apollo-servicelist
       list: _makeCLIArgs([
         `--key=${ apiKey }`,
         `--tag=${ VARIANT_CONFIG.schemaTags.current }`,
         `--endpoint=${ endpointUrl }`,
       ]),
 
+      // "is it safe to promote this schema?"
+      //   `apollo service:check` against *future* Environment
+      //   https://github.com/apollographql/apollo-tooling#apollo-servicecheck
       check: _makeCLIArgs([
         `--key=${ apiKey }`,
         `--tag=${ VARIANT_CONFIG.schemaTags.future }`,
@@ -221,6 +228,19 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
         (isFederatingService ? '' : `--serviceName=${ serviceName }`),
       ]),
 
+      // "what's new in the schema i've deployed?"
+      //   `apollo service:check` against *current* Environment
+      //   https://github.com/apollographql/apollo-tooling#apollo-servicecheck
+      diff: _makeCLIArgs([
+        `--key=${ apiKey }`,
+        `--tag=${ VARIANT_CONFIG.schemaTags.current }`,
+        `--endpoint=${ endpointUrl }`,
+        (isFederatingService ? '' : `--serviceName=${ serviceName }`),
+      ]),
+
+      // "register the deployed schema"
+      //   `apollo service:push` to *current* Environment
+      //   https://github.com/apollographql/apollo-tooling#apollo-servicepush
       push: _makeCLIArgs(isFederatingService
         // you *cannot* push from the Federating Service perspective;
         //   you can only push the schema for the individual Services.

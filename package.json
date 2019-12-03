@@ -34,7 +34,7 @@
     "@types/lodash": "4.14.136",
     "@types/morgan": "1.7.35",
     "@types/node-fetch": "2.1.6",
-    "@withjoy/telemetry": "^0.4.3",
+    "@withjoy/telemetry": "^0.5.0",
     "apollo": "^2.16.2",
     "apollo-link": "1.2.8",
     "apollo-link-http": "1.5.11",
