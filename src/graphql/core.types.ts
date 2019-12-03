@@ -41,20 +41,20 @@ export const coreTypeDefs = gql`
   }
 
   enum TimezoneFormat {
-    Short
-    Long
+    short
+    long
   }
 
   enum DateFormat {
-    Numerical
-    Short
-    Long
-    Full
+    numerical
+    short
+    long
+    full
   }
 
   enum TimeFormat {
-    Time
-    TimeWithSeconds
+    time
+    timeWithSeconds
   }
 
   "An ISO-8601 timestamp"
@@ -81,30 +81,30 @@ const convertDate = (date: string | [string, string]) => {
 }
 
 enum TimezoneFormat {
-  Long = 'Long',
-  Short = 'Short'
+  long = 'long',
+  short = 'short',
 }
 
 enum DateFormat {
-  Numerical = 'Numerical',
-  Short = 'Short',
-  Long = 'Long',
-  Full = 'Full',
+  numerical = 'numerical',
+  short = 'short',
+  long = 'long',
+  full = 'full',
 }
 
 enum TimeFormat {
-  Time = 'Time',
-  TimeWithSeconds = 'TimeWithSeconds'
+  time = 'time',
+  timeWithSeconds = 'timeWithSeconds',
 }
 
 const convertEnumToMomentFormat = (format?: DateFormat | TimeFormat) => {
   switch (format) {
-    case TimeFormat.Time: return 'LT';
-    case TimeFormat.TimeWithSeconds: return 'LTS';
-    case DateFormat.Numerical: return 'l';
-    case DateFormat.Short: return 'll';
-    case DateFormat.Long: return 'LL';
-    case DateFormat.Full: return 'LLLL';
+    case TimeFormat.time: return 'LT';
+    case TimeFormat.timeWithSeconds: return 'LTS';
+    case DateFormat.numerical: return 'l';
+    case DateFormat.short: return 'll';
+    case DateFormat.long: return 'LL';
+    case DateFormat.full: return 'LLLL';
     default: return undefined;
   }
 }
@@ -118,7 +118,7 @@ export const coreResolvers: IResolvers = {
     timezone:(date: string | [string, string], args: { format: TimezoneFormat }) => {
       const { format } = args;
       const convertedDate = convertDate(date);
-      if (format === TimezoneFormat.Short) {
+      if (format === TimezoneFormat.short) {
         return convertedDate.zoneAbbr() || UTC_SHORT;
       } else {
         return convertedDate.tz() || UTC_LONG;
@@ -143,7 +143,7 @@ export const coreResolvers: IResolvers = {
       } else if (timeFormat) {
         return convertedDate.locale(context.locale).format(timeFormat);
       } else {
-        const full = convertEnumToMomentFormat(DateFormat.Full);
+        const full = convertEnumToMomentFormat(DateFormat.full);
         return convertedDate.locale(context.locale).format(full);
       }
     },
