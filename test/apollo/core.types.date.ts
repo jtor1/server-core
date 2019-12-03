@@ -100,8 +100,8 @@ describe('the GraphQL Date and Time TypeDefs', () => {
         query: gql`
           query {
             defaultFormat: date { timezone }
-            long: date { timezone(format: Long) }
-            short: date { timezone(format: Short) }
+            long: date { timezone(format: long) }
+            short: date { timezone(format: short) }
           }
         `
       });
@@ -129,10 +129,10 @@ describe('the GraphQL Date and Time TypeDefs', () => {
         query: gql`
           query {
             defaultFormat: date { dateString }
-            numerical: date { dateString(dateFormat: Numerical) }
-            short: date { dateString(dateFormat: Short) }
-            long: date { dateString(dateFormat: Long) }
-            full: date { dateString(dateFormat: Full) }
+            numerical: date { dateString(dateFormat: numerical) }
+            short: date { dateString(dateFormat: short) }
+            long: date { dateString(dateFormat: long) }
+            full: date { dateString(dateFormat: full) }
           }
         `
       });
@@ -166,8 +166,8 @@ describe('the GraphQL Date and Time TypeDefs', () => {
         query: gql`
           query {
             defaultFormat: date { dateString }
-            time: date { dateString(timeFormat: Time) }
-            timeWithSeconds: date { dateString(timeFormat: TimeWithSeconds) }
+            time: date { dateString(timeFormat: time) }
+            timeWithSeconds: date { dateString(timeFormat: timeWithSeconds) }
           }
         `
       });
@@ -194,8 +194,8 @@ describe('the GraphQL Date and Time TypeDefs', () => {
       const res = await query({
         query: gql`
           query {
-            shortTime: date { dateString(dateFormat: Short, timeFormat: Time) }
-            longTimeWithSeconds: date { dateString(dateFormat: Long, timeFormat: TimeWithSeconds) }
+            shortTime: date { dateString(dateFormat: short, timeFormat: time) }
+            longTimeWithSeconds: date { dateString(dateFormat: long, timeFormat: timeWithSeconds) }
           }
         `
       });
@@ -299,8 +299,8 @@ describe('the GraphQL Date and Time TypeDefs', () => {
         query: gql`
           query {
             defaultFormat: date { timezone }
-            long: date { timezone(format: Long) }
-            short: date { timezone(format: Short) }
+            long: date { timezone(format: long) }
+            short: date { timezone(format: short) }
           }
         `
       });
@@ -328,10 +328,10 @@ describe('the GraphQL Date and Time TypeDefs', () => {
         query: gql`
           query {
             defaultFormat: date { dateString }
-            numerical: date { dateString(dateFormat: Numerical) }
-            short: date { dateString(dateFormat: Short) }
-            long: date { dateString(dateFormat: Long) }
-            full: date { dateString(dateFormat: Full) }
+            numerical: date { dateString(dateFormat: numerical) }
+            short: date { dateString(dateFormat: short) }
+            long: date { dateString(dateFormat: long) }
+            full: date { dateString(dateFormat: full) }
           }
         `
       });
@@ -365,8 +365,8 @@ describe('the GraphQL Date and Time TypeDefs', () => {
         query: gql`
           query {
             defaultFormat: date { dateString }
-            time: date { dateString(timeFormat: Time) }
-            timeWithSeconds: date { dateString(timeFormat: TimeWithSeconds) }
+            time: date { dateString(timeFormat: time) }
+            timeWithSeconds: date { dateString(timeFormat: timeWithSeconds) }
           }
         `
       });
@@ -393,8 +393,8 @@ describe('the GraphQL Date and Time TypeDefs', () => {
       const res = await query({
         query: gql`
           query {
-            shortTime: date { dateString(dateFormat: Short, timeFormat: Time) }
-            longTimeWithSeconds: date { dateString(dateFormat: Long, timeFormat: TimeWithSeconds) }
+            shortTime: date { dateString(dateFormat: short, timeFormat: time) }
+            longTimeWithSeconds: date { dateString(dateFormat: long, timeFormat: timeWithSeconds) }
           }
         `
       });
@@ -499,8 +499,8 @@ describe('the GraphQL Date and Time TypeDefs', () => {
         query: gql`
           query {
             defaultFormat: date { timezone }
-            long: date { timezone(format: Long) }
-            short: date { timezone(format: Short) }
+            long: date { timezone(format: long) }
+            short: date { timezone(format: short) }
           }
         `
       });
@@ -528,10 +528,10 @@ describe('the GraphQL Date and Time TypeDefs', () => {
         query: gql`
           query {
             defaultFormat: date { dateString }
-            numerical: date { dateString(dateFormat: Numerical) }
-            short: date { dateString(dateFormat: Short) }
-            long: date { dateString(dateFormat: Long) }
-            full: date { dateString(dateFormat: Full) }
+            numerical: date { dateString(dateFormat: numerical) }
+            short: date { dateString(dateFormat: short) }
+            long: date { dateString(dateFormat: long) }
+            full: date { dateString(dateFormat: full) }
           }
         `
       });
@@ -565,8 +565,8 @@ describe('the GraphQL Date and Time TypeDefs', () => {
         query: gql`
           query {
             defaultFormat: date { dateString }
-            time: date { dateString(timeFormat: Time) }
-            timeWithSeconds: date { dateString(timeFormat: TimeWithSeconds) }
+            time: date { dateString(timeFormat: time) }
+            timeWithSeconds: date { dateString(timeFormat: timeWithSeconds) }
           }
         `
       });
@@ -593,8 +593,8 @@ describe('the GraphQL Date and Time TypeDefs', () => {
       const res = await query({
         query: gql`
           query {
-            shortTime: date { dateString(dateFormat: Short, timeFormat: Time) }
-            longTimeWithSeconds: date { dateString(dateFormat: Long, timeFormat: TimeWithSeconds) }
+            shortTime: date { dateString(dateFormat: short, timeFormat: time) }
+            longTimeWithSeconds: date { dateString(dateFormat: long, timeFormat: timeWithSeconds) }
           }
         `
       });
