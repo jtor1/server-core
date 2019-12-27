@@ -1,10 +1,8 @@
 import { get as getProperty, pick } from 'lodash';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
-import fetch from 'node-fetch';
-import { Request, Response, NextFunction } from 'express';
-import { HttpLink } from 'apollo-link-http';
-import { execute, FetchResult } from 'apollo-link';
+import { Request } from 'express';
+import { default as CacheManager, Cache } from 'cache-manager';
 import {
   Telemetry,
   telemetry as telemetrySingleton,
@@ -58,6 +56,18 @@ const IDENTITY_ME = gql`
     }
   }
 `;
+
+// singleton Cache, across all Context instances
+const CACHE_IDENTITY_ME: Cache = CacheManager.caching({
+  store: 'memory',
+  ttl: 15, // seconds
+  max: 2048, // UserFragments? let's not go overboard with those
+  isCacheableValue(value) {
+    // keep looking until we find you -- you'll be there eventually
+    return ((value !== undefined) && (value !== null));
+  }
+});
+
 
 
 export function logContextRequest(context: Context): void {
@@ -120,6 +130,7 @@ export interface IContext {
   locale: string;
   identityUrl: string | undefined;
   currentUser: UserFragment | undefined;
+  disableIdentityCache: boolean | undefined;
   me: () => void;
 }
 
@@ -129,6 +140,7 @@ export interface ContextConstructorArgs {
   userId?: string;
   identityUrl?: string;
   locale?: string;
+  disableIdentityCache?: boolean;
 }
 
 export class Context
@@ -138,6 +150,8 @@ export class Context
   public readonly telemetry: Telemetry;
   public readonly identityUrl: string | undefined;
   public readonly locale: string;
+  public readonly disableIdentityCache: boolean;
+
   private _userId: string;
   private _token: string;
   private _currentUser?: UserFragment;
@@ -148,16 +162,18 @@ export class Context
 
     // defaults
     this.locale = 'en_US';
+    this.disableIdentityCache = false;
     this._token = NO_TOKEN;
     this._userId = NO_USER;
 
     if (args) {
-      const { req, token, userId, identityUrl, locale } = args;
+      const { req, token, userId, identityUrl, locale, disableIdentityCache } = args;
       const reqAsAny = (<any>req);
 
       this.req = req;
       this.identityUrl = identityUrl;
       this.locale = locale || this.locale;
+      this.disableIdentityCache = disableIdentityCache || false;
 
       // TODO:  derive `locale`
       //   @mcorrigan: "a header in stitch service in the future"
@@ -201,15 +217,40 @@ export class Context
     return this._userId;
   }
 
+  get identityCache(): Cache {
+    return CACHE_IDENTITY_ME;
+  }
+
   get currentUser() {
     return this._currentUser;
   }
 
 
   public me = async (overrides?: IServiceCallerOverrides): Promise<void> => {
+    const { disableIdentityCache } = this;
+
+    let userFragment: UserFragment | undefined;
+    if (disableIdentityCache) {
+      userFragment = await this.fetchIdentityUser(overrides);
+    }
+    else {
+      // thru the Cache
+      const token = (overrides && overrides.token) || this.token;
+      userFragment = await CACHE_IDENTITY_ME.wrap(token, () => this.fetchIdentityUser(overrides));
+    }
+    if (! userFragment) {
+      return;
+    }
+
+    // establish our state
+    this._currentUser = userFragment;
+    this._userId = userFragment.id;
+  }
+
+  public fetchIdentityUser = async (overrides?: IServiceCallerOverrides): Promise<UserFragment | undefined> => {
     const { identityUrl } = this;
     if (! identityUrl) {
-      return;
+      return undefined;
     }
 
     // pass along Telemetry headers
@@ -233,16 +274,18 @@ export class Context
 
       const { data } = result;
       if (data && data.me) {
-        this._currentUser = data.me;
-        this._userId = data.me.id;
+        return data.me;
       }
-    } catch (err) {
+    }
+    catch (err) {
       telemetry.error('Context#me', {
         ...deriveTelemetryContextFromError(err),
         identityUrl,
         token,
       });
     }
+
+    return undefined;
   }
 }
 
