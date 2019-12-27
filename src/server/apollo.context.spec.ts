@@ -31,8 +31,8 @@ const TOKEN = jwt.sign(JWT_PAYLOAD, '__secret__', { // IRL, it's a parseable tok
 });
 const USER_ID = 'USER_ID';
 const LOCALE = 'LOCALE';
-const HEADERS = Object.freeze({
-  'x-joy-header': 'X-JOY-HEADER',
+const ME_FRAGMENT = Object.freeze({
+  id: 'ME_ID',
 });
 
 
@@ -61,6 +61,7 @@ describe('server/apollo.context', () => {
           userId: USER_ID,
           identityUrl: IDENTITY_URL,
           locale: LOCALE,
+          disableIdentityCache: true,
         });
 
         expect(context.req).toBe(req);
@@ -68,6 +69,7 @@ describe('server/apollo.context', () => {
         expect(context.userId).toBe(USER_ID);
         expect(context.identityUrl).toBe(IDENTITY_URL);
         expect(context.locale).toBe(LOCALE);
+        expect(context.disableIdentityCache).toBe(true);
 
         expect(context.telemetry).toBeDefined();
         expect(context.currentUser).toBeUndefined();
@@ -83,6 +85,7 @@ describe('server/apollo.context', () => {
           // no `userId`
           identityUrl: IDENTITY_URL,
           locale: LOCALE,
+          disableIdentityCache: true,
         });
 
         expect(context.token).toBe('REQ_TOKEN');
@@ -100,6 +103,7 @@ describe('server/apollo.context', () => {
           // no `userId`
           identityUrl: IDENTITY_URL,
           locale: LOCALE,
+          disableIdentityCache: true,
         });
 
         expect(context.token).toBe('AUTH_TOKEN');
@@ -133,6 +137,7 @@ describe('server/apollo.context', () => {
           userId: USER_ID,
           identityUrl: IDENTITY_URL,
           locale: LOCALE,
+          disableIdentityCache: true,
         });
 
         const telemetryContext = context.telemetry.context();
@@ -170,6 +175,7 @@ describe('server/apollo.context', () => {
         expect(context.userId).toBe(NO_USER);
         expect(context.identityUrl).toBeUndefined();
         expect(context.locale).toBe('en_US');
+        expect(context.disableIdentityCache).toBe(false);
 
         expect(context.telemetry).toBeDefined();
         expect(context.currentUser).toBeUndefined();
@@ -203,6 +209,7 @@ describe('server/apollo.context', () => {
         userId: USER_ID,
         identityUrl: IDENTITY_URL,
         locale: LOCALE,
+        disableIdentityCache: true,
       });
 
       // not directly mutable
@@ -216,6 +223,7 @@ describe('server/apollo.context', () => {
       expect(context.userId).toBe(USER_ID);
       expect(context.identityUrl).toBe(IDENTITY_URL);
       expect(context.locale).toBe(LOCALE);
+      expect(context.disableIdentityCache).toBe(true);
 
       // it derives the same Telemetry context into a new instance
       const { telemetry } = context;
@@ -245,6 +253,7 @@ describe('server/apollo.context', () => {
       expect(context.userId).toBe(NO_USER);
       expect(context.identityUrl).toBeUndefined();
       expect(context.locale).toBe('en_US');
+      expect(context.disableIdentityCache).toBe(false);
 
       expect(context.telemetry).toBeDefined();
       expect(context.currentUser).toBeUndefined();
@@ -253,6 +262,139 @@ describe('server/apollo.context', () => {
 
 
   describe('#me', () => {
+    beforeEach(async () => {
+      context = new Context({
+        req: createRequest(),
+        token: TOKEN,
+        identityUrl: IDENTITY_URL,
+      });
+
+      expect(context.userId).toBe(NO_USER);
+      expect(context.currentUser).toBeUndefined();
+
+      // nothing is cached
+      expect( await context.identityCache.get(TOKEN) ).toBe(undefined);
+    });
+
+    afterEach(async () => {
+      // restore the singleton
+      const { identityCache } = context;
+      await Promise.all([
+        identityCache.del(TOKEN),
+        identityCache.del('CUSTOM_TOKEN'),
+      ]);
+    });
+
+
+    it('identifies the User via cache', async () => {
+      await context.identityCache.set(TOKEN, ME_FRAGMENT, { ttl: 31 });
+
+      await context.me();
+
+      expect(context.userId).toBe('ME_ID');
+      expect(context.currentUser).toEqual(ME_FRAGMENT);
+    });
+
+    it('identifies the User via the `identity_service`', async () => {
+      // @see fetchIdentityUser
+      nock(IDENTITY_URL)
+      .post('/')
+      .reply(200, {
+        data: {
+          me: ME_FRAGMENT,
+        },
+      });
+
+      await context.me();
+
+      // it('caches the fetched result')
+      expect( await context.identityCache.get(TOKEN) ).toEqual(ME_FRAGMENT);
+
+      expect(context.userId).toBe('ME_ID');
+      expect(context.currentUser).toEqual(ME_FRAGMENT);
+    });
+
+    it('bypasses the cache', async () => {
+      context = new Context({
+        req: createRequest(),
+        token: TOKEN,
+        identityUrl: IDENTITY_URL,
+        disableIdentityCache: true,
+      });
+
+      const CACHED_FRAGMENT = { cached: true };
+      await context.identityCache.set(TOKEN, CACHED_FRAGMENT, { ttl: 31 });
+
+      // @see fetchIdentityUser
+      nock(IDENTITY_URL)
+      .post('/')
+      .reply(200, {
+        data: {
+          me: ME_FRAGMENT,
+        },
+      });
+
+      await context.me();
+
+      expect( await context.identityCache.get(TOKEN) ).toEqual(CACHED_FRAGMENT);
+      expect(CACHED_FRAGMENT).not.toEqual(ME_FRAGMENT);
+
+      expect(context.userId).toBe('ME_ID');
+      expect(context.currentUser).toEqual(ME_FRAGMENT);
+    });
+
+    it('does nothing when there is no data', async () => {
+      nock(IDENTITY_URL)
+      .post('/', (body: any) => body.query.match(/GetMe/))
+      .reply(200, {});
+
+      await context.me();
+
+      // it('will not cache nothing')
+      expect( await context.identityCache.get(TOKEN) ).toBeUndefined();
+
+      expect(context.userId).toBe(NO_USER);
+      expect(context.currentUser).toBeUndefined();
+    });
+
+    it('does nothing upon Error', async () => {
+      nock(IDENTITY_URL)
+      .post('/', (body: any) => body.query.match(/GetMe/))
+      .reply(401);
+
+      await context.me();
+
+      // it('will not cache nothing')
+      expect( await context.identityCache.get(TOKEN) ).toBeUndefined();
+
+      expect(context.userId).toBe(NO_USER);
+      expect(context.currentUser).toBeUndefined();
+    });
+
+    it('allows for overrides', async () => {
+      nock(IDENTITY_URL)
+      .post('/')
+      .reply(200, {
+        data: {
+          me: ME_FRAGMENT,
+        },
+      });
+
+      await context.me({
+        token: 'CUSTOM_TOKEN',
+        headers: { 'x-joy-custom': 'CUSTOM_HEADER' },
+      });
+
+      expect( await context.identityCache.get(TOKEN) ).toBeUndefined();
+      expect( await context.identityCache.get('CUSTOM_TOKEN') ).toEqual(ME_FRAGMENT);
+
+      expect(context.userId).toBe('ME_ID');
+      expect(context.currentUser).toEqual(ME_FRAGMENT);
+    });
+  });
+
+
+  describe('#fetchIdentityUser', () => {
     beforeEach(() => {
       context = new Context({
         req: createRequest({
@@ -263,10 +405,14 @@ describe('server/apollo.context', () => {
         token: TOKEN,
         identityUrl: IDENTITY_URL,
       });
+    });
 
+    afterEach(() => {
+      // it('does not mutate Context state)
       expect(context.userId).toBe(NO_USER);
       expect(context.currentUser).toBeUndefined();
     });
+
 
     it('identifies the User by token', async () => {
       nock(IDENTITY_URL, {
@@ -321,18 +467,12 @@ describe('server/apollo.context', () => {
       })
       .reply(200, {
         data: {
-          me: {
-            id: 'ME_ID',
-          },
+          me: ME_FRAGMENT,
         },
       });
 
-      await context.me();
-
-      expect(context.userId).toBe('ME_ID');
-      expect(context.currentUser).toEqual({
-        id: 'ME_ID',
-      });
+      const meFragment = await context.fetchIdentityUser();
+      // expect(meFragment).toEqual(ME_FRAGMENT);
     });
 
     it('does nothing when there is no data', async () => {
@@ -340,10 +480,8 @@ describe('server/apollo.context', () => {
       .post('/', (body: any) => body.query.match(/GetMe/))
       .reply(200, {});
 
-      await context.me();
-
-      expect(context.userId).toBe(NO_USER);
-      expect(context.currentUser).toBeUndefined();
+      const meFragment = await context.fetchIdentityUser();
+      expect(meFragment).toBeUndefined();
     });
 
     it('does nothing upon Error', async () => {
@@ -351,10 +489,8 @@ describe('server/apollo.context', () => {
       .post('/', (body: any) => body.query.match(/GetMe/))
       .reply(401);
 
-      await context.me();
-
-      expect(context.userId).toBe(NO_USER);
-      expect(context.currentUser).toBeUndefined();
+      const meFragment = await context.fetchIdentityUser();
+      expect(meFragment).toBeUndefined();
     });
 
     it('allows for overrides', async () => {
@@ -368,21 +504,15 @@ describe('server/apollo.context', () => {
       .post('/', (body: any) => body.query.match(/GetMe/))
       .reply(200, {
         data: {
-          me: {
-            id: 'ME_ID',
-          },
+          me: ME_FRAGMENT,
         },
       });
 
-      await context.me({
+      const meFragment = await context.fetchIdentityUser({
         token: 'CUSTOM_TOKEN',
         headers: { 'x-joy-custom': 'CUSTOM_HEADER' },
       });
-
-      expect(context.userId).toBe('ME_ID');
-      expect(context.currentUser).toEqual({
-        id: 'ME_ID',
-      });
+      expect(meFragment).toEqual(ME_FRAGMENT);
     });
   });
 
