@@ -2,8 +2,8 @@ import 'jest';
 import * as TypeMoq from 'typemoq';
 import nock from 'nock';
 import { createRequest } from 'node-mocks-http';
-import { DocumentNode } from 'graphql';
 import { gql } from 'apollo-server';
+import { Cache } from 'cache-manager';
 import jwt from 'jsonwebtoken';
 import {
   TELEMETRY_HEADER_HOSTNAME,
@@ -29,11 +29,16 @@ const TOKEN = jwt.sign(JWT_PAYLOAD, '__secret__', { // IRL, it's a parseable tok
   expiresIn: 1, // second
   subject: 'AUTH0_ID',
 });
+const CACHE_KEY = `server-core/identity/${ TOKEN }`;
 const USER_ID = 'USER_ID';
 const LOCALE = 'LOCALE';
 const ME_FRAGMENT = Object.freeze({
   id: 'ME_ID',
 });
+const CACHE = (<unknown>Object.freeze({}) as Cache);
+
+const OTHER_TOKEN = 'OTHER_TOKEN';
+const OTHER_CACHE_KEY = `server-core/identity/${ OTHER_TOKEN }`;
 
 
 describe('server/apollo.context', () => {
@@ -60,16 +65,20 @@ describe('server/apollo.context', () => {
           token: TOKEN,
           userId: USER_ID,
           identityUrl: IDENTITY_URL,
+          identityCache: CACHE,
+          identityCacheTtl: 23,
           locale: LOCALE,
-          disableIdentityCache: true,
         });
 
         expect(context.req).toBe(req);
         expect(context.token).toBe(TOKEN);
         expect(context.userId).toBe(USER_ID);
-        expect(context.identityUrl).toBe(IDENTITY_URL);
         expect(context.locale).toBe(LOCALE);
-        expect(context.disableIdentityCache).toBe(true);
+
+        expect(context.identityUrl).toBe(IDENTITY_URL);
+        expect(context.identityCache).toBe(CACHE);
+        expect(context.identityCacheTtl).toBe(23);
+        expect(context.identityCacheEnabled).toBe(true);
 
         expect(context.telemetry).toBeDefined();
         expect(context.currentUser).toBeUndefined();
@@ -83,9 +92,10 @@ describe('server/apollo.context', () => {
           }),
           // no `token`
           // no `userId`
+          // no `identityCache`
+          // no `identityCacheTtl`
           identityUrl: IDENTITY_URL,
           locale: LOCALE,
-          disableIdentityCache: true,
         });
 
         expect(context.token).toBe('REQ_TOKEN');
@@ -103,11 +113,20 @@ describe('server/apollo.context', () => {
           // no `userId`
           identityUrl: IDENTITY_URL,
           locale: LOCALE,
-          disableIdentityCache: true,
         });
 
         expect(context.token).toBe('AUTH_TOKEN');
         expect(context.userId).toBe(NO_USER);
+      });
+
+      it('can be asked to operate without a Cache', () => {
+        context = new Context({
+          identityCache: null,
+        });
+
+        expect(context.identityCache).toBeNull();
+        expect(context.identityCacheTtl).toBe(300);
+        expect(context.identityCacheEnabled).toBe(false);
       });
 
       it('assumes a Telemetry context when the request does not provide headers', () => {
@@ -137,7 +156,6 @@ describe('server/apollo.context', () => {
           userId: USER_ID,
           identityUrl: IDENTITY_URL,
           locale: LOCALE,
-          disableIdentityCache: true,
         });
 
         const telemetryContext = context.telemetry.context();
@@ -173,9 +191,13 @@ describe('server/apollo.context', () => {
         expect(context.req).toBeUndefined();
         expect(context.token).toBe(NO_TOKEN);
         expect(context.userId).toBe(NO_USER);
-        expect(context.identityUrl).toBeUndefined();
         expect(context.locale).toBe('en_US');
-        expect(context.disableIdentityCache).toBe(false);
+
+        expect(context.identityUrl).toBeUndefined();
+        expect(context.identityCache).not.toBeNull();
+        expect( Reflect.get(context.identityCache!, 'store').name ).toBe('memory');
+        expect(context.identityCacheTtl).toBe(300);
+        expect(context.identityCacheEnabled).toBe(true);
 
         expect(context.telemetry).toBeDefined();
         expect(context.currentUser).toBeUndefined();
@@ -208,8 +230,9 @@ describe('server/apollo.context', () => {
         token: TOKEN,
         userId: USER_ID,
         identityUrl: IDENTITY_URL,
+        identityCache: CACHE,
+        identityCacheTtl: 23,
         locale: LOCALE,
-        disableIdentityCache: true,
       });
 
       // not directly mutable
@@ -221,9 +244,12 @@ describe('server/apollo.context', () => {
       expect(context.req).toBe(req);
       expect(context.token).toBe(TOKEN);
       expect(context.userId).toBe(USER_ID);
-      expect(context.identityUrl).toBe(IDENTITY_URL);
       expect(context.locale).toBe(LOCALE);
-      expect(context.disableIdentityCache).toBe(true);
+
+      expect(context.identityUrl).toBe(IDENTITY_URL);
+      expect(context.identityCache).toBe(CACHE);
+      expect(context.identityCacheTtl).toBe(23);
+      expect(context.identityCacheEnabled).toBe(true);
 
       // it derives the same Telemetry context into a new instance
       const { telemetry } = context;
@@ -251,9 +277,13 @@ describe('server/apollo.context', () => {
       expect(context.req).toBeUndefined();
       expect(context.token).toBe(NO_TOKEN);
       expect(context.userId).toBe(NO_USER);
-      expect(context.identityUrl).toBeUndefined();
       expect(context.locale).toBe('en_US');
-      expect(context.disableIdentityCache).toBe(false);
+
+      expect(context.identityUrl).toBeUndefined();
+      expect(context.identityCache).not.toBeNull();
+      expect( Reflect.get(context.identityCache!, 'store').name ).toBe('memory');
+      expect(context.identityCacheTtl).toBe(300);
+      expect(context.identityCacheEnabled).toBe(true);
 
       expect(context.telemetry).toBeDefined();
       expect(context.currentUser).toBeUndefined();
@@ -271,28 +301,54 @@ describe('server/apollo.context', () => {
 
       expect(context.userId).toBe(NO_USER);
       expect(context.currentUser).toBeUndefined();
+      expect(context.identityCacheEnabled).toBe(true);
 
       // nothing is cached
-      expect( await context.identityCache.get(TOKEN) ).toBe(undefined);
+      expect( await context.identityCache!.get(CACHE_KEY) ).toBe(undefined);
     });
 
     afterEach(async () => {
       // restore the singleton
-      const { identityCache } = context;
-      await Promise.all([
-        identityCache.del(TOKEN),
-        identityCache.del('CUSTOM_TOKEN'),
-      ]);
+      const identityCache = context.identityCache!;
+
+      if (identityCache) {
+        await Promise.all([
+          identityCache.del(CACHE_KEY),
+          identityCache.del(OTHER_CACHE_KEY),
+        ]);
+      }
     });
 
 
     it('identifies the User via cache', async () => {
-      await context.identityCache.set(TOKEN, ME_FRAGMENT, { ttl: 31 });
+      await context.identityCache!.set(CACHE_KEY, ME_FRAGMENT, { ttl: 31 });
 
       await context.me();
 
       expect(context.userId).toBe('ME_ID');
       expect(context.currentUser).toEqual(ME_FRAGMENT);
+    });
+
+    it('specifies the User cache TTL', async () => {
+      const identityCacheMock = TypeMoq.Mock.ofType<Cache>();
+      context = new Context({
+        ...context,
+
+        token: TOKEN,
+        identityCache: identityCacheMock.object,
+        identityCacheTtl: 23,
+      });
+
+      identityCacheMock.setup((mocked) => mocked.wrap(
+        CACHE_KEY,
+        TypeMoq.It.isAny(),
+        TypeMoq.It.isObjectWith({ ttl: 23 })
+      ))
+      .verifiable(TypeMoq.Times.exactly(1));
+
+      await context.me();
+
+      identityCacheMock.verifyAll();
     });
 
     it('identifies the User via the `identity_service`', async () => {
@@ -308,7 +364,7 @@ describe('server/apollo.context', () => {
       await context.me();
 
       // it('caches the fetched result')
-      expect( await context.identityCache.get(TOKEN) ).toEqual(ME_FRAGMENT);
+      expect( await context.identityCache!.get(CACHE_KEY) ).toEqual(ME_FRAGMENT);
 
       expect(context.userId).toBe('ME_ID');
       expect(context.currentUser).toEqual(ME_FRAGMENT);
@@ -319,11 +375,8 @@ describe('server/apollo.context', () => {
         req: createRequest(),
         token: TOKEN,
         identityUrl: IDENTITY_URL,
-        disableIdentityCache: true,
+        identityCache: null,
       });
-
-      const CACHED_FRAGMENT = { cached: true };
-      await context.identityCache.set(TOKEN, CACHED_FRAGMENT, { ttl: 31 });
 
       // @see fetchIdentityUser
       nock(IDENTITY_URL)
@@ -335,9 +388,6 @@ describe('server/apollo.context', () => {
       });
 
       await context.me();
-
-      expect( await context.identityCache.get(TOKEN) ).toEqual(CACHED_FRAGMENT);
-      expect(CACHED_FRAGMENT).not.toEqual(ME_FRAGMENT);
 
       expect(context.userId).toBe('ME_ID');
       expect(context.currentUser).toEqual(ME_FRAGMENT);
@@ -351,7 +401,7 @@ describe('server/apollo.context', () => {
       await context.me();
 
       // it('will not cache nothing')
-      expect( await context.identityCache.get(TOKEN) ).toBeUndefined();
+      expect( await context.identityCache!.get(CACHE_KEY) ).toBeUndefined();
 
       expect(context.userId).toBe(NO_USER);
       expect(context.currentUser).toBeUndefined();
@@ -365,7 +415,7 @@ describe('server/apollo.context', () => {
       await context.me();
 
       // it('will not cache nothing')
-      expect( await context.identityCache.get(TOKEN) ).toBeUndefined();
+      expect( await context.identityCache!.get(CACHE_KEY) ).toBeUndefined();
 
       expect(context.userId).toBe(NO_USER);
       expect(context.currentUser).toBeUndefined();
@@ -381,12 +431,12 @@ describe('server/apollo.context', () => {
       });
 
       await context.me({
-        token: 'CUSTOM_TOKEN',
+        token: OTHER_TOKEN,
         headers: { 'x-joy-custom': 'CUSTOM_HEADER' },
       });
 
-      expect( await context.identityCache.get(TOKEN) ).toBeUndefined();
-      expect( await context.identityCache.get('CUSTOM_TOKEN') ).toEqual(ME_FRAGMENT);
+      expect( await context.identityCache!.get(CACHE_KEY) ).toBeUndefined();
+      expect( await context.identityCache!.get(OTHER_CACHE_KEY) ).toEqual(ME_FRAGMENT);
 
       expect(context.userId).toBe('ME_ID');
       expect(context.currentUser).toEqual(ME_FRAGMENT);
@@ -496,7 +546,7 @@ describe('server/apollo.context', () => {
     it('allows for overrides', async () => {
       nock(IDENTITY_URL, {
         reqheaders: {
-          authorization: 'CUSTOM_TOKEN',
+          authorization: OTHER_TOKEN,
           [ TELEMETRY_HEADER_REQUEST_ID ]: 'REQUEST_ID',
           'x-joy-custom': 'CUSTOM_HEADER',
         },
@@ -509,7 +559,7 @@ describe('server/apollo.context', () => {
       });
 
       const meFragment = await context.fetchIdentityUser({
-        token: 'CUSTOM_TOKEN',
+        token: OTHER_TOKEN,
         headers: { 'x-joy-custom': 'CUSTOM_HEADER' },
       });
       expect(meFragment).toEqual(ME_FRAGMENT);

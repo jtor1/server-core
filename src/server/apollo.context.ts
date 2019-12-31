@@ -58,16 +58,18 @@ const IDENTITY_ME = gql`
 `;
 
 // singleton Cache, across all Context instances
-const CACHE_IDENTITY_ME: Cache = CacheManager.caching({
+//   UserFragments are not expected to change very often
+//   so we can assume a long-lived cache
+const IDENTITY_CACHE_TTL: number = 5 * 60; // 5min
+const IDENTITY_CACHE: Cache = CacheManager.caching({
   store: 'memory',
-  ttl: 15, // seconds
+  ttl: IDENTITY_CACHE_TTL,
   max: 2048, // UserFragments? let's not go overboard with those
   isCacheableValue(value) {
     // keep looking until we find you -- you'll be there eventually
     return ((value !== undefined) && (value !== null));
-  }
+  },
 });
-
 
 
 export function logContextRequest(context: Context): void {
@@ -129,8 +131,9 @@ export interface IContext {
   userId: string;
   locale: string;
   identityUrl: string | undefined;
+  identityCache: Cache | null;
+  identityCacheTtl: number;
   currentUser: UserFragment | undefined;
-  disableIdentityCache: boolean | undefined;
   me: () => void;
 }
 
@@ -139,8 +142,9 @@ export interface ContextConstructorArgs {
   token?: string;
   userId?: string;
   identityUrl?: string;
+  identityCache?: Cache | null; // `null` to disable
+  identityCacheTtl?: number;
   locale?: string;
-  disableIdentityCache?: boolean;
 }
 
 export class Context
@@ -149,8 +153,9 @@ export class Context
   public readonly req: Request | undefined;
   public readonly telemetry: Telemetry;
   public readonly identityUrl: string | undefined;
+  public readonly identityCache: Cache | null;
+  public readonly identityCacheTtl: number;
   public readonly locale: string;
-  public readonly disableIdentityCache: boolean;
 
   private _userId: string;
   private _token: string;
@@ -161,19 +166,35 @@ export class Context
     const telemetryContext = this.telemetry.context(); // to be mutated in-place
 
     // defaults
+    this.identityCache = IDENTITY_CACHE;
+    this.identityCacheTtl = IDENTITY_CACHE_TTL;
     this.locale = 'en_US';
-    this.disableIdentityCache = false;
     this._token = NO_TOKEN;
     this._userId = NO_USER;
 
     if (args) {
-      const { req, token, userId, identityUrl, locale, disableIdentityCache } = args;
+      const {
+        req,
+        token,
+        userId,
+        identityUrl,
+        identityCache,
+        identityCacheTtl,
+        locale,
+      } = args;
       const reqAsAny = (<any>req);
 
       this.req = req;
-      this.identityUrl = identityUrl;
       this.locale = locale || this.locale;
-      this.disableIdentityCache = disableIdentityCache || false;
+
+      this.identityUrl = identityUrl;
+      this.identityCache = ((identityCache === null)
+        ? null // disabled
+        : (identityCache || this.identityCache)
+      );
+      if (identityCacheTtl !== undefined) {
+        this.identityCacheTtl = identityCacheTtl;
+      }
 
       // TODO:  derive `locale`
       //   @mcorrigan: "a header in stitch service in the future"
@@ -217,8 +238,8 @@ export class Context
     return this._userId;
   }
 
-  get identityCache(): Cache {
-    return CACHE_IDENTITY_ME;
+  get identityCacheEnabled(): Boolean {
+    return (this.identityCache !== null);
   }
 
   get currentUser() {
@@ -227,16 +248,28 @@ export class Context
 
 
   public me = async (overrides?: IServiceCallerOverrides): Promise<void> => {
-    const { disableIdentityCache } = this;
+    const {
+      identityCacheEnabled,
+      identityCache,
+      identityCacheTtl,
+    } = this;
 
     let userFragment: UserFragment | undefined;
-    if (disableIdentityCache) {
+    if (! identityCacheEnabled) {
       userFragment = await this.fetchIdentityUser(overrides);
     }
     else {
       // thru the Cache
       const token = (overrides && overrides.token) || this.token;
-      userFragment = await CACHE_IDENTITY_ME.wrap(token, () => this.fetchIdentityUser(overrides));
+      const cacheKey = `server-core/identity/${ token }`;
+
+      userFragment = await identityCache!.wrap(
+        cacheKey,
+        () => this.fetchIdentityUser(overrides),
+        // apparently you have to specify { ttl } every time for it to work properly,
+        //   even if the Cache is pre-configured with a TTL
+        { ttl: identityCacheTtl }
+      );
     }
     if (! userFragment) {
       return;
