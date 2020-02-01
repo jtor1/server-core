@@ -13,6 +13,7 @@ import {
 import { IApolloServerArgs, createApolloServer } from './server/apollo.server'
 import { IServer, Server } from './server/server'
 import { initApp } from './server/server.init';
+import { bodyParserGraphql } from './middleware/body.parser';
 import { getDefaultMiddleware } from './middleware/defaults';
 import {
   NO_USER,
@@ -87,6 +88,8 @@ export {
   IServer,
   Server,
   initApp,
+
+  bodyParserGraphql,
   getDefaultMiddleware,
 
   ControllerTemplate,

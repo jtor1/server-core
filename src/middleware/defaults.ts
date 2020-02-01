@@ -34,7 +34,7 @@ export function getDefaultMiddleware(): DefaultMiddlewareResult {
   ].map(_tupleByMiddlewareName));
 
   const apolloMap = new Map<string, RequestHandler>([
-    bodyParserGraphql,
+    bodyParserGraphql({ limit: '100Kb' }),
   ].map(_tupleByMiddlewareName));
 
   return {
