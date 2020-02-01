@@ -1,4 +1,3 @@
-import urlLib from 'url';
 import {
   isError,
   pick,
@@ -37,7 +36,7 @@ export const errorLoggingExpress: ErrorRequestHandler = function errorLoggingExp
   // what was requested
   const requested = pick(req, 'path', 'params', 'query', 'body');
 
-  const { statusCode, code } = (err as any); // "Property 'FOO' does not exist on type 'Error'."
+  const { statusCode } = (err as any); // "Property 'FOO' does not exist on type 'Error'."
   let responded: Record<string, any>;
   let logged: Record<string, any>;
 
