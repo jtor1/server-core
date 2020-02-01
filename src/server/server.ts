@@ -1,11 +1,8 @@
 import http from 'http';
 import express, { Request, Response, RequestHandler, ErrorRequestHandler, Router } from 'express';
-import cors from 'cors';
-import morgan from 'morgan';
-import bodyParser from 'body-parser';
 import { telemetry, deriveTelemetryContextFromError } from '@withjoy/telemetry';
 
-import { bodyParserGraphql } from '../middleware/body.parser';
+import { getDefaultMiddleware } from '../middleware/defaults';
 import { errorLoggingExpress } from '../middleware/error.logging';
 import { ApolloServer } from 'apollo-server-express';
 
@@ -29,23 +26,30 @@ export class Server implements IServer {
   public app: express.Application
 
   constructor(args?: ServerConstructor) {
-    const middlewareArray: Array<RequestHandler> = [];
-    const apolloMiddlewareArray: Array<RequestHandler> = [];
+    let middlewareArray: Array<RequestHandler> = [];
+    let apolloMiddlewareArray: Array<RequestHandler> = [];
 
     this.app = express();
 
     if (args && args.useDefaultMiddleware) {
-      middlewareArray.push(cors());
-      middlewareArray.push(morgan('dev'));
-      middlewareArray.push(bodyParser.json());
-      middlewareArray.push(bodyParser.urlencoded({ extended: false }));
-
-      apolloMiddlewareArray.push(bodyParserGraphql);
+      const middlewareDefaults = getDefaultMiddleware();
+      middlewareArray = [ ...middlewareDefaults.preludes, ...middlewareDefaults.bodyParsers ];
+      apolloMiddlewareArray = middlewareDefaults.apollo;
     }
 
-    this.middleware(args && args.middleware ? [...middlewareArray, ...args.middleware] : middlewareArray);
+    this.middleware(args && args.middleware
+      ? middlewareArray.concat(args.middleware)
+      : middlewareArray
+    );
     if (args && args.apollo) {
-      this.bootApollo(args.apollo, args.apolloMiddleware ? [ ...apolloMiddlewareArray, ...args.apolloMiddleware ] : apolloMiddlewareArray, args.path);
+      this.bootApollo(
+        args.apollo,
+        (args.apolloMiddleware
+          ? apolloMiddlewareArray.concat(args.apolloMiddleware)
+          : apolloMiddlewareArray
+        ),
+        args.path
+      );
     }
     this.expressRoutes(args && args.routes ? [...args.routes] : []);
     this.middleware([ errorLoggingExpress ]);

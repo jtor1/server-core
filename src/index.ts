@@ -13,6 +13,7 @@ import {
 import { IApolloServerArgs, createApolloServer } from './server/apollo.server'
 import { IServer, Server } from './server/server'
 import { initApp } from './server/server.init';
+import { getDefaultMiddleware } from './middleware/defaults';
 import {
   NO_USER,
   NO_TOKEN,
@@ -86,6 +87,7 @@ export {
   IServer,
   Server,
   initApp,
+  getDefaultMiddleware,
 
   ControllerTemplate,
   ModelTemplate,

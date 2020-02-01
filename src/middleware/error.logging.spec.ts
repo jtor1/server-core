@@ -3,7 +3,6 @@ import * as TypeMoq from 'typemoq';
 import { noop, omit } from 'lodash';
 import { createRequest, createResponse, Headers } from 'node-mocks-http';
 import { Request, Response, NextFunction } from 'express';
-import { GraphQLError } from 'graphql';
 import { telemetry, Telemetry } from '@withjoy/telemetry';
 
 import { Context } from '../server/apollo.context';
@@ -15,7 +14,7 @@ import {
 } from './error.logging';
 
 
-describe('error.logging', () => {
+describe('middleware/error.logging', () => {
   let telemetryMock: TypeMoq.IMock<Telemetry>;
   let telemetryError: Function;
 
