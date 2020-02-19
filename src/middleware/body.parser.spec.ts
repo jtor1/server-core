@@ -1,8 +1,8 @@
 import 'jest';
 import { ifError } from 'assert';
 import { noop } from 'lodash';
-import { Request, Response, NextFunction, RequestHandler } from 'express'
-import { createRequest, createResponse, Headers } from 'node-mocks-http';
+import { RequestHandler } from 'express'
+import { createRequest, createResponse } from 'node-mocks-http';
 
 import {
   bodyParserGraphql,
