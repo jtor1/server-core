@@ -1,7 +1,7 @@
 import { get as getProperty, pick } from 'lodash';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
-import { Request } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { default as CacheManager, Cache } from 'cache-manager';
 import {
   Telemetry,
@@ -78,7 +78,7 @@ export function logContextRequest(context: Context): void {
     return;
   }
 
-  const { telemetry, token, userId } = context;
+  const { telemetry } = context;
   const { method, path, body } = req;
 
   const operations: Record<string, any>[] = [];
@@ -122,6 +122,28 @@ export function logContextRequest(context: Context): void {
       operations,
     },
   });
+}
+
+export type InjectContextIntoRequestFactory = (constructorArgs: ContextConstructorArgs) => Context;
+
+export function injectContextIntoRequestMiddleware(contextFactory: InjectContextIntoRequestFactory): RequestHandler {
+  // here's an Express middleware to associate Request <=> Context
+  //   for use in non-Apollo situations
+  //   eg. REST endpoints
+  return function injectContextIntoRequest(req: Request, res: Response, next: NextFunction) {
+    const reqAsAny: any = <any>req;
+    const { token, userId } = reqAsAny; // either may be missing
+    const context = contextFactory({
+      req,
+      token,
+      userId,
+    });
+
+    // the association that Apollo's `context` callback would normally handle for us
+    reqAsAny.context = context;
+
+    next();
+  }
 }
 
 

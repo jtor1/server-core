@@ -1,6 +1,8 @@
 import 'jest';
+import { noop } from 'lodash';
 import * as TypeMoq from 'typemoq';
 import nock from 'nock';
+import { Response } from 'express'
 import { createRequest } from 'node-mocks-http';
 import { gql } from 'apollo-server';
 import { Cache } from 'cache-manager';
@@ -15,9 +17,11 @@ import {
 import { NO_USER, NO_TOKEN } from '../authentication/token.check';
 import {
   Context,
+  ContextConstructorArgs,
   createContext,
 
   logContextRequest,
+  injectContextIntoRequestMiddleware,
 } from './apollo.context';
 
 const IDENTITY_URL = 'http://IDENTITY_URL';
@@ -705,6 +709,40 @@ describe('server/apollo.context', () => {
       .verifiable(TypeMoq.Times.never());
 
       logContextRequest(context);
+    });
+  });
+
+
+  describe('injectContextIntoRequestMiddleware', () => {
+    it('injects a Context instance into a Request', () => {
+      const middleware = injectContextIntoRequestMiddleware((args: ContextConstructorArgs) => {
+        return new Context({
+          locale: 'fr-CA',
+          ...args,
+        });
+      });
+
+      const req = createRequest({
+        token: 'TOKEN',
+        userId: 'USER_ID',
+
+        // it('makes no use of ...')
+        locale: 'LOCALE',
+      });
+      expect(req.context).toBeUndefined();
+
+      middleware(req, (<unknown>null as Response), noop); // it('does not care about the Response')
+
+      // it('builds and injects a Context into the Request')
+      const { context } = req;
+      expect(context).toMatchObject({
+        token: 'TOKEN',
+        userId: 'USER_ID',
+        locale: 'fr-CA',
+      });
+
+      // it('creates a bi-directional association')
+      expect(context.req).toBe(req);
     });
   });
 });

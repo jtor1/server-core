@@ -4,6 +4,7 @@ import {
   ContextConstructorArgs,
   createContext,
   logContextRequest,
+  injectContextIntoRequestMiddleware,
 } from './server/apollo.context'
 import {
   ApolloEnvironmentConfig,
@@ -77,6 +78,7 @@ export {
   ContextConstructorArgs,
   createContext,
   logContextRequest,
+  injectContextIntoRequestMiddleware,
 
   ApolloEnvironmentConfig,
   ApolloEnvironmentVariant,

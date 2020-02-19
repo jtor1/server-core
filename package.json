@@ -33,7 +33,7 @@
     "@types/jest": "24.0.0",
     "@types/jsonwebtoken": "8.3.0",
     "@types/lodash": "4.14.136",
-    "@types/morgan": "1.7.35",
+    "@types/morgan": "^1.7.37",
     "@types/node-fetch": "2.1.6",
     "@withjoy/telemetry": "^0.5.0",
     "apollo": "^2.16.2",

@@ -1,6 +1,8 @@
-import { RequestHandler } from 'express';
+import { get as getProperty } from 'lodash';
+import { Request, Response, RequestHandler } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import { TokenIndexer } from 'morgan';
 import bodyParser from 'body-parser';
 
 import { bodyParserGraphql } from './body.parser';
@@ -20,11 +22,43 @@ function _tupleByMiddlewareName(handler: RequestHandler): [ string, RequestHandl
   return [ handler.name, handler ];
 }
 
+// @protected -- exported only for Test Suite, not '/index.ts'
+export function _morganFormatter(tokens: TokenIndexer, req: Request, res: Response) {
+  // (1) Context => `req.context` is associated by Apollo during their Server's `context` callback
+  // (2) a `Context#telemetry` instance is setup by the Context Constructor
+  // (3) `requestId` is dervied into the resulting Telemetry "context" (vs. the Request or the Context itself)
+  const contextTelemetry = getProperty(req, 'context.telemetry');
+  const requestId = (contextTelemetry && contextTelemetry.context().requestId); // no fallback
+  const xForwardedFor = tokens.req(req, res, 'x-forwarded-for');
+  const remoteAddress = xForwardedFor || tokens['remote-addr'](req, res);
+
+  return JSON.stringify({
+    source: 'express',
+    action: 'request',
+    requestId,
+
+    // inbound
+    remoteAddress,
+    host: tokens.req(req, res, 'host'),
+    method: tokens.method(req, res),
+    uri: tokens.url(req, res),
+
+    // outbound (because { immediate: false })
+    statusCode: tokens.status(req, res),
+    contentLength: tokens.res(req, res, 'content-length'),
+    responseTimeMs: tokens['response-time'](req, res),
+  });
+}
+const MORGAN_LOGGER = morgan(_morganFormatter, {
+  immediate: false,
+  stream: process.stdout, // vs. @withjoy/telemetry, because Stream
+});
+
 
 export function getDefaultMiddleware(): DefaultMiddlewareResult {
   const preludesMap = new Map<string, RequestHandler>([
     cors(),
-    morgan('dev'),
+    MORGAN_LOGGER,
   ].map(_tupleByMiddlewareName));
 
   const bodyParsersMap = new Map<string, RequestHandler>([
