@@ -59,7 +59,7 @@ describe('middleware/defaults', () => {
     let req: Request;
     let res: Response;
 
-    it('logs rich data with a context', () => {
+    it('logs maximal data with a context', () => {
       req = createRequest({
         method: 'PATCH',
         ip: 'ADDRESS_IP',
@@ -85,21 +85,21 @@ describe('middleware/defaults', () => {
       context.telemetry.context().requestId = 'REQUEST_ID';
 
       const formatted = _morganFormatter(<any>morgan, req, res);
-      expect(JSON.parse(formatted)).toEqual({
+      expect(JSON.parse(formatted!)).toEqual({
         source: 'express',
         action: 'request',
         requestId: 'REQUEST_ID',
         remoteAddress: 'ADDRESS_FORWARDED',
         host: 'HOST',
         method: 'PATCH',
-        uri: '/url',
+        url: '/url',
         statusCode: '418',
         contentLength: '23',
         responseTimeMs: '5000.860',
       });
     });
 
-    it('logs minimal data', () => {
+    it('logs less data with a context', () => {
       req = createRequest({
         ip: 'ADDRESS_IP',
       });
@@ -115,15 +115,47 @@ describe('middleware/defaults', () => {
       expect(context).toBeDefined();
 
       const formatted = _morganFormatter(<any>morgan, req, res);
-      expect(JSON.parse(formatted)).toEqual({
+      expect(JSON.parse(formatted!)).toEqual({
         source: 'express',
         action: 'request',
         requestId: expect.any(String),
         remoteAddress: 'ADDRESS_IP',
         method: 'GET',
-        uri: '',
+        url: '',
         statusCode: '200',
       });
+    });
+
+    it('logs minimal data', () => {
+      req = createRequest();
+      res = createResponse();
+
+      // no Request <=> Context relationship
+      expect(Reflect.get(req, 'context')).toBeUndefined();
+
+      const formatted = _morganFormatter(<any>morgan, req, res);
+      expect(JSON.parse(formatted!)).toEqual({
+        source: 'express',
+        action: 'request',
+        method: 'GET',
+        url: '',
+      });
+    });
+
+    it('does not log a health check', () => {
+      req = createRequest({
+        method: 'GET',
+        url: '/healthy',
+        ip: 'ADDRESS_IP',
+      });
+
+      res = createResponse();
+      res.send(200);
+
+      expect(Reflect.get(req, 'context')).toBeUndefined();
+
+      const formatted = _morganFormatter(<any>morgan, req, res);
+      expect(formatted).toBeNull();
     });
   });
 });

@@ -23,7 +23,13 @@ function _tupleByMiddlewareName(handler: RequestHandler): [ string, RequestHandl
 }
 
 // @protected -- exported only for Test Suite, not '/index.ts'
-export function _morganFormatter(tokens: TokenIndexer, req: Request, res: Response) {
+export function _morganFormatter(tokens: TokenIndexer, req: Request, res: Response): string | null {
+  const url = tokens.url(req, res);
+  if (url.startsWith('/healthy')) {
+    // this is here so that it doesn't spam logs
+    return null;
+  }
+
   // (1) Context => `req.context` is associated by Apollo during their Server's `context` callback
   // (2) a `Context#telemetry` instance is setup by the Context Constructor
   // (3) `requestId` is dervied into the resulting Telemetry "context" (vs. the Request or the Context itself)
@@ -41,7 +47,7 @@ export function _morganFormatter(tokens: TokenIndexer, req: Request, res: Respon
     remoteAddress,
     host: tokens.req(req, res, 'host'),
     method: tokens.method(req, res),
-    uri: tokens.url(req, res),
+    url,
 
     // outbound (because { immediate: false })
     statusCode: tokens.status(req, res),
