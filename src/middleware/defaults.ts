@@ -26,7 +26,7 @@ function _tupleByMiddlewareName(handler: RequestHandler): [ string, RequestHandl
 export function _morganFormatter(tokens: TokenIndexer, req: Request, res: Response): string | null {
   const url = tokens.url(req, res);
   if (url.startsWith('/healthy')) {
-    // this is here so that it doesn't spam logs
+    // health checks should not spam the logs
     return null;
   }
 

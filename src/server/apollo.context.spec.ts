@@ -710,6 +710,23 @@ describe('server/apollo.context', () => {
 
       logContextRequest(context);
     });
+
+    it('does not log a health check', () => {
+      context = new Context({
+        req: createRequest({
+          method: 'GET',
+          url: 'http://HOST/healthy',
+        }),
+        token: TOKEN,
+        userId: USER_ID,
+      });
+      Reflect.set(context, 'telemetry', telemetryMock.object);
+
+      telemetryMock.setup((mocked) => mocked.info('logContextRequest', TypeMoq.It.isObjectWith({})))
+      .verifiable(TypeMoq.Times.never());
+
+      logContextRequest(context);
+    });
   });
 
 

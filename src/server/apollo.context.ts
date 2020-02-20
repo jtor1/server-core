@@ -80,6 +80,10 @@ export function logContextRequest(context: Context): void {
 
   const { telemetry } = context;
   const { method, path, body } = req;
+  if (path.startsWith('/healthy')) {
+    // health checks should not spam the logs
+    return;
+  }
 
   const operations: Record<string, any>[] = [];
   if (method.toUpperCase() === 'POST') {
