@@ -4,6 +4,10 @@ import cors from 'cors';
 import morgan from 'morgan';
 import { TokenIndexer } from 'morgan';
 import bodyParser from 'body-parser';
+import {
+  telemetry as telemetryGlobal,
+  TelemetryLevel
+} from '@withjoy/telemetry';
 
 import { bodyParserGraphql } from './body.parser';
 
@@ -30,18 +34,24 @@ export function _morganFormatter(tokens: TokenIndexer, req: Request, res: Respon
     return null;
   }
 
-  // (1) Context => `req.context` is associated by Apollo during their Server's `context` callback
-  // (2) a `Context#telemetry` instance is setup by the Context Constructor
-  // (3) `requestId` is dervied into the resulting Telemetry "context" (vs. the Request or the Context itself)
-  const contextTelemetry = getProperty(req, 'context.telemetry');
-  const requestId = (contextTelemetry && contextTelemetry.context().requestId); // no fallback
+  // align `morgan` + Telemetry logging
+  // there's a Telemetry instance tied to every Context
+  //   (1) Context => `req.context` is associated by Apollo during their Server's `context` callback
+  //   (2) a `Context#telemetry` instance is setup by the Context Constructor
+  // ... assuming that the Request has been associated with a Context
+  //   which cannot be guaranteed,
+  //   so fall back to the Telemetry singleton if need be
+  const contextTelemetry = getProperty(req, 'context.telemetry') || telemetryGlobal;
+  if (contextTelemetry.isLogSilent()) {
+    // Telemetry logging has been silenced
+    return null;
+  }
+
   const xForwardedFor = tokens.req(req, res, 'x-forwarded-for');
   const remoteAddress = xForwardedFor || tokens['remote-addr'](req, res);
-
-  return JSON.stringify({
+  const loggedData = {
     source: 'express',
     action: 'request',
-    requestId,
 
     // inbound
     remoteAddress,
@@ -53,7 +63,11 @@ export function _morganFormatter(tokens: TokenIndexer, req: Request, res: Respon
     statusCode: tokens.status(req, res),
     contentLength: tokens.res(req, res, 'content-length'),
     responseTimeMs: tokens['response-time'](req, res),
-  });
+  };
+
+  // with Telemetry, at 'info' level
+  const telemetryData = contextTelemetry.getLoggedData(TelemetryLevel.info, loggedData);
+  return JSON.stringify(telemetryData);
 }
 const MORGAN_LOGGER = morgan(_morganFormatter, {
   immediate: false,
