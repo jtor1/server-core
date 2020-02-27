@@ -34,7 +34,13 @@ import {
 import { ControllerTemplate } from './templates/controller.template';
 import { ModelViewTemplate, ViewTemplate } from './templates/view.template';
 import { ModelTemplate, ModelTemplateClass } from './templates/model.template';
-import { coreResolvers, coreTypeDefs } from './graphql/core.types'
+import {
+  coreResolvers,
+  coreTypeDefs,
+  CoreTypeDate,
+  resolveCoreTypeDate,
+  parseCoreTypeInputDate,
+} from './graphql/core.types'
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import {
@@ -110,6 +116,9 @@ export {
 
   coreResolvers,
   coreTypeDefs,
+  CoreTypeDate,
+  resolveCoreTypeDate,
+  parseCoreTypeInputDate,
   createGraphQLEnumValues,
 
   EdgeWrapper,
