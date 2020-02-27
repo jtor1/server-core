@@ -109,6 +109,29 @@ const convertEnumToMomentFormat = (format?: DateFormat | TimeFormat) => {
   }
 }
 
+export type CoreTypeDate = [ string, string ] | string | null;
+
+export function resolveCoreTypeDate(date: Date | undefined, timezone?: string): CoreTypeDate {
+  if (date) {
+    if (timezone) {
+      return [ date.toISOString(), timezone ];
+    }
+    return date.toISOString(); // no timezone
+  }
+  return null; // no date
+}
+
+export function parseCoreTypeInputDate(input: string | null | undefined): Date | undefined {
+  if (! input) {
+    return undefined;
+  }
+  const parsed = moment(input, moment.ISO_8601);
+  if (! parsed.isValid()) {
+    throw new TypeError(`parseCoreTypeDateInput: invalid ISO-8601 Date: ${ JSON.stringify(input) }`)
+  }
+  return parsed.toDate();
+}
+
 export const coreResolvers: IResolvers = {
   Date: {
     timestamp: (date: string | [string, string]) => {
