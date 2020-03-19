@@ -337,6 +337,41 @@ describe('server/apollo.context', () => {
   });
 
 
+  describe('#isIdentifed', () => {
+    it('returns true when there is a current User', () => {
+      context = new Context({
+        userId: USER_ID, // <= has nothing to do with
+      });
+      expect(context.isIdentifed).toBe(false);
+
+      // and with a bit of hackery,
+
+      context = new Context({ });
+      Reflect.set(context, '_currentUser', ME_FRAGMENT);
+      expect(context.isIdentifed).toBe(true);
+    });
+  });
+
+
+  describe('#isSuperAdmin', () => {
+    it('knows when the current User is a SuperAdmin', () => {
+      context = new Context({
+        userId: USER_ID, // <= has nothing to do with
+      });
+      expect(context.isIdentifed).toBe(false);
+
+      // and with a bit of hackery,
+
+      context = new Context({ });
+      Reflect.set(context, '_currentUser', {
+        ...ME_FRAGMENT,
+        superAdmin: true,
+      });
+      expect(context.isIdentifed).toBe(true);
+    });
+  });
+
+
   describe('#me', () => {
     beforeEach(async () => {
       context = new Context({

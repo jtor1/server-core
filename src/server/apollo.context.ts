@@ -286,6 +286,14 @@ export class Context
     return this._currentUser;
   }
 
+  get isIdentifed() {
+    return (!! this._currentUser);
+  }
+
+  get isSuperAdmin() {
+    return getProperty(this._currentUser, 'superAdmin') || false;
+  }
+
 
   public me = async (overrides?: IServiceCallerOverrides): Promise<void> => {
     const {
