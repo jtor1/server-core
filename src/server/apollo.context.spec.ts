@@ -24,6 +24,7 @@ import {
   injectContextIntoRequestMiddleware,
 } from './apollo.context';
 
+const AUTH0_ID = 'AUTH0_ID';
 const IDENTITY_URL = 'http://IDENTITY_URL';
 const JWT_PAYLOAD = {
   payload: 'IGNORED', // ... for now
@@ -31,7 +32,7 @@ const JWT_PAYLOAD = {
 const TOKEN = jwt.sign(JWT_PAYLOAD, '__secret__', { // IRL, it's a parseable token
   audience: '__secret__', // does not get exposed
   expiresIn: 1, // second
-  subject: 'AUTH0_ID',
+  subject: AUTH0_ID,
 });
 const CACHE_KEY = `server-core/identity/${ TOKEN }`;
 const USER_ID = 'USER_ID';
@@ -175,7 +176,7 @@ describe('server/apollo.context', () => {
             jwt: {
               exp: expect.any(Number),
               iat: expect.any(Number),
-              sub: 'AUTH0_ID',
+              sub: AUTH0_ID,
 
               // and nothing from JWT_PAYLOAD ... for now
             },
@@ -291,6 +292,47 @@ describe('server/apollo.context', () => {
 
       expect(context.telemetry).toBeDefined();
       expect(context.currentUser).toBeUndefined();
+    });
+  });
+
+
+  describe('#currentAuth0Id', () => {
+    it('derives the subject from the JWT token', () => {
+      context = new Context({
+        token: TOKEN,
+      });
+      expect(context.currentAuth0Id).toBe(AUTH0_ID);
+    });
+
+    it('returns nothing unless it has a derivable JWT subject', () => {
+      context = new Context({ });
+      expect(context.currentAuth0Id).toBeUndefined();
+
+      context = new Context({
+        token: NO_TOKEN,
+      });
+      expect(context.currentAuth0Id).toBeUndefined();
+    });
+  });
+
+
+  describe('#isAuthenticated', () => {
+    it('returns true when the `identity_service.User` has been idenfified', () => {
+      context = new Context({
+        userId: USER_ID,
+      });
+      expect(context.isAuthenticated).toBe(true);
+
+      context = new Context({
+        userId: NO_USER,
+      });
+      expect(context.isAuthenticated).toBe(false);
+
+      // and with a bit of hackery,
+
+      context = new Context({ });
+      Reflect.set(context, '_userId', undefined);
+      expect(context.isAuthenticated).toBe(false);
     });
   });
 

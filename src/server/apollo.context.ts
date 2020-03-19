@@ -89,7 +89,8 @@ export function logContextRequest(context: Context): void {
   if (method.toUpperCase() === 'POST') {
     let query: DocumentNode | undefined = undefined;
     try {
-      // assuming there's a query *and* its value is parseable GraphQL
+      // this will give us something similar to GraphQLResolveInfo
+      //   assuming there's a query *and* its value is parseable GraphQL
       query = gql`${ body.query }`;
     }
     catch (err) { }
@@ -260,15 +261,28 @@ export class Context
     return this._token;
   }
 
+  get currentAuth0Id(): string | undefined {
+    const { _token } = this;
+    if ((! _token) || (_token === NO_TOKEN)) {
+      return undefined;
+    }
+    const decoded = decodeUnverifiedToken(this._token);
+    return getProperty(decoded, 'sub'); // it's Subject
+  }
+
   get userId() {
     return this._userId;
+  }
+
+  get isAuthenticated() {
+    return (this.userId && (this.userId !== NO_USER)) || false;
   }
 
   get identityCacheEnabled(): Boolean {
     return (this.identityCache !== null);
   }
 
-  get currentUser() {
+  get currentUser(): UserFragment | undefined {
     return this._currentUser;
   }
 
