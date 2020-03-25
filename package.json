@@ -24,7 +24,8 @@
   },
   "peerDependencies": {
     "graphql": "14.4.2",
-    "typeorm": "^0.2.13"
+    "typeorm": "^0.2.13",
+    "ts-jest": "*"
   },
   "dependencies": {
     "@types/cache-manager": "^2.10.1",
@@ -69,7 +70,6 @@
     "lolex": "^4.0.1",
     "nock": "^10.0.6",
     "node-mocks-http": "^1.7.3",
-    "ts-jest": "23.10.5",
     "typemoq": "2.1.0"
   }
 }
