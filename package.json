@@ -23,8 +23,7 @@
     "postversion": "git push && git push --tags"
   },
   "peerDependencies": {
-    "graphql": "14.4.2",
-    "typeorm": "^0.2.13"
+    "graphql": "14.4.2"
   },
   "dependencies": {
     "@types/cache-manager": "^2.10.1",
