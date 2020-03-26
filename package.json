@@ -24,7 +24,7 @@
   },
   "peerDependencies": {
     "graphql": "14.4.2",
-    "typeorm": "0.2.13"
+    "typeorm": "^0.2.13"
   },
   "dependencies": {
     "@types/cache-manager": "^2.10.1",
