@@ -57,7 +57,7 @@
     "moment-timezone": "^0.5.26",
     "morgan": "1.9.1",
     "node-fetch": "2.3.0",
-    "typeorm": "^0.2.13",
+    "typeorm": "*",
     "typescript": "^3.5.3"
   },
   "devDependencies": {
