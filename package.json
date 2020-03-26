@@ -23,8 +23,7 @@
     "postversion": "git push && git push --tags"
   },
   "peerDependencies": {
-    "graphql": "14.4.2",
-    "typeorm": "*"
+    "graphql": "14.4.2"
   },
   "dependencies": {
     "@types/cache-manager": "^2.10.1",
@@ -57,7 +56,7 @@
     "moment-timezone": "^0.5.26",
     "morgan": "1.9.1",
     "node-fetch": "2.3.0",
-    "typeorm": "*",
+    "typeorm": "^0.2.13",
     "typescript": "^3.5.3"
   },
   "devDependencies": {
