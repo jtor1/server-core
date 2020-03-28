@@ -69,9 +69,33 @@ describe('middleware/error.logging', () => {
         },
         request: {
           path: '/path',
-          params: { params: true },
-          query: { query: true },
-          body: { body: true },
+          params: JSON.stringify({ params: true }),
+          query: JSON.stringify({ query: true }),
+          body: JSON.stringify({ body: true }),
+        },
+      }))
+      .verifiable(TypeMoq.Times.exactly(1));
+
+      errorLoggingExpress(err, req, res, nextMock.object);
+    });
+
+    it('logs an Error for a sparse request', () => {
+      req = createRequest({
+        path: '/path',
+      });
+
+      telemetryMock.setup((mocked) => mocked.error('errorLoggingExpress', {
+        source: 'express',
+        action: 'error',
+        error: {
+          message: 'BOOM',
+          name: 'Error',
+          stack: 'STACK',
+          statusCode: undefined,
+          code: undefined,
+        },
+        request: {
+          path: '/path',
         },
       }))
       .verifiable(TypeMoq.Times.exactly(1));
@@ -140,9 +164,9 @@ describe('middleware/error.logging', () => {
         },
         request: {
           path: '/path',
-          params: { params: true },
-          query: { query: true },
-          body: { body: true },
+          params: JSON.stringify({ params: true }),
+          query: JSON.stringify({ query: true }),
+          body: JSON.stringify({ body: true }),
         },
       }))
       .verifiable(TypeMoq.Times.exactly(1));
@@ -187,9 +211,9 @@ describe('middleware/error.logging', () => {
         },
         request: {
           path: '/path',
-          params: { params: true },
-          query: { query: true },
-          body: { body: true },
+          params: JSON.stringify({ params: true }),
+          query: JSON.stringify({ query: true }),
+          body: JSON.stringify({ body: true }),
         },
       }))
       .verifiable(TypeMoq.Times.exactly(1));

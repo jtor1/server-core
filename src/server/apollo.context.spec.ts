@@ -695,7 +695,7 @@ describe('server/apollo.context', () => {
           path: '/PATH',
         },
         graphql: {
-          operations: [
+          operations: JSON.stringify([
             {
               definitionName: 'DEFINITION_1',
               operation: 'query',
@@ -711,7 +711,7 @@ describe('server/apollo.context', () => {
               operation: 'mutation',
               selectionName: 'selection_2A',
             },
-          ],
+          ]),
         },
       }))
       .verifiable(TypeMoq.Times.exactly(1));
@@ -738,9 +738,6 @@ describe('server/apollo.context', () => {
           method: 'GET',
           path: '/PATH',
         },
-        graphql: {
-          operations: [],
-        },
       }))
       .verifiable(TypeMoq.Times.exactly(1));
 
@@ -765,9 +762,6 @@ describe('server/apollo.context', () => {
         req: {
           method: 'POST',
           path: '/PATH',
-        },
-        graphql: {
-          operations: [],
         },
       }))
       .verifiable(TypeMoq.Times.exactly(1));

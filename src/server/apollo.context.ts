@@ -116,17 +116,20 @@ export function logContextRequest(context: Context): void {
     });
   }
 
-  telemetry.info('logContextRequest', {
+  const logged: Record<string, any> = {
     source: 'apollo',
     action: 'request',
     req: { // merged into { req } subcontext
       method,
       path,
     },
-    graphql: {
-      operations,
-    },
-  });
+  };
+  if (operations.length !== 0) {
+    logged.graphql = {
+      operations: JSON.stringify(operations),
+    };
+  }
+  telemetry.info('logContextRequest', logged);
 }
 
 export type InjectContextIntoRequestFactory = (constructorArgs: ContextConstructorArgs) => Context;
