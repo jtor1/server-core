@@ -1,7 +1,10 @@
 import {
+  identity,
+  isEmpty,
   isError,
-  pick,
   get as getProperty,
+  pick,
+  pickBy,
 } from 'lodash';
 import {
   Request,
@@ -20,6 +23,10 @@ function _deriveTelemetryContextFromError(err: Error) {
   return (deriveTelemetryContextFromError(err).error || {}); // Error context = { error: { ... } }
 }
 
+function _loggedNonEmpty(loggable: any): any | undefined {
+  return (isEmpty(loggable) ? undefined : JSON.stringify(loggable));
+}
+
 
 export const errorLoggingExpress: ErrorRequestHandler = function errorLoggingExpress(
   err: Error,
@@ -34,7 +41,14 @@ export const errorLoggingExpress: ErrorRequestHandler = function errorLoggingExp
   }
 
   // what was requested
-  const requested = pick(req, 'path', 'params', 'query', 'body');
+  //   sparsely
+  //   in a way that won't be JSON-parsed by our upstream log provider
+  const requested = pickBy({
+    path: req.path,
+    params: _loggedNonEmpty(req.params),
+    query: _loggedNonEmpty(req.query),
+    body: _loggedNonEmpty(req.body),
+  }, identity); // eg. `compact`
 
   const { statusCode } = (err as any); // "Property 'FOO' does not exist on type 'Error'."
   let responded: Record<string, any>;

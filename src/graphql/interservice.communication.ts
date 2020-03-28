@@ -43,8 +43,8 @@ export const callService = <Query, Variables = undefined>(
           telemetry.error('callService', {
             ...deriveTelemetryContextFromError(err),
             serviceUrl,
-            query,
-            variables,
+            query: JSON.stringify(query),
+            variables: JSON.stringify(variables),
           });
           resolve();
         }
