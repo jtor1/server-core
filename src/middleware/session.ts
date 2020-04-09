@@ -5,7 +5,12 @@ import { Request, Response, NextFunction, RequestHandler } from 'express'
 const SESSION_COOKIE_NAME: string  = 'sessionId';
 
 function _makeSessionId(): string {
-    return 'foo';    // TODO
+    // not sure the criteria for session id, the following is from ticket:
+    // https://withjoy.atlassian.net/browse/ENG-1595
+    // random string (a UUID may be confusing)
+
+    // the following yields an 11 character random string, but not gauranteed to be unique
+    return Math.random().toString(36).substring(2, 15);
 }
 
 //export function bodyParserGraphql(maybeOptions?: OptionsText): RequestHandler {
@@ -22,6 +27,7 @@ console.log('SSSSSS session id = ', sessionId);
 console.log('SSSSSS not found');
       res.setHeader('Set-Cookie', cookie.serialize('name', sessionId, {
 //        httpOnly: true, .. what? TODO
+        domain: 'withjoy.com',      // TODO set/use as a constant somehow?
         maxAge: 60 * 60 * 24 * 7 // 1 week TODO
       }));
     }
