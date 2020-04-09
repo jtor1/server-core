@@ -78,7 +78,7 @@ export function logContextRequest(context: Context): void {
     return;
   }
 
-  const { telemetry } = context;
+  const { telemetry, sessionId } = context;
   const { method, path, body } = req;
   if (path.startsWith('/healthy')) {
     // health checks should not spam the logs
@@ -116,12 +116,14 @@ export function logContextRequest(context: Context): void {
     });
   }
 
+console.log('SSSSSIDDDDDD', sessionId);
   const logged: Record<string, any> = {
     source: 'apollo',
     action: 'request',
     req: { // merged into { req } subcontext
       method,
       path,
+      sessionId,
     },
   };
   if (operations.length !== 0) {
@@ -297,6 +299,13 @@ export class Context
     return getProperty(this._currentUser, 'superAdmin') || false;
   }
 
+  get sessionId() {
+    // 1. the any cast
+    // 2. sessionId keyname should not be hardcoded and if an enum, it should be shared with middleware
+    // 3. shoujld null be the default value
+    //return getProperty(<any>this.req, 'sessionId', null);
+    return getProperty(this.req, 'sessionId', null);
+  }
 
   public me = async (overrides?: IServiceCallerOverrides): Promise<void> => {
     const {
