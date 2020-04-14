@@ -25,12 +25,19 @@ console.log('SSSSSS session id = ', sessionId);
     if (!sessionId) {
       sessionId = _makeSessionId();
 console.log('SSSSSS not found');
-      res.setHeader('Set-Cookie', cookie.serialize('name', sessionId, {
+      res.setHeader('Set-Cookie', cookie.serialize(SESSION_COOKIE_NAME, sessionId, {
 //        httpOnly: true, .. what? TODO
-        domain: 'withjoy.com',      // TODO set/use as a constant somehow?
-        maxAge: 60 * 60 * 24 * 7 // 1 week TODO
+        path: '/',
+        domain: '.withjoy.com',      // TODO set/use as a constant somehow?
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 7, // 1 week TODO
+sameSite: 'none',
+//expires: new Date('Tue, 13 Apr 2021 23:20:42 GMT')
       }));
     }
+else { 
+console.log('SSSSSS is found', sessionId);
+}
 
     reqAsAny[SESSION_COOKIE_NAME] = sessionId;   // is this right (tix: "held as Request#sessionId")
 console.log('SSSSSS setting session id', sessionId);
