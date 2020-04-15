@@ -116,7 +116,6 @@ export function logContextRequest(context: Context): void {
     });
   }
 
-console.log('SSSSSIDDDDDD', sessionId);
   const logged: Record<string, any> = {
     source: 'apollo',
     action: 'request',
@@ -302,7 +301,7 @@ export class Context
   get sessionId() {
     // 1. the any cast
     // 2. sessionId keyname should not be hardcoded and if an enum, it should be shared with middleware
-    // 3. shoujld null be the default value
+    // 3. should null be the default value
     //return getProperty(<any>this.req, 'sessionId', null);
     return getProperty(this.req, 'sessionId', null);
   }
