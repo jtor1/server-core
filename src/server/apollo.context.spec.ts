@@ -693,6 +693,7 @@ describe('server/apollo.context', () => {
         req: { // deep-merged into Telemetry context
           method: 'POST',
           path: '/PATH',
+          sessionId: undefined,
         },
         graphql: {
           operations: JSON.stringify([
@@ -737,6 +738,7 @@ describe('server/apollo.context', () => {
         req: {
           method: 'GET',
           path: '/PATH',
+          sessionId: undefined,
         },
       }))
       .verifiable(TypeMoq.Times.exactly(1));
@@ -762,6 +764,7 @@ describe('server/apollo.context', () => {
         req: {
           method: 'POST',
           path: '/PATH',
+          sessionId: undefined,
         },
       }))
       .verifiable(TypeMoq.Times.exactly(1));
