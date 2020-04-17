@@ -16,7 +16,7 @@ import { IServer, Server } from './server/server'
 import { initApp } from './server/server.init';
 import { bodyParserGraphql } from './middleware/body.parser';
 import { getDefaultMiddleware } from './middleware/defaults';
-import sessionMiddleware from './middleware/session';
+import { sessionMiddleware } from './middleware/session';
 import {
   NO_USER,
   NO_TOKEN,

@@ -1,35 +1,43 @@
 import cookie from 'cookie';
 import { Request, Response, NextFunction, RequestHandler } from 'express'
+import { randomBytes } from 'crypto';
 
-const SESSION_COOKIE_NAME: string  = 'sessionId';
+export const SESSION_REQUEST_PROPERTY: string = 'sessionId';
 
 function _makeSessionId(): string {
-    // not sure the criteria for session id, the following is from ticket:
-    // https://withjoy.atlassian.net/browse/ENG-1595
-    // random string (a UUID may be confusing)
-
-    // the following yields an 11 character random string, but not gauranteed to be unique
-    return Math.random().toString(36).substring(2, 15);
+  // 'base64' was used in the code this was taken from, but Base64 is annoying when dealing
+  // with it as a cut-and-paste text string -- eg. '/.+-' etc. are interpreted as a word
+  // delimiters so a double-click doesn't always capture the whole text. not a strong case
+  // but we're not trying to "conserve String length" or do any special encoding, so i think 'hex' is sufficient
+  return randomBytes(24).toString('hex')
 }
 
-export default function (maybeOptions?: object): RequestHandler {
-  return function sessionId(req: Request, res: Response, next: NextFunction): void {
+export function generateSessionIdCookieHeaderValue(sessionId: string): string {
+  return cookie.serialize(SESSION_REQUEST_PROPERTY, sessionId, {
+    path: '/',
+    domain: '.withjoy.com', // (1) "a given Session ID can be used for both Staging & Production hosts" -- (2) TODO make constant or relocate?
+    httpOnly: true,
+//    maxAge: 60 * 60 * 24 * 7, // 1 week TODO --- what to do, what to do
+    sameSite: 'none', // TODO check if needed -- if so add comment from PR
+  });
+}
+
+export function sessionMiddleware(maybeOptions?: object): RequestHandler {
+  return function sessionMiddleware(req: Request, res: Response, next: NextFunction): void {
     const { headers } = req;
     const reqAsAny: any = <any>req;
 
-    let sessionId = (cookie.parse(headers['cookie'] || '') || {})[SESSION_COOKIE_NAME]; // too much foo?
+    const cookies = cookie.parse(headers['cookie'] || '');
+    let sessionId = (cookies || {})[SESSION_REQUEST_PROPERTY];
+console.log('SSSSSS session id = ', sessionId);
     if (!sessionId) {
       sessionId = _makeSessionId();
-      res.setHeader('Set-Cookie', cookie.serialize(SESSION_COOKIE_NAME, sessionId, {
-        path: '/',
-        domain: '.withjoy.com',      // TODO set/use as a constant somehow?
-        httpOnly: true,
-        maxAge: 60 * 60 * 24 * 7, // 1 week TODO
-        sameSite: 'none',
-      }));
+console.log('SSSSSS not found');
+      res.setHeader('Set-Cookie', generateSessionIdCookieHeaderValue(sessionId))
     }
 
-    reqAsAny[SESSION_COOKIE_NAME] = sessionId;   // is this right (tix: "held as Request#sessionId")
+console.log('SSSSSS setting session id', sessionId);
+    reqAsAny[SESSION_REQUEST_PROPERTY] = sessionId;
 
     next();
   }
