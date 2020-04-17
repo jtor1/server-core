@@ -4,7 +4,14 @@ import { Request, Response, NextFunction, RequestHandler } from 'express'
 const CONTENT_TYPE: string = 'application/graphql';
 
 export function bodyParserGraphql(maybeOptions?: OptionsText): RequestHandler {
-  // TODO: -->here<--
+  // derived from `body-parser-graphql`
+  //   which makes 'application/json' assumptions that we *don't* want to make
+  //   @see https://github.com/graphql-middleware/body-parser-graphql
+  const parser = bodyParser.text({
+    ...(maybeOptions || {}),
+    type: CONTENT_TYPE, // handle the body => String part
+  });
+
   return function bodyParserGraphql(req: Request, res: Response, next: NextFunction): void {
     const { headers } = req;
     if (headers['content-type'] !== CONTENT_TYPE) {
@@ -12,15 +19,6 @@ export function bodyParserGraphql(maybeOptions?: OptionsText): RequestHandler {
       next();
       return;
     }
-
-    // TODO:  this code block could be moved out to (-->here<-- ^^^ above) -- right?
-    // derived from `body-parser-graphql`
-    //   which makes 'application/json' assumptions that we *don't* want to make
-    //   @see https://github.com/graphql-middleware/body-parser-graphql
-    const parser = bodyParser.text({
-      ...(maybeOptions || {}),
-      type: CONTENT_TYPE, // handle the body => String part
-    });
 
     parser(req, res, (err) => {
       if (err) {
