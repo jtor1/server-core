@@ -693,7 +693,7 @@ describe('server/apollo.context', () => {
         req: { // deep-merged into Telemetry context
           method: 'POST',
           path: '/PATH',
-          sessionId: undefined,
+          sessionId: undefined, // TODO -- test passes, but still looking at this to see it makes sense
         },
         graphql: {
           operations: JSON.stringify([
