@@ -29,14 +29,11 @@ export function sessionMiddleware(maybeOptions?: object): RequestHandler {
 
     const cookies = cookie.parse(headers['cookie'] || '');
     let sessionId = (cookies || {})[SESSION_REQUEST_PROPERTY];
-console.log('SSSSSS session id = ', sessionId);
     if (!sessionId) {
       sessionId = _makeSessionId();
-console.log('SSSSSS not found');
       res.setHeader('Set-Cookie', generateSessionIdCookieHeaderValue(sessionId))
     }
 
-console.log('SSSSSS setting session id', sessionId);
     reqAsAny[SESSION_REQUEST_PROPERTY] = sessionId;
 
     next();

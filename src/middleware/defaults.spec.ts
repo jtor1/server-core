@@ -29,6 +29,7 @@ describe('middleware/defaults', () => {
       const NAMES = [
         'corsMiddleware',
         'logger',
+        'sessionMiddleware',
       ];
       expect(Array.from(preludesMap.keys())).toEqual(NAMES);
 
