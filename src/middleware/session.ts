@@ -46,7 +46,7 @@ export function sessionMiddleware(maybeOptions?: object): RequestHandler {
       res.setHeader('Set-Cookie', generateSessionIdCookieHeaderValue(sessionId))
     }
 
-    reqAsAny[SESSION_REQUEST_PROPERTY] = sessionId;
+    reqAsAny[SESSION_REQUEST_PROPERTY] = headers['x-joy-sessionid'] || sessionId;  // TODO header key as constant (but https://github.com/joylifeinc/event_service/pull/183)
 
     next();
   }

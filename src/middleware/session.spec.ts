@@ -61,6 +61,34 @@ describe('middleware/session', () => {
       );
     });
 
+    it('session id in custom header is used in preference to any existing or new cookie session', () => {
+      const req = createRequest({
+        headers: {
+          'x-joy-sessionid': DUMMY_SESSION_ID,
+        },
+      });
+      const resp = createResponse();
+
+      middleware(
+        req,
+        resp,
+        (err) => {
+          ifError(err);
+
+          const assignedSessionId = req[SESSION_REQUEST_PROPERTY];
+
+          // a new cookie session id is generated that is different from custom header session id
+          const setCookieValue = resp.header('set-cookie');
+          expect(!!setCookieValue).toBe(true);
+          const assignedSessionIdAsSetCookieHeaderValue = generateSessionIdCookieHeaderValue(assignedSessionId);
+          expect(assignedSessionIdAsSetCookieHeaderValue).not.toBe(setCookieValue);
+
+          // assigned session id is the value from custom header
+          expect(assignedSessionId).toBe(DUMMY_SESSION_ID);
+        }
+      );
+    });
+
     // TODO - I think we need to check the session id is set on Context, either here or in another test - check session value is set on Context ...
   });
 });
