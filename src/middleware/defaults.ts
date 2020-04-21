@@ -10,6 +10,7 @@ import {
 } from '@withjoy/telemetry';
 
 import { bodyParserGraphql } from './body.parser';
+import { sessionMiddleware } from './session';
 
 interface DefaultMiddlewareResult {
   preludesMap: Map<string, RequestHandler>;
@@ -79,6 +80,7 @@ export function getDefaultMiddleware(): DefaultMiddlewareResult {
   const preludesMap = new Map<string, RequestHandler>([
     cors(),
     MORGAN_LOGGER,
+    sessionMiddleware(),
   ].map(_tupleByMiddlewareName));
 
   const bodyParsersMap = new Map<string, RequestHandler>([

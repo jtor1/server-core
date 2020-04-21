@@ -20,6 +20,7 @@ import {
 import { decodeUnverifiedToken } from '../authentication/verify.token';
 import { callService, IServiceCallerOverrides } from '../graphql/interservice.communication';
 import { GetMe, UserFragment } from '../graphql/generated.typings';
+import { SESSION_REQUEST_PROPERTY } from '../middleware/session';
 
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -78,7 +79,7 @@ export function logContextRequest(context: Context): void {
     return;
   }
 
-  const { telemetry } = context;
+  const { telemetry, sessionId } = context;
   const { method, path, body } = req;
   if (path.startsWith('/healthy')) {
     // health checks should not spam the logs
@@ -123,6 +124,7 @@ export function logContextRequest(context: Context): void {
       method,
       path,
     },
+    sessionId,
   };
   if (operations.length !== 0) {
     logged.graphql = {
@@ -297,6 +299,9 @@ export class Context
     return getProperty(this._currentUser, 'superAdmin') || false;
   }
 
+  get sessionId(): string | undefined {
+    return getProperty(this.req, SESSION_REQUEST_PROPERTY);
+  }
 
   public me = async (overrides?: IServiceCallerOverrides): Promise<void> => {
     const {
