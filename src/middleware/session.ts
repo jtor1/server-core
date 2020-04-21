@@ -21,14 +21,14 @@ export function generateSessionIdCookieHeaderValue(sessionId: string): string {
   return cookie.serialize(SESSION_REQUEST_PROPERTY, sessionId, {
     path: '/',
 
-    // (1) "a given Session ID can be used for both Staging & Production hosts" -- (2) TODO make constant or relocate?
+    // (1) "a given Session ID can be used for both Staging & Production hosts" -- (2) make constant or relocate?
     domain: '.withjoy.com',
 
     httpOnly: true,
     expires: new Date(FAR_FUTURE_EXPIRES),  // for maximum compatibility with IE
     maxAge: FAR_FUTURE_MAX_AGE,             // for everything else
 
-    // TODO it appears this is not necessary to share cookies from <subdm1>.withjoy.com:<portA> to <subdm2>.withjoy.com:<portB>
+    // it appears this is not necessary to share cookies from <subdm1>.withjoy.com:<portA> to <subdm2>.withjoy.com:<portB>
     // seems wise to err on the side of reduced scope and expand later if necessary
     //sameSite: 'none',
   });
