@@ -16,7 +16,10 @@ import { IServer, Server } from './server/server'
 import { initApp } from './server/server.init';
 import { bodyParserGraphql } from './middleware/body.parser';
 import { getDefaultMiddleware } from './middleware/defaults';
-import { sessionMiddleware } from './middleware/session';
+import {
+  sessionMiddleware,
+  SESSION_COOKIE_NAME,
+} from './middleware/session';
 import {
   NO_USER,
   NO_TOKEN,
@@ -101,6 +104,8 @@ export {
   bodyParserGraphql,
   getDefaultMiddleware,
   sessionMiddleware,
+
+  SESSION_COOKIE_NAME,
 
   ControllerTemplate,
   ModelTemplate,

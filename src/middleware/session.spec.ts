@@ -3,8 +3,9 @@ import { ifError } from 'assert';
 import { RequestHandler } from 'express'
 import { createRequest, createResponse } from 'node-mocks-http';
 import {
+    SESSION_COOKIE_NAME,
     SESSION_REQUEST_PROPERTY,
-    generateSessionIdCookieHeaderValue,
+    generateSessionIdSetCookieHeaderValue,
     sessionMiddleware,
 } from './session';
 
@@ -17,7 +18,7 @@ describe('middleware/session', () => {
     it('picks up session id from cookie', () => {
       const req = createRequest({
         headers: {
-          'cookie': `${SESSION_REQUEST_PROPERTY}=${DUMMY_SESSION_ID}`,
+          'cookie': `${SESSION_COOKIE_NAME}=${DUMMY_SESSION_ID}`,
         },
       });
       const resp = createResponse();
@@ -53,7 +54,7 @@ describe('middleware/session', () => {
           expect(newSessionId).toMatch(/^[0-9A-Fa-f]{48}$/);
 
           // check the Set-Cookie header is present and correct
-          const expectedValue = generateSessionIdCookieHeaderValue(newSessionId);
+          const expectedValue = generateSessionIdSetCookieHeaderValue(newSessionId);
           const actualValue = resp.header('set-cookie');
           expect(actualValue).toBeDefined();
           expect(actualValue).toBe(expectedValue);
@@ -80,7 +81,7 @@ describe('middleware/session', () => {
           // a new cookie session id is generated that is different from custom header session id
           const setCookieValue = resp.header('set-cookie');
           expect(setCookieValue).toBeTruthy();
-          const assignedSessionIdAsSetCookieHeaderValue = generateSessionIdCookieHeaderValue(assignedSessionId);
+          const assignedSessionIdAsSetCookieHeaderValue = generateSessionIdSetCookieHeaderValue(assignedSessionId);
           expect(assignedSessionIdAsSetCookieHeaderValue).not.toBe(setCookieValue);
 
           // assigned session id is the value from custom header

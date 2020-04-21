@@ -2,6 +2,7 @@ import cookie from 'cookie';
 import { Request, Response, NextFunction, RequestHandler } from 'express'
 import { randomBytes } from 'crypto';
 
+export const SESSION_COOKIE_NAME: string = 'sessionId';
 export const SESSION_REQUEST_PROPERTY: string = 'sessionId';
 
 // we don't want cookie to expire, so set expiration time as far as possible
@@ -17,8 +18,8 @@ function _makeSessionId(): string {
   return randomBytes(24).toString('hex')
 }
 
-export function generateSessionIdCookieHeaderValue(sessionId: string): string {
-  return cookie.serialize(SESSION_REQUEST_PROPERTY, sessionId, {
+export function generateSessionIdSetCookieHeaderValue(sessionId: string): string {
+  return cookie.serialize(SESSION_COOKIE_NAME, sessionId, {
     path: '/',
 
     // (1) "a given Session ID can be used for both Staging & Production hosts" -- (2) make constant or relocate?
@@ -40,10 +41,10 @@ export function sessionMiddleware(): RequestHandler {
     const reqAsAny: any = <any>req;
 
     const cookies = cookie.parse(headers['cookie'] || '');
-    let sessionId = (cookies || {})[SESSION_REQUEST_PROPERTY];
+    let sessionId = (cookies || {})[SESSION_COOKIE_NAME];
     if (!sessionId) {
       sessionId = _makeSessionId();
-      res.setHeader('Set-Cookie', generateSessionIdCookieHeaderValue(sessionId))
+      res.setHeader('Set-Cookie', generateSessionIdSetCookieHeaderValue(sessionId))
     }
 
     reqAsAny[SESSION_REQUEST_PROPERTY] = headers['x-joy-sessionid'] || sessionId;
