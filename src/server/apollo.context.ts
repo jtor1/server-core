@@ -123,8 +123,8 @@ export function logContextRequest(context: Context): void {
     req: { // merged into { req } subcontext
       method,
       path,
-      sessionId,
     },
+    sessionId,
   };
   if (operations.length !== 0) {
     logged.graphql = {

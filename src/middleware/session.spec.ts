@@ -50,7 +50,7 @@ describe('middleware/session', () => {
 
           expect(typeof(newSessionId)).toBe('string');
           expect(newSessionId).not.toBe(DUMMY_SESSION_ID);
-          expect(/^[0-9A-Fa-f]{48}$/.test(newSessionId)).toBe(true);
+          expect(newSessionId).toMatch(/^[0-9A-Fa-f]{48}$/);
 
           // check the Set-Cookie header is present and correct
           const expectedValue = generateSessionIdCookieHeaderValue(newSessionId);

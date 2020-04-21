@@ -34,7 +34,7 @@ export function generateSessionIdCookieHeaderValue(sessionId: string): string {
   });
 }
 
-export function sessionMiddleware(maybeOptions?: object): RequestHandler {
+export function sessionMiddleware(): RequestHandler {
   return function sessionMiddleware(req: Request, res: Response, next: NextFunction): void {
     const { headers } = req;
     const reqAsAny: any = <any>req;
@@ -46,7 +46,7 @@ export function sessionMiddleware(maybeOptions?: object): RequestHandler {
       res.setHeader('Set-Cookie', generateSessionIdCookieHeaderValue(sessionId))
     }
 
-    reqAsAny[SESSION_REQUEST_PROPERTY] = headers['x-joy-sessionid'] || sessionId;  // TODO header key as constant (but https://github.com/joylifeinc/event_service/pull/183)
+    reqAsAny[SESSION_REQUEST_PROPERTY] = headers['x-joy-sessionid'] || sessionId;
 
     next();
   }

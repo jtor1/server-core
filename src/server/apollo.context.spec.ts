@@ -13,6 +13,9 @@ import {
   TELEMETRY_HEADER_REQUEST_ID,
   Telemetry,
 } from '@withjoy/telemetry';
+import {
+  SESSION_REQUEST_PROPERTY,
+} from '../middleware/session';
 
 import { NO_USER, NO_TOKEN } from '../authentication/token.check';
 import {
@@ -44,7 +47,7 @@ const CACHE = (<unknown>Object.freeze({}) as Cache);
 
 const OTHER_TOKEN = 'OTHER_TOKEN';
 const OTHER_CACHE_KEY = `server-core/identity/${ OTHER_TOKEN }`;
-
+const SESSION_ID = 'fa44276cb66d302601f14a14ccde5b8ad21994fd92ec0d7b';
 
 describe('server/apollo.context', () => {
   let context: Context;
@@ -681,6 +684,7 @@ describe('server/apollo.context', () => {
           method: 'POST',
           url: 'http://HOSTNAME/PATH',
           body: { query },
+          [SESSION_REQUEST_PROPERTY]: SESSION_ID,
         }),
         token: TOKEN,
         userId: USER_ID,
@@ -693,8 +697,8 @@ describe('server/apollo.context', () => {
         req: { // deep-merged into Telemetry context
           method: 'POST',
           path: '/PATH',
-          sessionId: undefined, // TODO -- test passes, but still looking at this to see it makes sense
         },
+        [SESSION_REQUEST_PROPERTY]: SESSION_ID,
         graphql: {
           operations: JSON.stringify([
             {
@@ -726,6 +730,7 @@ describe('server/apollo.context', () => {
           method: 'GET',
           url: 'http://HOSTNAME/PATH',
           query: { param: true },
+          [SESSION_REQUEST_PROPERTY]: SESSION_ID,
         }),
         token: TOKEN,
         userId: USER_ID,
@@ -738,8 +743,8 @@ describe('server/apollo.context', () => {
         req: {
           method: 'GET',
           path: '/PATH',
-          sessionId: undefined,
         },
+        [SESSION_REQUEST_PROPERTY]: SESSION_ID,
       }))
       .verifiable(TypeMoq.Times.exactly(1));
 
@@ -752,6 +757,7 @@ describe('server/apollo.context', () => {
           method: 'POST',
           url: 'http://HOSTNAME/PATH',
           body: { param: true },
+          [SESSION_REQUEST_PROPERTY]: SESSION_ID,
         }),
         token: TOKEN,
         userId: USER_ID,
@@ -764,8 +770,8 @@ describe('server/apollo.context', () => {
         req: {
           method: 'POST',
           path: '/PATH',
-          sessionId: undefined,
         },
+        [SESSION_REQUEST_PROPERTY]: SESSION_ID,
       }))
       .verifiable(TypeMoq.Times.exactly(1));
 
