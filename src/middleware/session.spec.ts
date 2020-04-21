@@ -79,7 +79,7 @@ describe('middleware/session', () => {
 
           // a new cookie session id is generated that is different from custom header session id
           const setCookieValue = resp.header('set-cookie');
-          expect(!!setCookieValue).toBe(true);
+          expect(setCookieValue).toBeTruthy();
           const assignedSessionIdAsSetCookieHeaderValue = generateSessionIdCookieHeaderValue(assignedSessionId);
           expect(assignedSessionIdAsSetCookieHeaderValue).not.toBe(setCookieValue);
 
@@ -88,7 +88,5 @@ describe('middleware/session', () => {
         }
       );
     });
-
-    // TODO - I think we need to check the session id is set on Context, either here or in another test - check session value is set on Context ...
   });
 });
