@@ -80,7 +80,6 @@ export function getDefaultMiddleware(): DefaultMiddlewareResult {
   const preludesMap = new Map<string, RequestHandler>([
     cors(),
     MORGAN_LOGGER,
-    sessionMiddleware(),
   ].map(_tupleByMiddlewareName));
 
   const bodyParsersMap = new Map<string, RequestHandler>([
@@ -90,6 +89,7 @@ export function getDefaultMiddleware(): DefaultMiddlewareResult {
   ].map(_tupleByMiddlewareName));
 
   const apolloMap = new Map<string, RequestHandler>([
+    sessionMiddleware(),
     bodyParserGraphql({ limit: '100Kb' }),
   ].map(_tupleByMiddlewareName));
 

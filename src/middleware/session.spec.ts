@@ -4,6 +4,7 @@ import { RequestHandler } from 'express'
 import { createRequest, createResponse } from 'node-mocks-http';
 import {
     SESSION_COOKIE_NAME,
+    SESSION_HEADER_NAME,
     SESSION_REQUEST_PROPERTY,
     generateSessionIdSetCookieHeaderValue,
     sessionMiddleware,
@@ -14,6 +15,7 @@ const DUMMY_SESSION_ID: string = '335957c0a7b1fe8c97f5e35d372ef3a522b2688c7c9868
 describe('middleware/session', () => {
   describe('sessionMiddleware', () => {
     const middleware: RequestHandler = sessionMiddleware();
+    const passiveMiddleware: RequestHandler = sessionMiddleware({ passive: true });
 
     it('picks up session id from cookie', () => {
       const req = createRequest({
@@ -29,10 +31,40 @@ describe('middleware/session', () => {
         (err) => {
           ifError(err);
 
+          // check there is no set-cookie header
+          expect(resp.header('set-cookie')).toBeUndefined();
+
+          // session is is set as request property
           expect(req[SESSION_REQUEST_PROPERTY]).toBe(DUMMY_SESSION_ID);
+
+          // session id is set on request headers (for proxying)
+//          expect(req.headers[SESSION_HEADER_NAME]).toBe(DUMMY_SESSION_ID); TODO don't do this unless issuing new sessiond id
+        }
+      );
+    });
+
+    it('picks up session id from session header', () => {
+      const req = createRequest({
+        headers: {
+          [SESSION_HEADER_NAME]: DUMMY_SESSION_ID,
+        },
+      });
+      const resp = createResponse();
+
+      middleware(
+        req,
+        resp,
+        (err) => {
+          ifError(err);
 
           // check there is no set-cookie header
           expect(resp.header('set-cookie')).toBeUndefined();
+
+          // session is is set as request property
+          expect(req[SESSION_REQUEST_PROPERTY]).toBe(DUMMY_SESSION_ID);
+
+          // session id is set on request headers (for proxying)
+//          expect(req.headers[SESSION_HEADER_NAME]).toBe(DUMMY_SESSION_ID); TODO: don't do this unless issuing new session id
         }
       );
     });
@@ -58,14 +90,37 @@ describe('middleware/session', () => {
           const actualValue = resp.header('set-cookie');
           expect(actualValue).toBeDefined();
           expect(actualValue).toBe(expectedValue);
+
+          // session is is set as request property
+          expect(req[SESSION_REQUEST_PROPERTY]).toBe(newSessionId);
+
+          // session id is set on request headers (for proxying)
+          expect(req.headers[SESSION_HEADER_NAME]).toBe(newSessionId);
         }
       );
     });
 
+    it('does not create a new session id in passive mode when there is none', () => {
+      const req = createRequest();
+      const resp = createResponse();
+
+      passiveMiddleware(
+        req,
+        resp,
+        (err) => {
+          ifError(err);
+
+          expect(req[SESSION_REQUEST_PROPERTY]).toBeUndefined();
+          expect(req.headers[SESSION_HEADER_NAME]).toBeUndefined();
+        }
+      );
+    });
+
+/* TODO: cleanup
     it('session id in custom header is used in preference to any existing or new cookie session', () => {
       const req = createRequest({
         headers: {
-          'x-joy-sessionid': DUMMY_SESSION_ID,
+          [SESSION_HEADER_NAME]: DUMMY_SESSION_ID,
         },
       });
       const resp = createResponse();
@@ -89,5 +144,6 @@ describe('middleware/session', () => {
         }
       );
     });
+*/
   });
 });

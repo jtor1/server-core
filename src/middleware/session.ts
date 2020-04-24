@@ -2,13 +2,18 @@ import cookie from 'cookie';
 import { Request, Response, NextFunction, RequestHandler } from 'express'
 import { randomBytes } from 'crypto';
 
-export const SESSION_COOKIE_NAME: string = 'sessionId';
+export const SESSION_COOKIE_NAME: string = 'joy_session_id';
 export const SESSION_REQUEST_PROPERTY: string = 'sessionId';
+export const SESSION_HEADER_NAME = 'x-joy-sessionid';
 
 // we don't want cookie to expire, so set expiration time as far as possible
 // in the future without risking unexpected results due to bugs
 const FAR_FUTURE_EXPIRES: string = 'Sun, 3 Jan 2038 00:00:00 GMT';
 const FAR_FUTURE_MAX_AGE: number = 157680000; // ~5 years, so not tickling limits until 1/2033
+
+interface SessionOptions {
+    passive: boolean;   // middleware does not create a new session if none exists (TODO: clarify / confirm this)
+}
 
 function _makeSessionId(): string {
   // 'base64' was used in the code this was taken from, but Base64 is annoying when dealing
@@ -35,19 +40,27 @@ export function generateSessionIdSetCookieHeaderValue(sessionId: string): string
   });
 }
 
-export function sessionMiddleware(): RequestHandler {
+export function sessionMiddleware(maybeOptions?: SessionOptions): RequestHandler {
+  const opts: SessionOptions = {
+    passive: false,
+    ...maybeOptions
+  }
   return function sessionMiddleware(req: Request, res: Response, next: NextFunction): void {
     const { headers } = req;
     const reqAsAny: any = <any>req;
 
     const cookies = cookie.parse(headers['cookie'] || '');
-    let sessionId = (cookies || {})[SESSION_COOKIE_NAME];
-    if (!sessionId) {
+    const cookieSessionId = (cookies || {})[SESSION_COOKIE_NAME];
+    let sessionId = headers[SESSION_HEADER_NAME] || cookieSessionId;
+    if (!opts.passive && !sessionId) {
       sessionId = _makeSessionId();
       res.setHeader('Set-Cookie', generateSessionIdSetCookieHeaderValue(sessionId))
+      req.headers[SESSION_HEADER_NAME] = sessionId;
     }
 
-    reqAsAny[SESSION_REQUEST_PROPERTY] = headers['x-joy-sessionid'] || sessionId;
+    if (sessionId) {
+      reqAsAny[SESSION_REQUEST_PROPERTY] = sessionId;
+    }
 
     next();
   }
