@@ -12,7 +12,7 @@ const FAR_FUTURE_EXPIRES: string = 'Sun, 3 Jan 2038 00:00:00 GMT';
 const FAR_FUTURE_MAX_AGE: number = 157680000; // ~5 years, so not tickling limits until 1/2033
 
 interface SessionOptions {
-    passive: boolean;   // middleware does not create a new session if none exists (TODO: clarify / confirm this)
+    passive: boolean;   // middleware does not create a new session if none exists
 }
 
 function _makeSessionId(): string {

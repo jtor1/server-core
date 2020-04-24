@@ -11,6 +11,7 @@ import {
 } from './session';
 
 const DUMMY_SESSION_ID: string = '335957c0a7b1fe8c97f5e35d372ef3a522b2688c7c98684b';
+const DUMMY_SESSION_ID2: string = '729f123eb53158bce92b182401f2111efe034127db1da749';
 
 describe('middleware/session', () => {
   describe('sessionMiddleware', () => {
@@ -36,9 +37,6 @@ describe('middleware/session', () => {
 
           // session is is set as request property
           expect(req[SESSION_REQUEST_PROPERTY]).toBe(DUMMY_SESSION_ID);
-
-          // session id is set on request headers (for proxying)
-//          expect(req.headers[SESSION_HEADER_NAME]).toBe(DUMMY_SESSION_ID); TODO don't do this unless issuing new sessiond id
         }
       );
     });
@@ -62,9 +60,26 @@ describe('middleware/session', () => {
 
           // session is is set as request property
           expect(req[SESSION_REQUEST_PROPERTY]).toBe(DUMMY_SESSION_ID);
+        }
+      );
+    });
 
-          // session id is set on request headers (for proxying)
-//          expect(req.headers[SESSION_HEADER_NAME]).toBe(DUMMY_SESSION_ID); TODO: don't do this unless issuing new session id
+    it('session id in custom header is picked in preference to a cookie', () => {
+      const req = createRequest({
+        headers: {
+          'cookie': `${SESSION_COOKIE_NAME}=${DUMMY_SESSION_ID}`,
+          [SESSION_HEADER_NAME]: DUMMY_SESSION_ID2,
+        },
+      });
+      const resp = createResponse();
+
+      middleware(
+        req,
+        resp,
+        (err) => {
+          ifError(err);
+
+          expect(req[SESSION_REQUEST_PROPERTY]).toBe(DUMMY_SESSION_ID2);
         }
       );
     });
@@ -115,35 +130,5 @@ describe('middleware/session', () => {
         }
       );
     });
-
-/* TODO: cleanup
-    it('session id in custom header is used in preference to any existing or new cookie session', () => {
-      const req = createRequest({
-        headers: {
-          [SESSION_HEADER_NAME]: DUMMY_SESSION_ID,
-        },
-      });
-      const resp = createResponse();
-
-      middleware(
-        req,
-        resp,
-        (err) => {
-          ifError(err);
-
-          const assignedSessionId = req[SESSION_REQUEST_PROPERTY];
-
-          // a new cookie session id is generated that is different from custom header session id
-          const setCookieValue = resp.header('set-cookie');
-          expect(setCookieValue).toBeTruthy();
-          const assignedSessionIdAsSetCookieHeaderValue = generateSessionIdSetCookieHeaderValue(assignedSessionId);
-          expect(assignedSessionIdAsSetCookieHeaderValue).not.toBe(setCookieValue);
-
-          // assigned session id is the value from custom header
-          expect(assignedSessionId).toBe(DUMMY_SESSION_ID);
-        }
-      );
-    });
-*/
   });
 });
