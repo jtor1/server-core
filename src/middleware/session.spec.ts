@@ -37,6 +37,9 @@ describe('middleware/session', () => {
 
           // session is is set as request property
           expect(req[SESSION_REQUEST_PROPERTY]).toBe(DUMMY_SESSION_ID);
+
+          // an existing cookie is not put in req.headers where there is no custom header
+          expect(req.headers[SESSION_HEADER_NAME]).toBeUndefined();
         }
       );
     });
@@ -60,6 +63,9 @@ describe('middleware/session', () => {
 
           // session is is set as request property
           expect(req[SESSION_REQUEST_PROPERTY]).toBe(DUMMY_SESSION_ID);
+
+          // an existing custom session header remains in req.headers
+          expect(req.headers[SESSION_HEADER_NAME]).toBe(DUMMY_SESSION_ID);
         }
       );
     });
