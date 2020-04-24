@@ -20,6 +20,7 @@ import {
   sessionMiddleware,
   SESSION_COOKIE_NAME,
   SESSION_HEADER_NAME,
+  SESSION_REQUEST_PROPERTY,
 } from './middleware/session';
 import {
   NO_USER,
@@ -108,6 +109,7 @@ export {
 
   SESSION_COOKIE_NAME,
   SESSION_HEADER_NAME,
+  SESSION_REQUEST_PROPERTY,
 
   ControllerTemplate,
   ModelTemplate,
