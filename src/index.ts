@@ -19,6 +19,7 @@ import { getDefaultMiddleware } from './middleware/defaults';
 import {
   sessionMiddleware,
   SESSION_COOKIE_NAME,
+  SESSION_HEADER_NAME,
 } from './middleware/session';
 import {
   NO_USER,
@@ -106,6 +107,7 @@ export {
   sessionMiddleware,
 
   SESSION_COOKIE_NAME,
+  SESSION_HEADER_NAME,
 
   ControllerTemplate,
   ModelTemplate,
