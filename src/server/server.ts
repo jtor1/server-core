@@ -126,7 +126,11 @@ export class Server implements IServer {
       this.app.use(path || '/graphql', ...apolloMiddleware);
     }
     apollo.applyMiddleware({
-      app: this.app
+      app: this.app,
+
+      // @see `getDefaultMiddleware`
+      //   also, legacy version; CORS disabled by #applyMiddleware
+      cors: false,
     });
   }
 }

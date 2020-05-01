@@ -267,6 +267,9 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
       //   fortunately, { engine: false } neutralizes that concern
       engine: false,
       reporting: false,
+
+      // @see `getDefaultMiddleware`
+      cors: false,
     },
 
     engineReportingOptions: {
