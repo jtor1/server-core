@@ -77,7 +77,7 @@ const MORGAN_LOGGER = morgan(_morganFormatter, {
 });
 
 
-const WITHJOY_DOMAIN_REGEX = /.withjoy.com$/;
+const WITHJOY_DOMAIN_REGEX = /\.withjoy\.com$/;
 
 export function getDefaultMiddleware(): DefaultMiddlewareResult {
   const preludesMap = new Map<string, RequestHandler>([
