@@ -105,8 +105,8 @@ export {
 
   bodyParserGraphql,
   getDefaultMiddleware,
-  sessionMiddleware,
 
+  sessionMiddleware,
   SESSION_COOKIE_NAME,
   SESSION_HEADER_NAME,
   SESSION_REQUEST_PROPERTY,
