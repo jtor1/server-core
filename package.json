@@ -6,22 +6,23 @@
   "types": "dist/index.d.ts",
   "license": "MIT",
   "engines": {
-    "node": ">=10 <11"
+    "node": ">=6"
   },
+  "engineStrict": true,
   "files": [
     "dist/**/*"
   ],
   "scripts": {
-    "prebuild": "rm -rf ./dist",
-    "prepublishOnly": "yarn test",
     "build": "tsc",
-    "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
-    "test:only": "NODE_ENV=test TERM=dumb  node  node_modules/.bin/jest  -i --no-coverage --no-verbose  --detectOpenHandles --forceExit --config jest.config.js",
-    "gentype:local": "apollo client:codegen --endpoint=http://localhost:9091/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/generated.typings.ts",
     "gentype:dev": "apollo client:codegen --endpoint=https://bliss-gateway-staging.withjoy.com/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/generated.typings.ts",
-    "prepare": "yarn build",
-    "version": "git add -A src",
-    "postversion": "git push && git push --tags"
+    "gentype:local": "apollo client:codegen --endpoint=http://localhost:9091/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/generated.typings.ts",
+    "postversion": "git push && git push --tags",
+    "prebuild": "rm -rf ./dist",
+    "prepare": "yarn build && npm shrinkwrap",
+    "prepublishOnly": "yarn test",
+    "test:only": "NODE_ENV=test TERM=dumb  node  node_modules/.bin/jest  -i --no-coverage --no-verbose  --detectOpenHandles --forceExit --config jest.config.js",
+    "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
+    "version": "git add -A src"
   },
   "peerDependencies": {
     "graphql": "14.4.2"
