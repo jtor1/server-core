@@ -1,17 +1,17 @@
-import { get as getProperty, isString } from 'lodash';
+import { get as getProperty, isString, last } from 'lodash';
 import { Request, Response, RequestHandler } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import { TokenIndexer } from 'morgan';
 import bodyParser from 'body-parser';
-import { parse as urlParse } from 'url';
+import forwarded from 'forwarded';
 import {
   telemetry as telemetryGlobal,
   TelemetryLevel
 } from '@withjoy/telemetry';
 
 import { bodyParserGraphql } from './body.parser';
-import { sessionMiddleware } from './session';
+import { sessionMiddleware, SESSION_REQUEST_PROPERTY } from './session';
 
 interface DefaultMiddlewareResult {
   preludesMap: Map<string, RequestHandler>;
@@ -30,11 +30,16 @@ function _tupleByMiddlewareName(handler: RequestHandler): [ string, RequestHandl
 
 // @protected -- exported only for Test Suite, not '/index.ts'
 export function _morganFormatter(tokens: TokenIndexer, req: Request, res: Response): string | null {
-  const url = tokens.url(req, res);
-  if (url.startsWith('/healthy')) {
+  const reqAsAny: any = req;
+
+  const path = tokens.url(req, res);
+  if (path.startsWith('/healthy')) {
     // health checks should not spam the logs
     return null;
   }
+
+  // @see `injectContextIntoRequestMiddleware`
+  const context = reqAsAny.context;
 
   // align `morgan` + Telemetry logging
   // there's a Telemetry instance tied to every Context
@@ -43,23 +48,30 @@ export function _morganFormatter(tokens: TokenIndexer, req: Request, res: Respon
   // ... assuming that the Request has been associated with a Context
   //   which cannot be guaranteed,
   //   so fall back to the Telemetry singleton if need be
-  const contextTelemetry = getProperty(req, 'context.telemetry') || telemetryGlobal;
+  const contextTelemetry = getProperty(context, 'telemetry') || telemetryGlobal;
   if (contextTelemetry.isLogSilent()) {
     // Telemetry logging has been silenced
     return null;
   }
 
-  const xForwardedFor = tokens.req(req, res, 'x-forwarded-for');
-  const remoteAddress = xForwardedFor || tokens['remote-addr'](req, res);
+  const sessionId = (context
+    ? context.sessionId
+    : getProperty(req, SESSION_REQUEST_PROPERTY)
+  );
+
+  // "the last index is the furthest address, typically the end-user"
+  const remoteAddress = (req.connection && last(forwarded(req)));
+
   const loggedData = {
     source: 'express',
     action: 'request',
 
     // inbound
     remoteAddress,
-    host: tokens.req(req, res, 'host'),
+    host: tokens.req(req, res, 'host'), // HTTP requested host (vs. physical hostname)
     method: tokens.method(req, res),
-    url,
+    path,
+    sessionId,
 
     // outbound (because { immediate: false })
     statusCode: tokens.status(req, res),

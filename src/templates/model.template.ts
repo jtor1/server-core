@@ -1,4 +1,4 @@
- import { PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, VersionColumn, Column, Generated, Index } from 'typeorm';
+import { PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, VersionColumn, Column, Generated, Index } from 'typeorm';
 
 export abstract class ModelTemplate  {
 
