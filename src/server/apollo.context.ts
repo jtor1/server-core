@@ -1,7 +1,8 @@
-import { get as getProperty, pick } from 'lodash';
+import { get as getProperty, last, pick } from 'lodash';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
+import forwarded from 'forwarded';
 import { default as CacheManager, Cache } from 'cache-manager';
 import {
   Telemetry,
@@ -80,7 +81,8 @@ export function logContextRequest(context: Context): void {
   }
 
   const { telemetry, sessionId } = context;
-  const { method, path, body } = req;
+  const { host, method, body } = req;
+  const path = (req.baseUrl || req.path); // GraphQL middleware does a rewrite
   if (path.startsWith('/healthy')) {
     // health checks should not spam the logs
     return;
@@ -121,16 +123,25 @@ export function logContextRequest(context: Context): void {
     source: 'apollo',
     action: 'request',
     req: { // merged into { req } subcontext
+      host, // HTTP requested host (vs. physical hostname)
       method,
       path,
     },
     sessionId,
   };
+
+  // "the last index is the furthest address, typically the end-user"
+  const remoteAddress = (req.connection && last(forwarded(req)));
+  if (remoteAddress) {
+    logged.req.remoteAddress = remoteAddress;
+  }
+
   if (operations.length !== 0) {
     logged.graphql = {
       operations: JSON.stringify(operations),
     };
   }
+
   telemetry.info('logContextRequest', logged);
 }
 
@@ -252,6 +263,7 @@ export class Context
     //   NOTE: Telemetry does a deep merge; { req: { foo } }
     const context = this;
     telemetryContext.req = {
+      get sessionId() { return context.sessionId },
       get token() { return context._token },
       get userId() { return context._userId },
       get jwt() {

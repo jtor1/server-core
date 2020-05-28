@@ -1,4 +1,5 @@
 import 'jest';
+import { Socket } from 'net';
 import { noop, omit } from 'lodash';
 import { Request, Response } from 'express'
 import { createRequest, createResponse } from 'node-mocks-http';
@@ -13,12 +14,15 @@ import {
 
 import { Context, injectContextIntoRequestMiddleware } from '../server/apollo.context';
 import { NO_USER, NO_TOKEN } from '../authentication/token.check';
+import { SESSION_REQUEST_PROPERTY } from '../middleware/session';
 import {
   getDefaultMiddleware,
 
   // @protected
   _morganFormatter,
 } from './defaults';
+
+const SESSION_ID = 'SESSION_ID';
 
 
 describe('middleware/defaults', () => {
@@ -78,6 +82,7 @@ describe('middleware/defaults', () => {
       ...LOGGED_BY_GLOBAL_TELEMETRY,
 
       req: { // @see introspection setup by Context#constructor
+        sessionId: SESSION_ID,
         jwt: null,
         token: NO_TOKEN,
         userId: NO_USER,
@@ -91,6 +96,7 @@ describe('middleware/defaults', () => {
       telemetryContext = telemetry.context();
 
       contextualizeGlobalTelemetry({
+        // @see LOGGED_BY_GLOBAL_TELEMETRY
         app: 'APP',
         hostname: 'HOSTNAME',
       });
@@ -112,13 +118,20 @@ describe('middleware/defaults', () => {
           // => Telemetry `{ requestId }`
           [ TELEMETRY_HEADER_REQUEST_ID ]: 'REQUEST_ID',
         },
+
+        [ SESSION_REQUEST_PROPERTY ]: SESSION_ID, // pre-derived (vs. Cookie / header)
+
+        connection: ({ remoteAddress: 'ADDRESS_IP' } as Socket), // overridden by 'X-Fowarded-For'
       });
+
+      // internal `morgan` trickery
+      //   `process.hrtime` => [ seconds, nanos ]
       Reflect.set(req, '_startAt', [ 0, 0 ]);
 
       res = createResponse();
       res.set('content-length', '23');
       res.send(418);
-      Reflect.set(res, '_startAt', [ 5, 860000 ]); // `process.hrtime` => [ seconds, nanos ]
+      Reflect.set(res, '_startAt', [ 5, 860000 ]);
 
       // build a Request <=> Context relationship
       const middleware = injectContextIntoRequestMiddleware((args) => new Context(args));
@@ -136,12 +149,17 @@ describe('middleware/defaults', () => {
         // it('logs the Request ID header via Telemetry')
         requestId: 'REQUEST_ID',
 
+        // it('logs the Session ID')
+        sessionId: SESSION_ID,
+
+        // it('derives the forwarded IP address')
+        remoteAddress: 'ADDRESS_FORWARDED',
+
         source: 'express',
         action: 'request',
-        remoteAddress: 'ADDRESS_FORWARDED',
         host: 'HOST',
         method: 'PATCH',
-        url: '/url',
+        path: '/url',
         statusCode: '418',
         contentLength: '23',
         responseTimeMs: '5000.860',
@@ -150,7 +168,9 @@ describe('middleware/defaults', () => {
 
     it('logs less data with a context', () => {
       req = createRequest({
-        ip: 'ADDRESS_IP',
+        [ SESSION_REQUEST_PROPERTY ]: SESSION_ID, // pre-derived (vs. Cookie / header)
+
+        connection: ({ remoteAddress: 'ADDRESS_IP' } as Socket), // logged if parseable
       });
 
       res = createResponse();
@@ -169,6 +189,9 @@ describe('middleware/defaults', () => {
         // it('logs with Telemetry from the Context')
         ...LOGGED_BY_CONTEXT_TELEMETRY,
 
+        // it('logs the Session ID')
+        sessionId: SESSION_ID,
+
         // it('disregards the Request ID in absence of a request header')
 
         source: 'express',
@@ -176,13 +199,58 @@ describe('middleware/defaults', () => {
         requestId: expect.any(String),
         remoteAddress: 'ADDRESS_IP',
         method: 'GET',
-        url: '',
+        path: '',
         statusCode: '200',
       });
     });
 
-    it('logs minimal data', () => {
-      req = createRequest(); // no Request <=> Context relationship
+    it('logs maximal data without a context', () => {
+      req = createRequest({
+        method: 'PATCH',
+        url: '/url',
+        headers: {
+          'host': 'HOST',
+          'x-forwarded-for': 'ADDRESS_FORWARDED',
+        },
+
+        [ SESSION_REQUEST_PROPERTY ]: SESSION_ID, // pre-derived (vs. Cookie / header)
+
+        connection: ({ remoteAddress: 'ADDRESS_IP' } as Socket), // overridden by 'X-Fowarded-For'
+      });
+
+      res = createResponse();
+      res.send(200);
+
+      expect((<any>req).context).toBeUndefined();
+
+      const formatted = _morganFormatter(<any>morgan, req, res);
+      const parsed = JSON.parse(formatted!); // from a formatted String
+      const expected = omit(parsed, 'time', 'unixTime'); // avoid time-sensitive properties
+
+      expect(expected).toEqual({
+        // it('logs with global Telemetry')
+        ...LOGGED_BY_GLOBAL_TELEMETRY,
+
+        // it('logs the Session ID')
+        sessionId: SESSION_ID,
+
+        // it('logs the default Request ID via Telemetry in absence of a request header')
+        requestId: '                                ',
+
+        source: 'express',
+        action: 'request',
+        remoteAddress: 'ADDRESS_FORWARDED',
+        host: 'HOST',
+        method: 'PATCH',
+        path: '/url',
+        statusCode: '200',
+      });
+    });
+
+    it('logs minimal data without a context', () => {
+      req = createRequest({
+        connection: ({} as Socket), // un-parseable
+      });
       res = createResponse(); // un-sent
 
       expect((<any>req).context).toBeUndefined();
@@ -201,7 +269,7 @@ describe('middleware/defaults', () => {
         source: 'express',
         action: 'request',
         method: 'GET',
-        url: '',
+        path: '',
       });
     });
 
@@ -209,7 +277,6 @@ describe('middleware/defaults', () => {
       req = createRequest({
         method: 'GET',
         url: '/healthy',
-        ip: 'ADDRESS_IP',
       });
       expect(Reflect.get(req, 'context')).toBeUndefined();
 

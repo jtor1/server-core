@@ -1,4 +1,5 @@
 import 'jest';
+import { Socket } from 'net';
 import { noop } from 'lodash';
 import * as TypeMoq from 'typemoq';
 import nock from 'nock';
@@ -159,6 +160,7 @@ describe('server/apollo.context', () => {
               [ TELEMETRY_HEADER_PERSON_ID ]: 'PERSON_ID',
               [ TELEMETRY_HEADER_REQUEST_ID ]: 'REQUEST_ID',
             },
+            [ SESSION_REQUEST_PROPERTY ]: SESSION_ID, // pre-derived (vs. Cookie / header)
           }),
           token: TOKEN,
           userId: USER_ID,
@@ -172,6 +174,7 @@ describe('server/apollo.context', () => {
           personId: 'PERSON_ID',
           requestId: 'REQUEST_ID',
           req: {
+            sessionId: SESSION_ID,
             token: TOKEN,
             userId: USER_ID,
 
@@ -681,10 +684,16 @@ describe('server/apollo.context', () => {
 
       context = new Context({
         req: createRequest({
+          // individual properties, vs. relying upon a parsed `url`
+          host: 'HOSTNAME',
           method: 'POST',
-          url: 'http://HOSTNAME/PATH',
+          path: '/IGNORED',
           body: { query },
-          [SESSION_REQUEST_PROPERTY]: SESSION_ID,
+          [SESSION_REQUEST_PROPERTY]: SESSION_ID, // pre-derived (vs. Cookie / header)
+
+          baseUrl: '/GRAPHQL', // GraphQL middleware does a rewrite
+
+          connection: ({ remoteAddress: 'REMOTE_ADDRESS' } as Socket), // logged if parseable
         }),
         token: TOKEN,
         userId: USER_ID,
@@ -695,10 +704,12 @@ describe('server/apollo.context', () => {
         source: 'apollo',
         action: 'request',
         req: { // deep-merged into Telemetry context
+          remoteAddress: 'REMOTE_ADDRESS',
+          host: 'HOSTNAME',
           method: 'POST',
-          path: '/PATH',
+          path: '/GRAPHQL',
         },
-        [SESSION_REQUEST_PROPERTY]: SESSION_ID,
+        sessionId: SESSION_ID,
         graphql: {
           operations: JSON.stringify([
             {
@@ -727,10 +738,13 @@ describe('server/apollo.context', () => {
     it('logs a REST-y GET request', () => {
       context = new Context({
         req: createRequest({
+          host: 'HOSTNAME',
           method: 'GET',
-          url: 'http://HOSTNAME/PATH',
+          path: '/PATH',
           query: { param: true },
           [SESSION_REQUEST_PROPERTY]: SESSION_ID,
+
+          connection: ({} as Socket), // un-parseable
         }),
         token: TOKEN,
         userId: USER_ID,
@@ -741,10 +755,11 @@ describe('server/apollo.context', () => {
         source: 'apollo',
         action: 'request',
         req: {
+          host: 'HOSTNAME',
           method: 'GET',
           path: '/PATH',
         },
-        [SESSION_REQUEST_PROPERTY]: SESSION_ID,
+        sessionId: SESSION_ID,
       }))
       .verifiable(TypeMoq.Times.exactly(1));
 
@@ -754,8 +769,9 @@ describe('server/apollo.context', () => {
     it('logs a REST-y POST request', () => {
       context = new Context({
         req: createRequest({
+          host: 'HOSTNAME',
           method: 'POST',
-          url: 'http://HOSTNAME/PATH',
+          path: '/PATH',
           body: { param: true },
           [SESSION_REQUEST_PROPERTY]: SESSION_ID,
         }),
@@ -768,10 +784,11 @@ describe('server/apollo.context', () => {
         source: 'apollo',
         action: 'request',
         req: {
+          host: 'HOSTNAME',
           method: 'POST',
           path: '/PATH',
         },
-        [SESSION_REQUEST_PROPERTY]: SESSION_ID,
+        sessionId: SESSION_ID,
       }))
       .verifiable(TypeMoq.Times.exactly(1));
 
@@ -794,8 +811,9 @@ describe('server/apollo.context', () => {
     it('does not log a health check', () => {
       context = new Context({
         req: createRequest({
+          host: 'HOSTNAME',
           method: 'GET',
-          url: 'http://HOST/healthy',
+          path: '/healthy',
         }),
         token: TOKEN,
         userId: USER_ID,
