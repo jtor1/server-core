@@ -148,9 +148,10 @@ export function logContextRequest(context: Context): void {
 export type InjectContextIntoRequestFactory = (constructorArgs: ContextConstructorArgs) => Context;
 
 export function injectContextIntoRequestMiddleware(contextFactory: InjectContextIntoRequestFactory): RequestHandler {
-  // here's an Express middleware to associate Request <=> Context
-  //   for use in non-Apollo situations
-  //   eg. REST endpoints
+  // an Express middleware to associate Request <=> Context
+  //   for use in both Apollo GraphQL and REST endpoints.
+  // having this association is important to other core methods,
+  //   eg. `_morganFormatter` having access to contextual Telemetry
   return function injectContextIntoRequest(req: Request, res: Response, next: NextFunction) {
     const reqAsAny: any = <any>req;
     const { token, userId } = reqAsAny; // either may be missing
