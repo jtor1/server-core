@@ -122,18 +122,18 @@ export function logContextRequest(context: Context): void {
   const logged: Record<string, any> = {
     source: 'apollo',
     action: 'request',
-    req: { // merged into { req } subcontext
-      host, // HTTP requested host (vs. physical hostname)
-      method,
-      path,
-    },
+
+    // (in a structure similar to `_morganFormatter`)
+    host, // HTTP requested host (vs. physical hostname)
+    method,
+    path,
     sessionId,
   };
 
   // "the last index is the furthest address, typically the end-user"
   const remoteAddress = (req.connection && last(forwarded(req)));
   if (remoteAddress) {
-    logged.req.remoteAddress = remoteAddress;
+    logged.remoteAddress = remoteAddress;
   }
 
   if (operations.length !== 0) {
