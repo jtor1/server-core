@@ -703,12 +703,10 @@ describe('server/apollo.context', () => {
       telemetryMock.setup((mocked) => mocked.info('logContextRequest', {
         source: 'apollo',
         action: 'request',
-        req: { // deep-merged into Telemetry context
-          remoteAddress: 'REMOTE_ADDRESS',
-          host: 'HOSTNAME',
-          method: 'POST',
-          path: '/GRAPHQL',
-        },
+        remoteAddress: 'REMOTE_ADDRESS',
+        host: 'HOSTNAME',
+        method: 'POST',
+        path: '/GRAPHQL',
         sessionId: SESSION_ID,
         graphql: {
           operations: JSON.stringify([
@@ -754,11 +752,9 @@ describe('server/apollo.context', () => {
       telemetryMock.setup((mocked) => mocked.info('logContextRequest', {
         source: 'apollo',
         action: 'request',
-        req: {
-          host: 'HOSTNAME',
-          method: 'GET',
-          path: '/PATH',
-        },
+        host: 'HOSTNAME',
+        method: 'GET',
+        path: '/PATH',
         sessionId: SESSION_ID,
       }))
       .verifiable(TypeMoq.Times.exactly(1));
@@ -783,11 +779,9 @@ describe('server/apollo.context', () => {
       telemetryMock.setup((mocked) => mocked.info('logContextRequest', {
         source: 'apollo',
         action: 'request',
-        req: {
-          host: 'HOSTNAME',
-          method: 'POST',
-          path: '/PATH',
-        },
+        host: 'HOSTNAME',
+        method: 'POST',
+        path: '/PATH',
         sessionId: SESSION_ID,
       }))
       .verifiable(TypeMoq.Times.exactly(1));
