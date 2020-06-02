@@ -1,3 +1,6 @@
+// also:  @see node6.ts
+
+import { VERSION } from './utils/const';
 import {
   Context,
   IContext,
@@ -85,6 +88,8 @@ import * as sortKeyBase64 from './utils/sortKey/base64';
 import * as sortKeyPaddedNumeric from './utils/sortKey/paddedNumeric';
 
 export {
+  VERSION,
+
   Context,
   IContext,
   ContextConstructorArgs,
