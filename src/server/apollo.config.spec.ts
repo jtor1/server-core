@@ -7,6 +7,7 @@ import {
 } from './apollo.config';
 
 
+const API_KEY = 'ENGINE_API_KEY';
 const DEFAULT_CONFIG_ARGS: ApolloEnvironmentConfigArgs = {
   serviceName: 'testSuite',
   servicePort: '90210',
@@ -19,7 +20,7 @@ describe('server/apollo.config', () => {
     env = Object.assign({}, process.env);
 
     // things everyone needs
-    process.env.ENGINE_API_KEY = 'ENGINE_API_KEY';
+    process.env.ENGINE_API_KEY = API_KEY;
   });
 
   afterEach(() => {
@@ -247,6 +248,123 @@ describe('server/apollo.config', () => {
             url: 'http://localhost:90210/graphql',
           },
         },
+      });
+    });
+
+
+    describe('per the variant', () => {
+      // for "less subtle" configuration sections not covered above
+
+      it('provides a local configuration', () => {
+        const config = deriveApolloEnvironmentConfig({
+          ...DEFAULT_CONFIG_ARGS,
+          variant: ApolloEnvironmentVariant.local,
+        });
+
+        expect(config).toMatchObject({
+          variant: ApolloEnvironmentVariant.local,
+
+          apiKey: API_KEY,
+          engineReportingOptions: {
+            apiKey: API_KEY,
+            schemaTag: 'development',
+          },
+          serverOptions: {
+            cors: false,
+            debug: true,
+            engine: false,
+            introspection: true,
+            mocks: false,
+            playground: true,
+            reporting: false,
+            subscriptions: false,
+            tracing: true,
+          },
+        });
+      });
+
+      it('provides a development configuration', () => {
+        const config = deriveApolloEnvironmentConfig({
+          ...DEFAULT_CONFIG_ARGS,
+          variant: ApolloEnvironmentVariant.development,
+        });
+
+        expect(config).toMatchObject({
+          variant: ApolloEnvironmentVariant.development,
+
+          apiKey: API_KEY,
+          engineReportingOptions: {
+            apiKey: API_KEY,
+            schemaTag: 'development',
+          },
+          serverOptions: {
+            cors: false,
+            debug: true,
+            engine: false,
+            introspection: true,
+            mocks: false,
+            playground: true,
+            reporting: false,
+            subscriptions: false,
+            tracing: true,
+          },
+        });
+      });
+
+      it('provides a staging configuration', () => {
+        const config = deriveApolloEnvironmentConfig({
+          ...DEFAULT_CONFIG_ARGS,
+          variant: ApolloEnvironmentVariant.staging,
+        });
+
+        expect(config).toMatchObject({
+          variant: ApolloEnvironmentVariant.staging,
+
+          apiKey: API_KEY,
+          engineReportingOptions: {
+            apiKey: API_KEY,
+            schemaTag: 'staging',
+          },
+          serverOptions: {
+            cors: false,
+            debug: true,
+            engine: false,
+            introspection: true,
+            mocks: false,
+            playground: true,
+            reporting: false,
+            subscriptions: false,
+            tracing: true,
+          },
+        });
+      });
+
+      it('provides a production configuration', () => {
+        const config = deriveApolloEnvironmentConfig({
+          ...DEFAULT_CONFIG_ARGS,
+          variant: ApolloEnvironmentVariant.production,
+        });
+
+        expect(config).toMatchObject({
+          variant: ApolloEnvironmentVariant.production,
+
+          apiKey: API_KEY,
+          engineReportingOptions: {
+            apiKey: API_KEY,
+            schemaTag: 'production',
+          },
+          serverOptions: {
+            cors: false,
+            debug: false,
+            engine: false,
+            introspection: true,
+            mocks: false,
+            playground: false,
+            reporting: false,
+            subscriptions: false,
+            tracing: true,
+          },
+        });
       });
     });
   });
