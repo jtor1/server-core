@@ -5,6 +5,24 @@ import { ServiceConfigFormat } from 'apollo-language-server';
 import { telemetry } from '@withjoy/telemetry';
 
 
+const SERVER_OPTIONS_DEFAULT = Object.freeze({
+  // https://www.apollographql.com/docs/apollo-server/api/apollo-server/
+  //   defaults are meant for Production
+  cacheControl: true, // "This is primarily intended for use with the deprecated Engine proxy."
+  cors: false, // @see `getDefaultMiddleware`
+  debug: false,
+  // https://www.apollographql.com/docs/apollo-server/federation/metrics/#turning-it-on
+  //   "ensure that implementing services do not report metrics"
+  //   eg. default behavior = no reporting
+  //   the Federating service will need to override the { engine } config
+  engine: false,
+  introspection: true,
+  mocks: false,
+  playground: false,
+  subscriptions: false, // string | false | Partial<SubscriptionServerOptions> | undefined
+  reporting: false, // @see { engine }
+  tracing: true, // "This is primarily intended for use with the deprecated Engine proxy."
+});
 const FEDERATING_SERVICE_NAME = 'stitch';
 
 function _makeCLIArgs(lines: string[]) {
@@ -20,7 +38,7 @@ export interface ApolloEnvironmentConfig {
 
   apiKey: string;
 
-  schemaTags: { // aka. the 'variant'
+  graphVariants: {
     current: string;
     future: string; // the next sequential environment
   };
@@ -42,7 +60,7 @@ export interface ApolloEnvironmentConfig {
   engineReportingOptions: EngineReportingOptions<any>;
 
   // for use in `apollo.config.js`
-  //   https://www.apollographql.com/docs/resources/apollo-config/
+  //   https://www.apollographql.com/docs/devtools/apollo-config/
   serviceConfig: ServiceConfigFormat;
 }
 
@@ -86,7 +104,23 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
   const useLocalEndpoint = args.useLocalEndpoint || false;
   const isFederatingService = (serviceName === FEDERATING_SERVICE_NAME);
   const env = process.env;
-  const apiKey = env.ENGINE_API_KEY || '';
+
+  // our Apollo API Key
+  //   FIXME:  deprecate ENGINE_API_KEY
+  //   "[deprecated] The `ENGINE_API_KEY` environment variable has been renamed to `APOLLO_KEY`."
+  const apiKey = env.APOLLO_KEY || env.ENGINE_API_KEY || '';
+
+  if (! isFederatingService) {
+    // https://www.apollographql.com/docs/graph-manager/federation/#metrics-and-observability
+    //   "ensure that federated services do not have the APOLLO_KEY environment variable set"
+    //   "You should only configure your Apollo gateway to report metrics to Apollo Graph Manager."
+    // however, a service codebase *does* need the APOLLO_KEY,
+    //   for tooling -- eg. `serviceConfig` + `cliArguments below` -- but not while "serving"
+    //   unfortunately, `{ engine: false }` does not help here
+    // also, the Federating Service needs it to be retained
+    env.APOLLO_KEY = '';
+    env.ENGINE_API_KEY = '';
+  }
 
   const variantAsString = args.variant || env.ENVIRONMENT || env.NODE_ENV || 'local';
   const variant = _enumerateApolloEnvironmentVariant(variantAsString);
@@ -111,20 +145,17 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
       // "the url to the location of the implementing service for a federated graph"
       //   from which your schema can be derived
       federatingService: {
-        url: 'https://bliss-gateway-dev.withjoy.com/graphql', // matches intention of { schemaTags }
+        url: 'https://bliss-gateway-dev.withjoy.com/graphql', // matches intention of { graphVariants }
         skipSSLValidation: true,
       },
-      schemaTags: {
+      graphVariants: {
         current: 'development', // there is no 'local'
         future: 'development',
       },
       serverOptions: {
+        ...SERVER_OPTIONS_DEFAULT,
         debug: true,
-        introspection: true,
-        mocks: false,
         playground: true,
-        subscriptions: false, // string | false | Partial<SubscriptionServerOptions> | undefined
-        tracing: true,
       },
     },
     [ ApolloEnvironmentVariant.development ]: {
@@ -136,17 +167,14 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
         url: 'https://bliss-gateway-dev.withjoy.com/graphql',
         skipSSLValidation: true,
       },
-      schemaTags: {
+      graphVariants: {
         current: 'development',
         future: 'staging',
       },
       serverOptions: {
+        ...SERVER_OPTIONS_DEFAULT,
         debug: true,
-        introspection: true,
-        mocks: false,
         playground: true,
-        subscriptions: false,
-        tracing: true,
       },
     },
     [ ApolloEnvironmentVariant.staging ]: {
@@ -158,17 +186,14 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
         url: 'https://bliss-gateway-staging.withjoy.com/graphql',
         skipSSLValidation: false,
       },
-      schemaTags: {
+      graphVariants: {
         current: 'staging',
         future: 'production',
       },
       serverOptions: {
+        ...SERVER_OPTIONS_DEFAULT,
         debug: true,
-        introspection: true,
-        mocks: false,
         playground: true,
-        subscriptions: false,
-        tracing: true,
       },
     },
     [ ApolloEnvironmentVariant.production ]: {
@@ -180,38 +205,31 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
         url: 'https://bliss-gateway-prod.withjoy.com/graphql',
         skipSSLValidation: false,
       },
-      schemaTags: {
+      graphVariants: {
         current: 'production',
         future: 'production', // 'production' is as far as we go
       },
-      serverOptions: {
-        debug: false,
-        introspection: true,
-        mocks: false,
-        playground: false,
-        subscriptions: false,
-        tracing: true,
-      },
+      serverOptions: SERVER_OPTIONS_DEFAULT,
     },
   } as Record<ApolloEnvironmentVariant, any>)[
     variant // Object lookup
   ];
 
   const endpointUrl = VARIANT_CONFIG.endpoint.url;
-  const derived = {
+  const derived: ApolloEnvironmentConfig = {
     variant,
     serviceName,
     servicePort,
 
     apiKey,
-    schemaTags: VARIANT_CONFIG.schemaTags,
+    graphVariants: VARIANT_CONFIG.graphVariants,
     cliArguments: {
       // "who are my peers?"
       //   `apollo service:list` for current Environment
       //   https://github.com/apollographql/apollo-tooling#apollo-servicelist
       list: _makeCLIArgs([
         `--key=${ apiKey }`,
-        `--tag=${ VARIANT_CONFIG.schemaTags.current }`,
+        `--variant=${ VARIANT_CONFIG.graphVariants.current }`,
         `--endpoint=${ endpointUrl }`,
       ]),
 
@@ -220,7 +238,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
       //   https://github.com/apollographql/apollo-tooling#apollo-servicecheck
       check: _makeCLIArgs([
         `--key=${ apiKey }`,
-        `--tag=${ VARIANT_CONFIG.schemaTags.future }`,
+        `--variant=${ VARIANT_CONFIG.graphVariants.future }`,
         `--endpoint=${ endpointUrl }`,
         // you *can* check the schema from the Federating Service perspective;
         //   it'll check the federated schema as a whole.
@@ -233,7 +251,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
       //   https://github.com/apollographql/apollo-tooling#apollo-servicecheck
       diff: _makeCLIArgs([
         `--key=${ apiKey }`,
-        `--tag=${ VARIANT_CONFIG.schemaTags.current }`,
+        `--variant=${ VARIANT_CONFIG.graphVariants.current }`,
         `--endpoint=${ endpointUrl }`,
         (isFederatingService ? '' : `--serviceName=${ serviceName }`),
       ]),
@@ -248,7 +266,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
         ? [] // => "Error: No service found to link to Engine" (because you should never do this)
         : [
           `--key=${ apiKey }`,
-          `--tag=${ VARIANT_CONFIG.schemaTags.current }`,
+          `--variant=${ VARIANT_CONFIG.graphVariants.current }`,
           `--endpoint=${ endpointUrl }`,
           `--serviceURL=${ VARIANT_CONFIG.federatingService.url }`,
           `--serviceName=${ serviceName }`,
@@ -256,25 +274,15 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
       ),
     },
 
-    serverOptions: {
-      ...VARIANT_CONFIG.serverOptions,
-
-      // https://www.apollographql.com/docs/apollo-server/federation/metrics/#turning-it-on
-      //   "ensure that implementing services do not report metrics"
-      //   the Federating service will want to override the { engine } config
-      // https://www.apollographql.com/docs/graph-manager/federation/#metrics-and-observability
-      //   "ensure that federated services do not have the ENGINE_API_KEY environment variable set"
-      //   fortunately, { engine: false } neutralizes that concern
-      engine: false,
-      reporting: false,
-
-      // @see `getDefaultMiddleware`
-      cors: false,
-    },
+    serverOptions: VARIANT_CONFIG.serverOptions,
 
     engineReportingOptions: {
       apiKey,
-      schemaTag: VARIANT_CONFIG.schemaTags.current,
+      // // FIXME:  rename
+      // //   "[deprecated] The `schemaTag` property within `engine` configuration has been renamed to `graphVariant`."
+      // //   "Error: Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant."
+      // graphVariant: VARIANT_CONFIG.graphVariants.current,
+      schemaTag: VARIANT_CONFIG.graphVariants.current,
     },
 
     serviceConfig: {
