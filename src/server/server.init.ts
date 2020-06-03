@@ -4,7 +4,7 @@ import { VERSION } from '../utils/const';
 import { IServer } from './server';
 
 
-export const initApp = (app: IServer, port: number) => {
+export const initApp = async (app: IServer, port: number): Promise<void> => {
   let closeCalled = false;
   const gracefulClose = async (reason: string): Promise<void> => {
     telemetry.info('initApp', {
@@ -88,7 +88,7 @@ export const initApp = (app: IServer, port: number) => {
   process.once('SIGINT', () => gracefulShutdown('SIGINT'));
   process.once('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
-  app.init(port)
+  return app.init(port)
     .then(config => {
       telemetry.info('initApp', {
         action: 'started',
