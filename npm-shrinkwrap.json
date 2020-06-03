@@ -1,6 +1,6 @@
 {
   "name": "@withjoy/server-core",
-  "version": "1.12.3",
+  "version": "1.13.0",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -609,8 +609,7 @@
       "version": "2.10.1"
     },
     "@types/chroma-js": {
-      "version": "1.4.1",
-      "dev": true
+      "version": "1.4.1"
     },
     "@types/connect": {
       "version": "3.4.32",
@@ -657,7 +656,6 @@
     },
     "@types/forwarded": {
       "version": "0.1.0",
-      "dev": true,
       "requires": {
         "@types/node": "*"
       }
@@ -731,7 +729,6 @@
     },
     "@types/moment-timezone": {
       "version": "0.5.12",
-      "dev": true,
       "requires": {
         "moment": ">=2.14.0"
       }
