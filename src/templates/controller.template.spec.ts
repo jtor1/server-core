@@ -2,6 +2,26 @@ import 'jest';
 import { ControllerTemplate } from './controller.template';
 import { FakeModelWithIndex } from './fake.model';
 
+const FAKE_MODELS = [
+  Object.assign(new FakeModelWithIndex(), {
+    id: '1',
+    fakeData: 'FAKE_1',
+  }),
+  Object.assign(new FakeModelWithIndex(), {
+    id: '2',
+    fakeData: 'FAKE_2',
+  }),
+  Object.assign(new FakeModelWithIndex(), {
+    id: '3',
+    fakeData: 'FAKE_3',
+  }),
+];
+const MAYBE_FAKE_MODELS = [
+  null,
+  FAKE_MODELS[1],
+  undefined,
+] as Array<FakeModelWithIndex>;
+
 
 type LoaderKeys = 'byId' | 'byFakeId';
 class FakeController extends ControllerTemplate<FakeModelWithIndex, LoaderKeys> {
@@ -84,22 +104,56 @@ describe('ControllerTemplate', () => {
 
   describe('orderResultsByIds', () => {
     it('should order results by ids', () => {
-      const vendor1 = new FakeModelWithIndex();
-      vendor1.id = '1';
-      const vendor2 = new FakeModelWithIndex();
-      vendor2.id = '2';
-      const vendor3 = new FakeModelWithIndex();
-      vendor3.id = '3';
-      const arrayOfStuff = [vendor1, vendor2, vendor3];
+      const list1 = controller.orderResultsByIds(['1', '2', '3'], FAKE_MODELS);
+      expect(list1).toEqual(FAKE_MODELS);
+      const list2 = controller.orderResultsByIds(['3', '1', '2'], FAKE_MODELS);
+      expect(list2).toEqual([ FAKE_MODELS[2], FAKE_MODELS[0], FAKE_MODELS[1] ]);
+    });
 
-      const list1 = controller.orderResultsByIds(['1', '2', '3'], arrayOfStuff);
-      expect(list1[0]).toEqual(vendor1);
-      expect(list1[1]).toEqual(vendor2);
-      expect(list1[2]).toEqual(vendor3);
-      const list2 = controller.orderResultsByIds(['3', '1', '2'], arrayOfStuff);
-      expect(list2[0]).toEqual(vendor3);
-      expect(list2[1]).toEqual(vendor1);
-      expect(list2[2]).toEqual(vendor2);
+    it('should order results by a custom JSON Path', () => {
+      const list1 = controller.orderResultsByIds(['FAKE_1', 'FAKE_2', 'FAKE_3'], FAKE_MODELS, 'fakeData');
+      expect(list1).toEqual(FAKE_MODELS);
+      const list2 = controller.orderResultsByIds(['FAKE_3', 'FAKE_1', 'FAKE_2'], FAKE_MODELS, 'fakeData');
+      expect(list2).toEqual([ FAKE_MODELS[2], FAKE_MODELS[0], FAKE_MODELS[1] ]);
+    });
+
+    it('is tolerant of unmatched ids', () => {
+      const list1 = controller.orderResultsByIds(['1', '2', '3'], MAYBE_FAKE_MODELS);
+      expect(list1).toEqual([ undefined, MAYBE_FAKE_MODELS[1], undefined ]);
+      const list2 = controller.orderResultsByIds(['FAKE_3', 'FAKE_1', 'FAKE_2'], MAYBE_FAKE_MODELS, 'fakeData');
+      expect(list2).toEqual([ undefined, undefined, MAYBE_FAKE_MODELS[1] ]);
+    });
+  });
+
+  describe('orderResultsByDerivedId', () => {
+    const idDeriver = ((model: FakeModelWithIndex) => (model && model.id));
+
+    it('should order results by the derived id', () => {
+      const list1 = controller.orderResultsByDerivedId(['1', '2', '3'], FAKE_MODELS, idDeriver);
+      expect(list1).toEqual(FAKE_MODELS);
+      const list2 = controller.orderResultsByDerivedId(['3', '1', '2'], FAKE_MODELS, idDeriver);
+      expect(list2).toEqual([ FAKE_MODELS[2], FAKE_MODELS[0], FAKE_MODELS[1] ]);
+    });
+
+    it('is tolerant of unmatched ids', () => {
+      const list1 = controller.orderResultsByDerivedId(['1', '2', '3'], MAYBE_FAKE_MODELS, idDeriver);
+      expect(list1).toEqual([ undefined, MAYBE_FAKE_MODELS[1], undefined ]);
+    });
+  });
+
+  describe('orderResultsByMatchingModel', () => {
+    const modelDeriver = ((id: string, models: Array<FakeModelWithIndex>) => models[ (parseInt(id, 10) - 1) ]);
+
+    it('should order results by derived Model', () => {
+      const list1 = controller.orderResultsByMatchingModel(['1', '2', '3'], FAKE_MODELS, modelDeriver);
+      expect(list1).toEqual(FAKE_MODELS);
+      const list2 = controller.orderResultsByMatchingModel(['3', '1', '2'], FAKE_MODELS, modelDeriver);
+      expect(list2).toEqual([ FAKE_MODELS[2], FAKE_MODELS[0], FAKE_MODELS[1] ]);
+    });
+
+    it('is tolerant of missing Models', () => {
+      const list1 = controller.orderResultsByMatchingModel(['1', '2', '3'], MAYBE_FAKE_MODELS, modelDeriver);
+      expect(list1).toEqual(MAYBE_FAKE_MODELS);
     });
   });
 

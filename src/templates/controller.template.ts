@@ -1,5 +1,5 @@
 import DataLoader from 'dataloader';
-import _ from 'lodash';
+import { keyBy } from 'lodash';
 import { produce } from 'immer';
 
 
@@ -16,22 +16,64 @@ export class ControllerTemplate<T, LoaderKeys extends string> {
   // a helper for integrating TypeORM and the DataLoader pool
   //   eg. `this.loaders.byId = this.wrapQueryInDataLoader(async (ids: string[]) => { ... });`
   //   @see the spec file for a practical example
-  public wrapQueryInDataLoader = (query: (keys: Array<string>) => Promise<Array<T>>) => {
+  public wrapQueryInDataLoader(query: (keys: Array<string>) => Promise<Array<T>>): DataLoader<string, T> {
     return new DataLoader(query);
   }
 
-  // used to reorient your TypeORM Models returned by `wrapQueryInDataLoader`
+
+  // "orderResultsBy" methods are used to reorient your TypeORM Models returned by `wrapQueryInDataLoader`
   //   so that they have a one-to-one ordering with the `ids` passed to your wrapper
   //   (a critical aspect of working with the `dataloader` paradigm)
   //   @see the spec file for a practical example
-  public orderResultsByIds = (ids: Array<string>, results: Array<T>, identifier?: string) => {
-    const resultsByIds = _.keyBy(results, identifier ? identifier : 'id');
-    return ids.map(id => {
-      return resultsByIds[id];
-    });
+  // PS. the `Array<T>` Typing is a lie;
+  //   in reality, it acts as `Array<T | undefined>`
+
+  /**
+   * @param ids {String[]} the IDs used for the DataLoader fetch
+   * @param results {T[]} the Models resolved by the DataLoader fetch
+   * @param [jsonPath] {String} an optional JSON Path to derive an ID from the Model
+   *   which corresponds to a value from `ids`;
+   *   if not provided, `Model.id` is assumed
+   */
+  public orderResultsByIds(
+    ids: Array<string>,
+    results: Array<T>,
+    jsonPath?: string
+  ): Array<T> {
+    const resultsByIds = keyBy(results, (jsonPath ? jsonPath : 'id'));
+    return ids.map((id) => resultsByIds[id]);
   }
 
-  public updateIndexOrder = <T extends { index: number }>(items: Array<T>, from: number, to: number): Array<T> => {
+  /**
+   * @param ids {String[]} the IDs used for the DataLoader fetch
+   * @param results {T[]} the Models resolved by the DataLoader fetch
+   * @param [idDeriver] {Function} a Function returning an ID which corresponds to a value from `ids`
+   */
+  public orderResultsByDerivedId(
+    ids: Array<string>,
+    results: Array<T>,
+    idDeriver: (model: T) => string // | null | undefined
+  ): Array<T> {
+    const resultsByIds = keyBy(results, idDeriver);
+    return ids.map((id) => resultsByIds[id]);
+  }
+
+  /**
+   * @param ids {String[]} the IDs used for the DataLoader fetch
+   * @param results {T[]} the Models resolved by the DataLoader fetch
+   * @param [modelDeriver] {Function} a Function returning the Model (from `results`)
+   *   which corresponds to a given ID (from `ids`)
+   */
+  public orderResultsByMatchingModel(
+    ids: Array<string>,
+    results: Array<T>,
+    modelDeriver: (id: string, results: Array<T>) => T // | null | undefined
+  ): Array<T> {
+    return ids.map((id) => modelDeriver(id, results));
+  }
+
+
+  public updateIndexOrder<T extends { index: number }>(items: Array<T>, from: number, to: number): Array<T> {
     items = items.sort((a, b) => a.index - b.index);
     if (from < 0 || from + 1 > items.length || to < 0 || to + 1 > items.length) {
       return items;
