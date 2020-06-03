@@ -685,7 +685,7 @@ describe('server/apollo.context', () => {
       context = new Context({
         req: createRequest({
           // individual properties, vs. relying upon a parsed `url`
-          host: 'HOSTNAME',
+          hostname: 'HOSTNAME', // HTTP requested host (vs. physical hostname)
           method: 'POST',
           path: '/IGNORED',
           body: { query },
@@ -736,7 +736,7 @@ describe('server/apollo.context', () => {
     it('logs a REST-y GET request', () => {
       context = new Context({
         req: createRequest({
-          host: 'HOSTNAME',
+          hostname: 'HOSTNAME',
           method: 'GET',
           path: '/PATH',
           query: { param: true },
@@ -765,7 +765,7 @@ describe('server/apollo.context', () => {
     it('logs a REST-y POST request', () => {
       context = new Context({
         req: createRequest({
-          host: 'HOSTNAME',
+          hostname: 'HOSTNAME',
           method: 'POST',
           path: '/PATH',
           body: { param: true },
@@ -805,7 +805,7 @@ describe('server/apollo.context', () => {
     it('does not log a health check', () => {
       context = new Context({
         req: createRequest({
-          host: 'HOSTNAME',
+          hostname: 'HOSTNAME',
           method: 'GET',
           path: '/healthy',
         }),

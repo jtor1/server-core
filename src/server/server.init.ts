@@ -1,14 +1,16 @@
 import { telemetry, deriveTelemetryContextFromError } from '@withjoy/telemetry';
 
+import { VERSION } from '../utils/const';
 import { IServer } from './server';
 
 
-export const initApp = (app: IServer, port: number) => {
+export const initApp = async (app: IServer, port: number): Promise<void> => {
   let closeCalled = false;
-  const gracefulClose = (reason: string): Promise<void> => {
+  const gracefulClose = async (reason: string): Promise<void> => {
     telemetry.info('initApp', {
       action: 'starting',
       reason,
+      serverCoreVersion: VERSION,
     });
 
     if (closeCalled) {
@@ -31,6 +33,7 @@ export const initApp = (app: IServer, port: number) => {
         telemetry.info('initApp', {
           action: 'complete',
           reason,
+          serverCoreVersion: VERSION,
         });
       })
       .catch(err => {
@@ -38,13 +41,14 @@ export const initApp = (app: IServer, port: number) => {
           ...deriveTelemetryContextFromError(err),
           action: 'error',
           reason,
+          serverCoreVersion: VERSION,
         });
         throw err;
       });
   };
 
-  const gracefulRestart = (signalName: string) => {
-    gracefulClose(`${signalName}: Graceful restart`)
+  const gracefulRestart = async (signalName: string) => {
+    return gracefulClose(`${signalName}: Graceful restart`)
       .then(() => process.kill(process.pid, signalName))
       .catch(err => {
         telemetry.error('initApp.gracefulRestart', {
@@ -56,8 +60,8 @@ export const initApp = (app: IServer, port: number) => {
       });
   };
 
-  const gracefulShutdown = (signalName: string) => {
-    gracefulClose(`${signalName}: Graceful shutdown`)
+  const gracefulShutdown = async (signalName: string) => {
+    return gracefulClose(`${signalName}: Graceful shutdown`)
       .then(() => process.exit(0))
       .catch(err => {
         telemetry.error('initApp.gracefulShutdown', {
@@ -84,10 +88,11 @@ export const initApp = (app: IServer, port: number) => {
   process.once('SIGINT', () => gracefulShutdown('SIGINT'));
   process.once('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
-  app.init(port)
+  return app.init(port)
     .then(config => {
       telemetry.info('initApp', {
         action: 'started',
+        serverCoreVersion: VERSION,
         port: config.port,
       });
     })
@@ -95,6 +100,7 @@ export const initApp = (app: IServer, port: number) => {
       telemetry.error('initApp', {
         ...deriveTelemetryContextFromError(err),
         action: 'error',
+        serverCoreVersion: VERSION,
       });
       process.exit(1);
     });

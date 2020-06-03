@@ -81,7 +81,7 @@ export function logContextRequest(context: Context): void {
   }
 
   const { telemetry, sessionId } = context;
-  const { host, method, body } = req;
+  const { hostname: host, method, body } = req;
   const path = (req.baseUrl || req.path); // GraphQL middleware does a rewrite
   if (path.startsWith('/healthy')) {
     // health checks should not spam the logs

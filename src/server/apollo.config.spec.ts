@@ -1,25 +1,36 @@
 import 'jest';
 
 import {
+  ApolloEnvironmentConfig,
   ApolloEnvironmentConfigArgs,
   ApolloEnvironmentVariant,
   deriveApolloEnvironmentConfig,
 } from './apollo.config';
 
 
+const API_KEY = 'API_KEY';
 const DEFAULT_CONFIG_ARGS: ApolloEnvironmentConfigArgs = {
   serviceName: 'testSuite',
   servicePort: '90210',
 };
 
+
 describe('server/apollo.config', () => {
   let env: Record<string, any>;
+
+  function _setupVolatile() {
+    // things everyone needs
+    //   yet which are volatile:  it('blanks the Apollo API Key in the environment')
+    process.env.APOLLO_KEY = API_KEY;
+
+    // FIXME:  deprecate ENGINE_API_KEY
+    delete process.env.ENGINE_API_KEY;
+  }
 
   beforeEach(() => {
     env = Object.assign({}, process.env);
 
-    // things everyone needs
-    process.env.ENGINE_API_KEY = 'ENGINE_API_KEY';
+    _setupVolatile();
   });
 
   afterEach(() => {
@@ -70,6 +81,44 @@ describe('server/apollo.config', () => {
       expect( deriveApolloEnvironmentConfig(DEFAULT_CONFIG_ARGS).variant ).toBe(ApolloEnvironmentVariant.production);
     });
 
+    it('blanks the Apollo API Key in the environment', () => {
+      let config: ApolloEnvironmentConfig;
+
+      config = deriveApolloEnvironmentConfig({
+        ...DEFAULT_CONFIG_ARGS,
+        variant: ApolloEnvironmentVariant.local,
+      });
+
+      expect(config.apiKey).toBe(API_KEY);
+      expect(process.env.APOLLO_KEY).toBe('');
+      expect(process.env.ENGINE_API_KEY).toBe('');
+
+      // it('honors the legacy ENGINE_API_KEY')
+      //   FIXME:  deprecate ENGINE_API_KEY
+      process.env.ENGINE_API_KEY = API_KEY;
+      deriveApolloEnvironmentConfig({
+        ...DEFAULT_CONFIG_ARGS,
+        variant: ApolloEnvironmentVariant.local,
+      });
+
+      expect(config.apiKey).toBe(API_KEY);
+      expect(process.env.APOLLO_KEY).toBe('');
+      expect(process.env.ENGINE_API_KEY).toBe('');
+
+      // it('does *not* blank the Apollo API Key for the Federating Service')
+      _setupVolatile();
+      deriveApolloEnvironmentConfig({
+        ...DEFAULT_CONFIG_ARGS,
+        variant: ApolloEnvironmentVariant.local,
+
+        serviceName: 'stitch', // <= them's there's the Federator
+      });
+
+      expect(config.apiKey).toBe(API_KEY);
+      expect(process.env.APOLLO_KEY).toBe(API_KEY);
+      expect(process.env.ENGINE_API_KEY).toBeUndefined();
+    });
+
     it('leverages arguments into the configuration', () => {
       const configLocal = deriveApolloEnvironmentConfig({
         ...DEFAULT_CONFIG_ARGS,
@@ -87,12 +136,12 @@ describe('server/apollo.config', () => {
           //   consume the schema from your local Service
           //   current variant = 'development'
           //   future variant = 'development'
-          list: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
-          check: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql --serviceName=testSuite',
-          diff: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql --serviceName=testSuite',
-          push: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-dev.withjoy.com/graphql --serviceName=testSuite',
+          list: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql',
+          check: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql --serviceName=testSuite',
+          diff: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql --serviceName=testSuite',
+          push: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-dev.withjoy.com/graphql --serviceName=testSuite',
         },
-        schemaTags: {
+        graphVariants: {
           current: 'development',
           future: 'development',
         },
@@ -104,6 +153,7 @@ describe('server/apollo.config', () => {
         },
       });
 
+      _setupVolatile();
       const configStaging = deriveApolloEnvironmentConfig({
         ...DEFAULT_CONFIG_ARGS,
         variant: ApolloEnvironmentVariant.staging,
@@ -120,12 +170,12 @@ describe('server/apollo.config', () => {
           //   consume the schema from the Service code deployed to Staging, as proxied by the Federating Service
           //   current variant = 'staging'
           //   future variant = 'production'
-          list: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql',
-          check: '--key=ENGINE_API_KEY --tag=production --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceName=testSuite',
-          diff: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceName=testSuite',
-          push: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceURL=https://bliss-gateway-staging.withjoy.com/graphql --serviceName=testSuite',
+          list: '--key=API_KEY --variant=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql',
+          check: '--key=API_KEY --variant=production --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceName=testSuite',
+          diff: '--key=API_KEY --variant=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceName=testSuite',
+          push: '--key=API_KEY --variant=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceURL=https://bliss-gateway-staging.withjoy.com/graphql --serviceName=testSuite',
         },
-        schemaTags: {
+        graphVariants: {
           current: 'staging',
           future: 'production',
         },
@@ -158,12 +208,12 @@ describe('server/apollo.config', () => {
           //   current variant = 'development'
           //   future variant = 'development'
           //   you can check the Federated schema, but you cannot push
-          list: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
-          check: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
-          diff: '--key=ENGINE_API_KEY --tag=development --endpoint=http://localhost:90210/graphql',
+          list: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql',
+          check: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql',
+          diff: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql',
           push: '',
         },
-        schemaTags: {
+        graphVariants: {
           current: 'development',
           future: 'development',
         },
@@ -175,6 +225,7 @@ describe('server/apollo.config', () => {
         },
       });
 
+      _setupVolatile();
       const configStaging = deriveApolloEnvironmentConfig({
         ...DEFAULT_CONFIG_ARGS,
         variant: ApolloEnvironmentVariant.staging,
@@ -194,12 +245,12 @@ describe('server/apollo.config', () => {
           //   current variant = 'staging'
           //   future variant = 'production'
           //   you can check the Federated schema, but you cannot push
-          list: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
-          check: '--key=ENGINE_API_KEY --tag=production --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
-          diff: '--key=ENGINE_API_KEY --tag=staging --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
+          list: '--key=API_KEY --variant=staging --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
+          check: '--key=API_KEY --variant=production --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
+          diff: '--key=API_KEY --variant=staging --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
           push: '',
         },
-        schemaTags: {
+        graphVariants: {
           current: 'staging',
           future: 'production',
         },
@@ -232,12 +283,12 @@ describe('server/apollo.config', () => {
           //   consume the Federated schema from the Service code deployed to Staging
           //   current variant = 'staging'
           //   future variant = 'production'
-          list: '--key=ENGINE_API_KEY --tag=staging --endpoint=http://localhost:90210/graphql',
-          check: '--key=ENGINE_API_KEY --tag=production --endpoint=http://localhost:90210/graphql --serviceName=testCase',
-          diff: '--key=ENGINE_API_KEY --tag=staging --endpoint=http://localhost:90210/graphql --serviceName=testCase',
-          push: '--key=ENGINE_API_KEY --tag=staging --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-staging.withjoy.com/graphql --serviceName=testCase',
+          list: '--key=API_KEY --variant=staging --endpoint=http://localhost:90210/graphql',
+          check: '--key=API_KEY --variant=production --endpoint=http://localhost:90210/graphql --serviceName=testCase',
+          diff: '--key=API_KEY --variant=staging --endpoint=http://localhost:90210/graphql --serviceName=testCase',
+          push: '--key=API_KEY --variant=staging --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-staging.withjoy.com/graphql --serviceName=testCase',
         },
-        schemaTags: {
+        graphVariants: {
           current: 'staging',
           future: 'production',
         },
@@ -247,6 +298,123 @@ describe('server/apollo.config', () => {
             url: 'http://localhost:90210/graphql',
           },
         },
+      });
+    });
+
+
+    describe('per the variant', () => {
+      // for "less subtle" configuration sections not covered above
+
+      it('provides a local configuration', () => {
+        const config = deriveApolloEnvironmentConfig({
+          ...DEFAULT_CONFIG_ARGS,
+          variant: ApolloEnvironmentVariant.local,
+        });
+
+        expect(config).toMatchObject({
+          variant: ApolloEnvironmentVariant.local,
+
+          apiKey: API_KEY,
+          engineReportingOptions: {
+            apiKey: API_KEY,
+            schemaTag: 'development',
+          },
+          serverOptions: {
+            cors: false,
+            debug: true,
+            engine: false,
+            introspection: true,
+            mocks: false,
+            playground: true,
+            reporting: false,
+            subscriptions: false,
+            tracing: true,
+          },
+        });
+      });
+
+      it('provides a development configuration', () => {
+        const config = deriveApolloEnvironmentConfig({
+          ...DEFAULT_CONFIG_ARGS,
+          variant: ApolloEnvironmentVariant.development,
+        });
+
+        expect(config).toMatchObject({
+          variant: ApolloEnvironmentVariant.development,
+
+          apiKey: API_KEY,
+          engineReportingOptions: {
+            apiKey: API_KEY,
+            schemaTag: 'development',
+          },
+          serverOptions: {
+            cors: false,
+            debug: true,
+            engine: false,
+            introspection: true,
+            mocks: false,
+            playground: true,
+            reporting: false,
+            subscriptions: false,
+            tracing: true,
+          },
+        });
+      });
+
+      it('provides a staging configuration', () => {
+        const config = deriveApolloEnvironmentConfig({
+          ...DEFAULT_CONFIG_ARGS,
+          variant: ApolloEnvironmentVariant.staging,
+        });
+
+        expect(config).toMatchObject({
+          variant: ApolloEnvironmentVariant.staging,
+
+          apiKey: API_KEY,
+          engineReportingOptions: {
+            apiKey: API_KEY,
+            schemaTag: 'staging',
+          },
+          serverOptions: {
+            cors: false,
+            debug: true,
+            engine: false,
+            introspection: true,
+            mocks: false,
+            playground: true,
+            reporting: false,
+            subscriptions: false,
+            tracing: true,
+          },
+        });
+      });
+
+      it('provides a production configuration', () => {
+        const config = deriveApolloEnvironmentConfig({
+          ...DEFAULT_CONFIG_ARGS,
+          variant: ApolloEnvironmentVariant.production,
+        });
+
+        expect(config).toMatchObject({
+          variant: ApolloEnvironmentVariant.production,
+
+          apiKey: API_KEY,
+          engineReportingOptions: {
+            apiKey: API_KEY,
+            schemaTag: 'production',
+          },
+          serverOptions: {
+            cors: false,
+            debug: false,
+            engine: false,
+            introspection: true,
+            mocks: false,
+            playground: false,
+            reporting: false,
+            subscriptions: false,
+            tracing: true,
+          },
+        });
       });
     });
   });
