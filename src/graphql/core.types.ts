@@ -1,5 +1,5 @@
 import { gql, IResolvers } from 'apollo-server';
-import moment from 'moment-timezone';
+import moment, { Moment } from 'moment-timezone';
 import chroma from 'chroma-js';
 import { Context } from 'src/server/apollo.context';
 
@@ -72,7 +72,7 @@ export const coreTypeDefs = gql`
 
 `;
 
-const convertDate = (date: string | [string, string]) => {
+const convertDate = (date: string | [string, string]): Moment => {
   if (Array.isArray(date)) {
     return moment.tz(date[0], date[1]);
   } else {
