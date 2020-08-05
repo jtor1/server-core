@@ -1,4 +1,3 @@
-import 'jest';
 import { ifError } from 'assert';
 import { noop } from 'lodash';
 import { RequestHandler } from 'express'

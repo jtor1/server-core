@@ -1,13 +1,15 @@
 {
   "extends": "./tsconfig",
   "compilerOptions": {
+    "types": ["node", "jest"],
+    "allowJs": true,
     "module": "umd",
-    "resolveJsonModule": false,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "resolveJsonModule": false
   },
   "include": [
     "src/**/*.spec.ts",
-    "src/**/*.mock.ts"
-  ]
+    "src/**/*.test.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": []
 }

@@ -1,5 +1,3 @@
-import 'jest';
-
 import {
   ApolloEnvironmentConfig,
   ApolloEnvironmentConfigArgs,

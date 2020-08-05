@@ -1,4 +1,3 @@
-import 'jest';
 import * as TypeMoq from 'typemoq';
 import { noop, isEmpty } from 'lodash';
 import { Repository } from 'typeorm';

@@ -1,4 +1,3 @@
-import 'jest';
 import assert from 'assert';
 import nock from 'nock';
 import { DocumentNode } from 'graphql';

@@ -1,4 +1,3 @@
-import 'jest';
 import { ifError } from 'assert';
 import { RequestHandler } from 'express'
 import { createRequest, createResponse } from 'node-mocks-http';

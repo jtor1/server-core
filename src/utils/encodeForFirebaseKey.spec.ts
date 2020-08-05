@@ -1,4 +1,3 @@
-import 'jest';
 import {encode, decode} from './encodeForFirebaseKey';
 
 describe('encodeForFirebaseKey', () => {

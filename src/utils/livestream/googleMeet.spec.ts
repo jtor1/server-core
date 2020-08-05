@@ -1,4 +1,3 @@
-import 'jest';
 import {
   parseGoogleMeet,
 } from './googleMeet';

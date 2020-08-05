@@ -1,4 +1,3 @@
-import 'jest';
 import jwt from 'jsonwebtoken';
 import * as TypeMoq from 'typemoq';
 import { createRequest } from 'node-mocks-http';

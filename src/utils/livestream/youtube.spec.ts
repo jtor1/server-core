@@ -1,4 +1,3 @@
-import 'jest';
 import {
   parseYoutube,
 } from './youtube';

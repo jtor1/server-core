@@ -1,4 +1,3 @@
-import 'jest';
 import {
   parseEventLive,
 } from './eventlive';
