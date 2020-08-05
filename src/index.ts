@@ -53,6 +53,11 @@ import {
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import {
+  LivestreamUrlParseResult,
+  LivestreamUrlProvider,
+  parseLivestreamUrl,
+} from './utils/livestream';
+import {
   callService,
   ServiceCaller,
   createServiceCaller,
@@ -139,6 +144,10 @@ export {
 
   EdgeWrapper,
   edgeWrapperType,
+
+  LivestreamUrlParseResult,
+  LivestreamUrlProvider,
+  parseLivestreamUrl,
 
   callService,
   ServiceCaller,
