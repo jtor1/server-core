@@ -1,6 +1,7 @@
 import {
   _LivestreamUrlParser,
   _URL_REGEXP,
+
   _safelyParseUrl,
   _domainMatchFromUrl,
   _firstMatchFromLines,
@@ -33,7 +34,7 @@ export const parseGoogleMeet: _LivestreamUrlParser = (text: string) => {
   }
 
   // derive the Stream ID;
-  //   it's always the pathname (sans '/'), regardless of domain
+  //   it's always the pathname (sans leading '/'), regardless of domain
   const { pathname } = url;
   const streamId = pathname?.substring(1);
   if (! streamId) {

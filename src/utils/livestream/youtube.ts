@@ -1,7 +1,9 @@
 import {
   _LivestreamUrlParser,
+
   _safelyParseUrl,
   _domainMatchFromUrl,
+  _parsedSearchFromUrl,
 } from './_helpers';
 
 
@@ -19,15 +21,16 @@ export const parseYoutube: _LivestreamUrlParser = (urlOriginal: string) => {
   }
 
   // derive the Stream ID
-  const { pathname, searchParams } = url;
-  let streamId: string | null = null;
+  const { pathname } = url;
+  const parsedSearch = _parsedSearchFromUrl(url);
+  let streamId: string | undefined = undefined;
 
   switch (domain) {
     case FULL_DOMAIN:
-      streamId = searchParams.get('v');
+      streamId = parsedSearch['v'];
       break;
     case SHORTENED_DOMAIN:
-      streamId = pathname?.substring(1);
+      streamId = pathname?.substring(1); // (sans leading '/')
       break;
   }
   if (! streamId) {

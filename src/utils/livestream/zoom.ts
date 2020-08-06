@@ -1,9 +1,12 @@
 import {
   _LivestreamUrlParser,
   _URL_REGEXP,
+
   _safelyParseUrl,
   _domainMatchFromUrl,
   _firstMatchFromLines,
+  _parsedSearchFromUrl,
+  _stringifiedUrl,
 } from './_helpers';
 
 
@@ -40,7 +43,11 @@ export const parseZoomUrl: _LivestreamUrlParser = (text: string) => {
     return null;
   }
 
-  const { pathname, searchParams } = url;
+  const { pathname } = url;
+  const parsedSearch = _parsedSearchFromUrl(url);
+  if (! pathname) {
+    return null;
+  }
 
   // derive the Stream ID
   const streamIdMatch = PATHNAME_ID_REGEXP.exec(pathname);
@@ -57,18 +64,18 @@ export const parseZoomUrl: _LivestreamUrlParser = (text: string) => {
 
   if (isUrlApp || isUrlWebClient) {
     // only go down this road if we truly "grok" the URL format
-    url.hostname = CANONICAL_DOMAIN;
-
-    url.pathname = `${ PATHNAME_PREFIX_APP }/${ streamId }`;
-    urlApp = url.toString();
-
-    url.pathname = `${ PATHNAME_PREFIX_WEB_CLIENT }/${ streamId }`;
-    urlBrowser = url.toString();
+    urlApp = _stringifiedUrl(url, {
+      hostname: CANONICAL_DOMAIN,
+      pathname: `${ PATHNAME_PREFIX_APP }/${ streamId }`,
+    });
+    urlBrowser = _stringifiedUrl(url, {
+      hostname: CANONICAL_DOMAIN,
+      pathname: `${ PATHNAME_PREFIX_WEB_CLIENT }/${ streamId }`,
+    });
   }
 
   // the URL may have a password
-  const passwordParam = searchParams.get(PASSWORD_EMBED_PARAM);
-  const passwordUrlEmbed = passwordParam || undefined;
+  const passwordUrlEmbed = parsedSearch[PASSWORD_EMBED_PARAM] || undefined;
 
   // the text may have a password, even if the URL does not embed it
   //   Settings > "Embed passcode in invite link for one-click join"

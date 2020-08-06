@@ -1,5 +1,6 @@
 import {
   _LivestreamUrlParser,
+
   _safelyParseUrl,
   _domainMatchFromUrl,
 } from './_helpers';
@@ -17,11 +18,14 @@ export const parseEventLive: _LivestreamUrlParser = (urlOriginal: string) => {
     return null;
   }
 
-  const { pathname } = url;
+  const pathname = url?.pathname;
+  if (! pathname) {
+    return null;
+  }
 
   // derive the Stream ID
   //   '/<ACCOUNT>/<STREAM>'
-  const pathSegements = (pathname || '').slice(1).split(PATH_DELIMITER);
+  const pathSegements = pathname.slice(1).split(PATH_DELIMITER);
   if (pathSegements.length < 2) {
     return null;
   }
