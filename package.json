@@ -20,6 +20,7 @@
     "prebuild": "rm -rf ./dist",
     "prepare": "npm shrinkwrap && yarn build",
     "prepublishOnly": "yarn test",
+    "test:ci": "yarn test",
     "test:only": "NODE_ENV=test TERM=dumb  node  node_modules/.bin/jest  -i --no-coverage --no-verbose  --detectOpenHandles --forceExit --config jest.config.js",
     "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
     "version": "git add -A  src test  yarn.lock npm-shrinkwrap.json"

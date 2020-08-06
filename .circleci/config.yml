@@ -1,0 +1,51 @@
+# Javascript Node CircleCI 2.1 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2.1
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: node:10
+
+    working_directory: ~/bliss-api-tmp
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - yarn-dependencies-{{ checksum "yarn.lock" }}
+          # fallback to using the latest cache if no exact match is found
+          - yarn-dependencies-
+
+      # `yarn.lock` enforcement, just like the Dockerfile
+      - run: rm -f package-lock.json;
+      - run: yarn install --frozen-lockfile;
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: yarn-dependencies-{{ checksum "yarn.lock" }}
+
+      # run the build!
+      - run: yarn build
+
+      # run tests!
+      - run: yarn run test:ci
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+workflows:
+  version: 2.1
+  build-n-deploy:
+    jobs:
+      - build:
+          filters:  # required since `deploy` has tag filters AND requires `build`
+            tags:
+              only: /.*/
