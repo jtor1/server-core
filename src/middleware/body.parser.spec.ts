@@ -27,7 +27,7 @@ describe('middleware/body.parser', () => {
       parser(
         req,
         createResponse(),
-        (err) => {
+        (err: any) => {
           ifError(err);
 
           expect(req.body).toEqual({
@@ -51,7 +51,7 @@ describe('middleware/body.parser', () => {
       parser(
         req,
         createResponse(),
-        (err) => {
+        (err: any) => {
           ifError(err);
 
           expect(req.body).toEqual(QUERY); // unchanged
@@ -75,7 +75,7 @@ describe('middleware/body.parser', () => {
       parser(
         req,
         createResponse(),
-        (err) => {
+        (err: any) => {
           // HTTP 413 Entity Too Large
           expect(err.status).toBe(413);
 

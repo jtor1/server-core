@@ -1,5 +1,3 @@
-// also:  @see node6.ts
-
 import { VERSION } from './utils/const';
 import {
   Context,

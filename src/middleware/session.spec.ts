@@ -1,3 +1,4 @@
+import { expect as chaiExpects } from 'chai';
 import { ifError } from 'assert';
 import { RequestHandler } from 'express'
 import { createRequest, createResponse } from 'node-mocks-http';
@@ -28,17 +29,17 @@ describe('middleware/session', () => {
       middleware(
         req,
         resp,
-        (err) => {
+        (err: any) => {
           ifError(err);
 
           // check there is no set-cookie header
-          expect(resp.header('set-cookie')).toBeUndefined();
+          chaiExpects(resp.header('set-cookie')).to.equal(undefined);
 
           // session is is set as request property
-          expect(req[SESSION_REQUEST_PROPERTY]).toBe(DUMMY_SESSION_ID);
+          chaiExpects(req[SESSION_REQUEST_PROPERTY]).to.equal(DUMMY_SESSION_ID);
 
           // an existing cookie is not put in req.headers where there is no custom header
-          expect(req.headers[SESSION_HEADER_NAME]).toBeUndefined();
+          chaiExpects(req.headers[SESSION_HEADER_NAME]).to.equal(undefined);
         }
       );
     });
@@ -54,17 +55,17 @@ describe('middleware/session', () => {
       middleware(
         req,
         resp,
-        (err) => {
+        (err: any) => {
           ifError(err);
 
           // check there is no set-cookie header
-          expect(resp.header('set-cookie')).toBeUndefined();
+          chaiExpects(resp.header('set-cookie')).to.equal(undefined);
 
           // session is is set as request property
-          expect(req[SESSION_REQUEST_PROPERTY]).toBe(DUMMY_SESSION_ID);
+          chaiExpects(req[SESSION_REQUEST_PROPERTY]).to.equal(DUMMY_SESSION_ID);
 
           // an existing custom session header remains in req.headers
-          expect(req.headers[SESSION_HEADER_NAME]).toBe(DUMMY_SESSION_ID);
+          chaiExpects(req.headers[SESSION_HEADER_NAME]).to.equal(DUMMY_SESSION_ID);
         }
       );
     });
@@ -81,10 +82,10 @@ describe('middleware/session', () => {
       middleware(
         req,
         resp,
-        (err) => {
+        (err: any) => {
           ifError(err);
 
-          expect(req[SESSION_REQUEST_PROPERTY]).toBe(DUMMY_SESSION_ID2);
+          chaiExpects(req[SESSION_REQUEST_PROPERTY]).to.equal(DUMMY_SESSION_ID2);
         }
       );
     });
@@ -96,26 +97,26 @@ describe('middleware/session', () => {
       middleware(
         req,
         resp,
-        (err) => {
+        (err: any) => {
           ifError(err);
 
           const newSessionId = req[SESSION_REQUEST_PROPERTY];
 
-          expect(typeof(newSessionId)).toBe('string');
-          expect(newSessionId).not.toBe(DUMMY_SESSION_ID);
-          expect(newSessionId).toMatch(/^[0-9A-Fa-f]{48}$/);
+          chaiExpects(typeof(newSessionId)).to.equal('string');
+          chaiExpects(newSessionId).not.to.equal(DUMMY_SESSION_ID);
+          chaiExpects(newSessionId).to.match(/^[0-9A-Fa-f]{48}$/);
 
           // check the Set-Cookie header is present and correct
           const expectedValue = generateSessionIdSetCookieHeaderValue(newSessionId);
           const actualValue = resp.header('set-cookie');
-          expect(actualValue).toBeDefined();
-          expect(actualValue).toBe(expectedValue);
+          chaiExpects(actualValue).not.to.equal(undefined);
+          chaiExpects(actualValue).to.equal(expectedValue);
 
           // session is is set as request property
-          expect(req[SESSION_REQUEST_PROPERTY]).toBe(newSessionId);
+          chaiExpects(req[SESSION_REQUEST_PROPERTY]).to.equal(newSessionId);
 
           // session id is set on request headers (for proxying)
-          expect(req.headers[SESSION_HEADER_NAME]).toBe(newSessionId);
+          chaiExpects(req.headers[SESSION_HEADER_NAME]).to.equal(newSessionId);
         }
       );
     });
@@ -127,11 +128,11 @@ describe('middleware/session', () => {
       passiveMiddleware(
         req,
         resp,
-        (err) => {
+        (err: any) => {
           ifError(err);
 
-          expect(req[SESSION_REQUEST_PROPERTY]).toBeUndefined();
-          expect(req.headers[SESSION_HEADER_NAME]).toBeUndefined();
+          chaiExpects(req[SESSION_REQUEST_PROPERTY]).to.equal(undefined);
+          chaiExpects(req.headers[SESSION_HEADER_NAME]).to.equal(undefined);
         }
       );
     });

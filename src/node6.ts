@@ -1,3 +1,7 @@
+//
+// @see README.md + "Node 6 Support"
+//
+
 import { VERSION } from './utils/const';
 import {
   LivestreamUrlParseResult,

@@ -1,3 +1,5 @@
+import { expect as chaiExpects } from 'chai';
+
 import {
   parseGoogleMeet,
 } from './googleMeet';
@@ -6,18 +8,18 @@ import {
 describe('service/livestreamUrl/googleMeet', () => {
   describe('parseGoogleMeet', () => {
     it('has minimum requirements', () => {
-      expect( parseGoogleMeet('') ).toBeNull();
-      expect( parseGoogleMeet('http-ish String') ).toBeNull();
+      chaiExpects( parseGoogleMeet('') ).to.equal(null);
+      chaiExpects( parseGoogleMeet('http-ish String') ).to.equal(null);
 
       // it('constrains on protocol')
-      expect( parseGoogleMeet('ftp://meet.google.com/thr-four-ee3') ).toBeNull();
+      chaiExpects( parseGoogleMeet('ftp://meet.google.com/thr-four-ee3') ).to.equal(null);
 
       // it('constrains on domain')
-      expect( parseGoogleMeet('https://not-meet.google.com/thr-four-ee3') ).toBeNull();
+      chaiExpects( parseGoogleMeet('https://not-meet.google.com/thr-four-ee3') ).to.equal(null);
 
       // it('requires a Stream ID')
-      expect( parseGoogleMeet('https://meet.google.com') ).toBeNull();
-      expect( parseGoogleMeet('https://go.meet/') ).toBeNull();
+      chaiExpects( parseGoogleMeet('https://meet.google.com') ).to.equal(null);
+      chaiExpects( parseGoogleMeet('https://go.meet/') ).to.equal(null);
     });
 
 
@@ -25,14 +27,14 @@ describe('service/livestreamUrl/googleMeet', () => {
       it('parses a URL', () => {
         const TEXT = 'https://meet.google.com/thr-four-ee3';
 
-        expect( parseGoogleMeet(TEXT) ).toEqual({
+        chaiExpects( parseGoogleMeet(TEXT) ).to.deep.equal({
           urlOriginal: TEXT,
           streamId: 'thr-four-ee3',
           passwordDetected: false,
         });
 
         // it('honors sub-domains')
-        expect( parseGoogleMeet('https://whitelabeled.meet.google.com/thr-four-ee3') ).toMatchObject({
+        chaiExpects( parseGoogleMeet('https://whitelabeled.meet.google.com/thr-four-ee3') ).to.include({
           streamId: 'thr-four-ee3',
         });
       });
@@ -43,7 +45,7 @@ describe('service/livestreamUrl/googleMeet', () => {
       it('parses a URL', () => {
         const TEXT = 'https://go.meet/thr-four-ee3';
 
-        expect( parseGoogleMeet(TEXT) ).toEqual({
+        chaiExpects( parseGoogleMeet(TEXT) ).to.deep.equal({
           urlOriginal: TEXT,
           streamId: 'thr-four-ee3',
           passwordDetected: false,
@@ -60,7 +62,7 @@ Otherwise, to join by phone, dial +1 252-986-3126 and enter this PIN: 333 333 33
 To view more phone numbers, click this link: https://tel.meet/thr-four-ee3?hs=5
         `.trim();
 
-        expect( parseGoogleMeet(TEXT) ).toEqual({
+        chaiExpects( parseGoogleMeet(TEXT) ).to.deep.equal({
           urlOriginal: 'https://meet.google.com/thr-four-ee3',
           streamId: 'thr-four-ee3',
           passwordDetected: false,

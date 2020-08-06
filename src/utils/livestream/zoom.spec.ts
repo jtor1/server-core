@@ -1,3 +1,5 @@
+import { expect as chaiExpects } from 'chai';
+
 import {
   parseZoomUrl,
 } from './zoom';
@@ -6,18 +8,18 @@ import {
 describe('service/livestreamUrl/zoom', () => {
   describe('parseZoomUrl', () => {
     it('has minimum requirements', () => {
-      expect( parseZoomUrl('') ).toBeNull();
-      expect( parseZoomUrl('http-ish String') ).toBeNull();
+      chaiExpects( parseZoomUrl('') ).to.equal(null);
+      chaiExpects( parseZoomUrl('http-ish String') ).to.equal(null);
 
       // it('constrains on protocol')
-      expect( parseZoomUrl('ftp://zoom.us/j/4155551212') ).toBeNull();
+      chaiExpects( parseZoomUrl('ftp://zoom.us/j/4155551212') ).to.equal(null);
 
       // it('constrains on domain')
-      expect( parseZoomUrl('https://not-zoom.us/j/4155551212') ).toBeNull();
+      chaiExpects( parseZoomUrl('https://not-zoom.us/j/4155551212') ).to.equal(null);
 
       // it('requires a Stream ID')
-      expect( parseZoomUrl('https://zoom.us/j/') ).toBeNull();
-      expect( parseZoomUrl('https://zoom.us/wc/') ).toBeNull();
+      chaiExpects( parseZoomUrl('https://zoom.us/j/') ).to.equal(null);
+      chaiExpects( parseZoomUrl('https://zoom.us/wc/') ).to.equal(null);
     });
 
 
@@ -28,7 +30,7 @@ describe('service/livestreamUrl/zoom', () => {
         // it('parses a Web-Client-launching URL')
         const TEXT = 'https://zoom.us/wc/4155551212';
 
-        expect( parseZoomUrl(TEXT) ).toEqual({
+        chaiExpects( parseZoomUrl(TEXT) ).to.deep.equal({
           urlOriginal: TEXT,
           urlApp: 'https://zoom.us/j/4155551212',
           urlBrowser: TEXT,
@@ -39,7 +41,7 @@ describe('service/livestreamUrl/zoom', () => {
         });
 
         // it('can be generous')
-        expect( parseZoomUrl('https://zoom.us/wc/more/paths/4155551212') ).toMatchObject({
+        chaiExpects( parseZoomUrl('https://zoom.us/wc/more/paths/4155551212') ).to.include({
           urlBrowser: 'https://zoom.us/wc/4155551212',
           streamId: '4155551212',
         });
@@ -50,7 +52,7 @@ describe('service/livestreamUrl/zoom', () => {
         // it('parses an App-launching URL')
         const TEXT = 'https://us04web.zoom.us/j/4155551212?pwd=P4s5w0r6';
 
-        expect( parseZoomUrl(TEXT) ).toEqual({
+        chaiExpects( parseZoomUrl(TEXT) ).to.deep.equal({
           urlOriginal: TEXT,
           // it('propagates the password')
           urlApp: 'https://zoom.us/j/4155551212?pwd=P4s5w0r6',
@@ -62,7 +64,7 @@ describe('service/livestreamUrl/zoom', () => {
         });
 
         // it('can be generous')
-        expect( parseZoomUrl('https://zoom.us/j/more/paths/4155551212?pwd=P4s5w0r6') ).toMatchObject({
+        chaiExpects( parseZoomUrl('https://zoom.us/j/more/paths/4155551212?pwd=P4s5w0r6') ).to.include({
           urlApp: 'https://zoom.us/j/4155551212?pwd=P4s5w0r6',
           streamId: '4155551212',
           passwordUrlEmbed: 'P4s5w0r6',
@@ -72,7 +74,7 @@ describe('service/livestreamUrl/zoom', () => {
       it('only reformats URLs which it can grok', () => {
         const TEXT = 'https://zoom.us/weird/4155551212';
 
-        expect( parseZoomUrl(TEXT) ).toEqual({
+        chaiExpects( parseZoomUrl(TEXT) ).to.deep.equal({
           urlOriginal: TEXT,
           urlApp: undefined,
           urlBrowser: undefined,
@@ -86,7 +88,7 @@ describe('service/livestreamUrl/zoom', () => {
       it('detects a non-embedded password', () => {
         const TEXT = 'https://us04web.zoom.us/j/4155551212 (Password: PASSWORD)';
 
-        expect( parseZoomUrl(TEXT) ).toMatchObject({
+        chaiExpects( parseZoomUrl(TEXT) ).to.include({
           urlOriginal: 'https://us04web.zoom.us/j/4155551212',
           urlApp: 'https://zoom.us/j/4155551212',
           urlBrowser: 'https://zoom.us/wc/4155551212',
@@ -109,7 +111,7 @@ https://zoom.us/wc/2675551212
 Meeting ID: 415 555 1212
         `.trim();
 
-        expect( parseZoomUrl(TEXT) ).toEqual({
+        chaiExpects( parseZoomUrl(TEXT) ).to.deep.equal({
           urlOriginal: 'https://zoom.us/wc/2675551212',
           urlApp: 'https://zoom.us/j/2675551212',
           urlBrowser: 'https://zoom.us/wc/2675551212',
@@ -135,7 +137,7 @@ Meeting ID: 267 555 1212
 Passcode: PASSWORD
         `.trim();
 
-        expect( parseZoomUrl(TEXT) ).toEqual({
+        chaiExpects( parseZoomUrl(TEXT) ).to.deep.equal({
           urlOriginal: 'https://us04web.zoom.us/j/2675551212?pwd=P4s5w0r6',
           // it('propagates the password')
           urlApp: 'https://zoom.us/j/2675551212?pwd=P4s5w0r6',
@@ -160,7 +162,7 @@ Meeting ID: 212 555 1212
 Passcode: PASSWORD
         `.trim();
 
-        expect( parseZoomUrl(TEXT) ).toEqual({
+        chaiExpects( parseZoomUrl(TEXT) ).to.deep.equal({
           urlOriginal: 'https://zoom.us/no/soup/for/you/2125551212?pwd=P4s5w0r6',
           urlApp: undefined,
           urlBrowser: undefined,
@@ -184,7 +186,7 @@ Meeting ID: 212 555 1212
 Passcode: PASSWORD
         `.trim();
 
-        expect( parseZoomUrl(TEXT) ).toMatchObject({
+        chaiExpects( parseZoomUrl(TEXT) ).to.include({
           urlOriginal: 'https://us04web.zoom.us/j/2125551212',
           urlApp: 'https://zoom.us/j/2125551212',
           urlBrowser: 'https://zoom.us/wc/2125551212',

@@ -1,3 +1,5 @@
+import { expect as chaiExpects } from 'chai';
+
 import {
   LivestreamUrlProvider,
   parseLivestreamUrl,
@@ -7,16 +9,16 @@ import {
 describe('service/livestreamUrl', () => {
   describe('parseLivestreamUrl', () => {
     it('matches nothing', () => {
-      expect( parseLivestreamUrl('') ).toBeNull();
-      expect( parseLivestreamUrl('http-ish String') ).toBeNull();
+      chaiExpects( parseLivestreamUrl('') ).to.equal(null);
+      chaiExpects( parseLivestreamUrl('http-ish String') ).to.equal(null);
 
-      expect( parseLivestreamUrl('https://withjoy.com/meetjoy') ).toBeNull();
+      chaiExpects( parseLivestreamUrl('https://withjoy.com/meetjoy') ).to.equal(null);
     });
 
     it('matches Zoom', () => {
       const TEXT = 'https://zoom.us/j/4155551212?pwd=P4s5w0r6';
 
-      expect( parseLivestreamUrl(TEXT) ).toEqual({
+      chaiExpects( parseLivestreamUrl(TEXT) ).to.deep.equal({
         provider: LivestreamUrlProvider.zoom,
         text: TEXT,
         urlOriginal: TEXT,
@@ -32,7 +34,7 @@ describe('service/livestreamUrl', () => {
     it('matches YouTube', () => {
       const TEXT = 'https://youtube.com/watch?v=dQw4w9WgXcQ&t=43';
 
-      expect( parseLivestreamUrl(TEXT) ).toEqual({
+      chaiExpects( parseLivestreamUrl(TEXT) ).to.deep.equal({
         provider: LivestreamUrlProvider.youtube,
         text: TEXT,
         urlOriginal: TEXT,
@@ -44,7 +46,7 @@ describe('service/livestreamUrl', () => {
     it('matches Google Meet', () => {
       const TEXT = 'https://meet.google.com/thr-four-ee3';
 
-      expect( parseLivestreamUrl(TEXT) ).toEqual({
+      chaiExpects( parseLivestreamUrl(TEXT) ).to.deep.equal({
         provider: LivestreamUrlProvider.googleMeet,
         text: TEXT,
         urlOriginal: TEXT,
@@ -56,7 +58,7 @@ describe('service/livestreamUrl', () => {
     it('matches EventLive', () => {
       const TEXT = 'https://evt.live/ACCOUNT/STREAM';
 
-      expect( parseLivestreamUrl(TEXT) ).toEqual({
+      chaiExpects( parseLivestreamUrl(TEXT) ).to.deep.equal({
         provider: LivestreamUrlProvider.eventlive,
         text: TEXT,
         urlOriginal: TEXT,

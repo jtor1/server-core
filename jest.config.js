@@ -31,7 +31,6 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: [
     '<rootDir>/src/**/*.spec.{ts,js}',
-    '<rootDir>/src/**/*.test.{ts,js}',
     '<rootDir>/test/**/*.{ts,js}',
   ],
   testPathIgnorePatterns: [

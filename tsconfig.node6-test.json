@@ -2,13 +2,16 @@
   "extends": "./tsconfig",
   "compilerOptions": {
     "types": ["node", "jest"],
+    "outDir": "./dist-node6-test",
+    "rootDir": ".",
     "allowJs": true,
     "module": "umd",
     "resolveJsonModule": false
   },
   "include": [
     "src/**/*.spec.ts",
-    "test/**/*.ts"
+    "test/**/*.ts",
+    "typings"
   ],
   "exclude": []
 }

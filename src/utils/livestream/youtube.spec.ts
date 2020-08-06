@@ -1,3 +1,5 @@
+import { expect as chaiExpects } from 'chai';
+
 import {
   parseYoutube,
 } from './youtube';
@@ -6,15 +8,15 @@ import {
 describe('service/livestreamUrl/youtube', () => {
   describe('parseYoutube', () => {
     it('has minimum requirements', () => {
-      expect( parseYoutube('') ).toBeNull();
-      expect( parseYoutube('http-ish String') ).toBeNull();
+      chaiExpects( parseYoutube('') ).to.equal(null);
+      chaiExpects( parseYoutube('http-ish String') ).to.equal(null);
 
       // it('constrains on domain')
-      expect( parseYoutube('https://not-youtube.com/dQw4w9WgXcQ') ).toBeNull();
+      chaiExpects( parseYoutube('https://not-youtube.com/dQw4w9WgXcQ') ).to.equal(null);
 
       // it('requires a Stream ID')
-      expect( parseYoutube('https://youtube.com?t=43') ).toBeNull();
-      expect( parseYoutube('https://youtu.be/?t=43') ).toBeNull();
+      chaiExpects( parseYoutube('https://youtube.com?t=43') ).to.equal(null);
+      chaiExpects( parseYoutube('https://youtu.be/?t=43') ).to.equal(null);
     });
 
 
@@ -22,14 +24,14 @@ describe('service/livestreamUrl/youtube', () => {
       it('parses a URL', () => {
         const TEXT = 'https://youtube.com/watch?v=dQw4w9WgXcQ&t=43';
 
-        expect( parseYoutube(TEXT) ).toEqual({
+        chaiExpects( parseYoutube(TEXT) ).to.deep.equal({
           urlOriginal: TEXT,
           streamId: 'dQw4w9WgXcQ',
           passwordDetected: false,
         });
 
         // it('honors sub-domains')
-        expect( parseYoutube('https://www.youtube.com/watch?v=dQw4w9WgXcQ') ).toMatchObject({
+        chaiExpects( parseYoutube('https://www.youtube.com/watch?v=dQw4w9WgXcQ') ).to.include({
           streamId: 'dQw4w9WgXcQ',
         });
       });
@@ -40,7 +42,7 @@ describe('service/livestreamUrl/youtube', () => {
       it('parses a URL', () => {
         const TEXT = 'https://youtu.be/dQw4w9WgXcQ?t=43';
 
-        expect( parseYoutube(TEXT) ).toEqual({
+        chaiExpects( parseYoutube(TEXT) ).to.deep.equal({
           urlOriginal: TEXT,
           streamId: 'dQw4w9WgXcQ',
           passwordDetected: false,

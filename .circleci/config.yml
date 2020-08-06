@@ -1,15 +1,13 @@
-# Javascript Node CircleCI 2.1 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+# https://circleci.com/docs/reference-2-1/
+# https://circleci.com/docs/2.0/workflows/
 #
 version: 2.1
 jobs:
-  build:
+  build-and-test-node10:
     docker:
-      # specify the version you desire here
       - image: node:10
 
-    working_directory: ~/bliss-api-tmp
+    working_directory: ~/tmp-node10
 
     steps:
       - checkout
@@ -21,20 +19,68 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - yarn-dependencies-
 
-      # `yarn.lock` enforcement, just like the Dockerfile
-      - run: rm -f package-lock.json;
-      - run: yarn install --frozen-lockfile;
+      - run:
+          name: Install Packages
+          # `yarn.lock` enforcement, just like the Dockerfile
+          command: >
+            rm -f npm-shrinkwrap.json;
+            yarn install --frozen-lockfile;
 
       - save_cache:
           paths:
             - node_modules
           key: yarn-dependencies-{{ checksum "yarn.lock" }}
 
-      # run the build!
-      - run: yarn build
+      - run:
+          name: Build
+          command: "yarn build"
 
-      # run tests!
-      - run: yarn run test:ci
+      - run:
+          name: Test Suite
+          command: "yarn run test:ci"
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  #
+  # @see README.md + "Node 6 Support"
+  #
+  build-and-test-node6:
+    docker:
+      - image: node:6
+
+    working_directory: ~/tmp-node6
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+          - npm-dependencies-{{ checksum "npm-shrinkwrap.json" }}
+          - npm-dependencies-
+
+      - run:
+          name: Install Packages
+          # https://docs.npmjs.com/cli/install
+          #   "If the package has a ... shrinkwrap file, the installation of dependencies will be driven by that."
+          command: >
+            rm -f yarn.lock;
+            npm install;
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: yarn-dependencies-{{ checksum "npm-shrinkwrap.json" }}
+
+      - run:
+          name: Build
+          command: "npm run build"
+
+      - run:
+          name: Test Suite
+          command: "npm run node6:test:ci"
 
       - persist_to_workspace:
           root: .
@@ -43,9 +89,13 @@ jobs:
 
 workflows:
   version: 2.1
-  build-n-deploy:
+  build-and-test:
     jobs:
-      - build:
-          filters:  # required since `deploy` has tag filters AND requires `build`
+      - build-and-test-node10:
+          filters:
+            tags:
+              only: /.*/
+      - build-and-test-node6:
+          filters:
             tags:
               only: /.*/

@@ -1,0 +1,4 @@
+--recursive
+--reporter spec
+./dist-node6-test/src/middleware/session.spec.js
+./dist-node6-test/src/utils/livestream/*.spec.js

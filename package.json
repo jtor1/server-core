@@ -16,17 +16,18 @@
     "build": "tsc",
     "gentype:dev": "apollo client:codegen --endpoint=https://bliss-gateway-staging.withjoy.com/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/generated.typings.ts",
     "gentype:local": "apollo client:codegen --endpoint=http://localhost:9091/graphql --target=typescript --includes=src/**/*.ts --outputFlat=src/graphql/generated.typings.ts",
+    "node6:build": "rm -f npm-shrinkwrap.json  &&  npm install  &&  yarn build  &&  npm shrinkwrap",
+    "node6:test:build": "rm -rf ./dist-node6-test  &&  tsc -p tsconfig.node6-test.json",
+    "node6:test:ci": "npm run node6:test:build  &&  npm run node6:test:run",
+    "node6:test:run": "NODE_ENV=test  mocha --opts ./mocha-node6.opts",
     "postversion": "git push && git push --tags",
     "prebuild": "rm -rf ./dist",
-    "prepare": "npm shrinkwrap && yarn build",
+    "prepare": "yarn build",
     "prepublishOnly": "yarn test",
+    "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
     "test:ci": "yarn test",
     "test:only": "NODE_ENV=test TERM=dumb  node  node_modules/.bin/jest  -i --no-coverage --no-verbose  --detectOpenHandles --forceExit --config jest.config.js",
-    "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
     "version": "git add -A  src test  yarn.lock npm-shrinkwrap.json"
-  },
-  "peerDependencies": {
-    "graphql": "14.4.2"
   },
   "dependencies": {
     "@types/cache-manager": "^2.10.1",
@@ -67,12 +68,16 @@
     "typescript": "^3.7.3"
   },
   "devDependencies": {
+    "@types/chai": "^4.2.12",
     "@types/jest": "^25.2.3",
     "@types/lolex": "^3.1.1",
+    "@types/mocha": "^5.2.7",
     "@types/nock": "^10.0.2",
     "apollo-server-testing": "^2.7.2",
+    "chai": "^4.2.0",
     "jest": "^25.5.1",
     "lolex": "^4.0.1",
+    "mocha": "^5.2.0",
     "nock": "^10.0.6",
     "node-mocks-http": "^1.7.3",
     "ts-jest": "^25.5.1",

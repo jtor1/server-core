@@ -1,3 +1,5 @@
+import { expect as chaiExpects } from 'chai';
+
 import {
   parseEventLive,
 } from './eventlive';
@@ -6,15 +8,15 @@ import {
 describe('service/livestreamUrl/eventlive', () => {
   describe('parseEventLive', () => {
     it('has minimum requirements', () => {
-      expect( parseEventLive('') ).toBeNull();
-      expect( parseEventLive('http-ish String') ).toBeNull();
+      chaiExpects( parseEventLive('') ).to.equal(null);
+      chaiExpects( parseEventLive('http-ish String') ).to.equal(null);
 
       // it('constrains on domain')
-      expect( parseEventLive('https://not-evt.live/ACCOUNT/STREAM') ).toBeNull();
+      chaiExpects( parseEventLive('https://not-evt.live/ACCOUNT/STREAM') ).to.equal(null);
 
       // it('requires a Stream ID')
-      expect( parseEventLive('https://evt.live') ).toBeNull();
-      expect( parseEventLive('https://evt.live/ACCOUNT') ).toBeNull();
+      chaiExpects( parseEventLive('https://evt.live') ).to.equal(null);
+      chaiExpects( parseEventLive('https://evt.live/ACCOUNT') ).to.equal(null);
     });
 
 
@@ -22,20 +24,20 @@ describe('service/livestreamUrl/eventlive', () => {
       it('parses a URL', () => {
         const TEXT = 'https://evt.live/ACCOUNT/STREAM';
 
-        expect( parseEventLive(TEXT) ).toEqual({
+        chaiExpects( parseEventLive(TEXT) ).to.deep.equal({
           urlOriginal: TEXT,
           streamId: 'ACCOUNT/STREAM',
           passwordDetected: false,
         });
 
         // it('honors sub-domains')
-        expect( parseEventLive('https://my.evt.live/ACCOUNT/STREAM') ).toMatchObject({
+        chaiExpects( parseEventLive('https://my.evt.live/ACCOUNT/STREAM') ).to.include({
           streamId: 'ACCOUNT/STREAM',
         });
 
         // it('honors more extenstive pathnames')
         //   https://broadcaster.eventlive.pro/event/<STREAM>/embed
-        expect( parseEventLive('https://my.evt.live/ACCOUNT/STREAM/embed') ).toMatchObject({
+        chaiExpects( parseEventLive('https://my.evt.live/ACCOUNT/STREAM/embed') ).to.include({
           streamId: 'ACCOUNT/STREAM',
         });
       });
