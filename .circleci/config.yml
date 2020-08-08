@@ -16,8 +16,6 @@ jobs:
       - restore_cache:
           keys:
           - yarn-dependencies-{{ checksum "yarn.lock" }}
-          # fallback to using the latest cache if no exact match is found
-          - yarn-dependencies-
 
       - run:
           name: Install Packages
