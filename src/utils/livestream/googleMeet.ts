@@ -14,7 +14,11 @@ import {
 const RECOGNIZED_DOMAINS = [ 'meet.google.com', 'go.meet' ];
 
 
-export const parseGoogleMeet: _LivestreamUrlParser = (text: string) => {
+export const parseUrl: _LivestreamUrlParser = (text: string) => {
+  if (! text) {
+    return null;
+  }
+
   // line termination is significant whitespace;
   //   mutli-line RegExps aren't the right strategy
   const lines = text.split(/\n/);

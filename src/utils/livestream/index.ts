@@ -5,10 +5,10 @@ import {
 import {
   _LivestreamUrlParser,
 } from './_helpers';
-import { parseZoomUrl } from './zoom';
-import { parseYoutube } from './youtube';
-import { parseGoogleMeet } from './googleMeet';
-import { parseEventLive } from './eventlive';
+import { parseUrl as parseZoomUrl } from './zoom';
+import { parseUrl as parseYouTubeUrl } from './youtube';
+import { parseUrl as parseGoogleMeetUrl } from './googleMeet';
+import { parseUrl as parseEventLiveUrl } from './eventlive';
 
 import * as schema from './schema';
 export const livestreamGraphQL = schema;
@@ -16,9 +16,9 @@ export const livestreamGraphQL = schema;
 
 const PROVIDER_PARSERS = new Map<LivestreamUrlProvider, _LivestreamUrlParser>([
   [ LivestreamUrlProvider.zoom, parseZoomUrl ],
-  [ LivestreamUrlProvider.youtube, parseYoutube ],
-  [ LivestreamUrlProvider.googleMeet, parseGoogleMeet ],
-  [ LivestreamUrlProvider.eventlive, parseEventLive ],
+  [ LivestreamUrlProvider.youtube, parseYouTubeUrl ],
+  [ LivestreamUrlProvider.googleMeet, parseGoogleMeetUrl ],
+  [ LivestreamUrlProvider.eventlive, parseEventLiveUrl ],
 ]);
 
 
@@ -30,6 +30,9 @@ export {
 
 export function parseLivestreamUrl(text: string): LivestreamUrlParseResult | null {
   let match: LivestreamUrlParseResult | null = null;
+  if (! text) {
+    return match;
+  }
 
   for (let [ provider, parser ] of PROVIDER_PARSERS.entries()) {
     const parsed = parser(text);

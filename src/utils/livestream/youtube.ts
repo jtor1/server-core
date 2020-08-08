@@ -12,7 +12,7 @@ const SHORTENED_DOMAIN = 'youtu.be';
 const RECOGNIZED_DOMAINS = [ FULL_DOMAIN, SHORTENED_DOMAIN ];
 
 
-export const parseYoutube: _LivestreamUrlParser = (urlOriginal: string) => {
+export const parseUrl: _LivestreamUrlParser = (urlOriginal: string) => {
   // the URL must be from a domain that we recognize
   const url = _safelyParseUrl(urlOriginal)!;
   const domain = _domainMatchFromUrl(url, RECOGNIZED_DOMAINS);

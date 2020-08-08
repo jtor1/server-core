@@ -9,6 +9,7 @@ import {
 describe('service/livestreamUrl', () => {
   describe('parseLivestreamUrl', () => {
     it('matches nothing', () => {
+      chaiExpects( parseLivestreamUrl(<unknown>null as string) ).to.equal(null);
       chaiExpects( parseLivestreamUrl('') ).to.equal(null);
       chaiExpects( parseLivestreamUrl('http-ish String') ).to.equal(null);
 

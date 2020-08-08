@@ -25,7 +25,11 @@ const PASSWORD_REGEXPS = [
 ].map(Object.freeze) as RegExp[];
 
 
-export const parseZoomUrl: _LivestreamUrlParser = (text: string) => {
+export const parseUrl: _LivestreamUrlParser = (text: string) => {
+  if (! text) {
+    return null;
+  }
+
   // line termination is significant whitespace;
   //   mutli-line RegExps aren't the right strategy
   const lines = text.split(/\n/);
