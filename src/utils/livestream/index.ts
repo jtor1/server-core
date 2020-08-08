@@ -10,6 +10,8 @@ import { parseYoutube } from './youtube';
 import { parseGoogleMeet } from './googleMeet';
 import { parseEventLive } from './eventlive';
 
+import * as schema from './schema';
+export const livestreamGraphQL = schema;
 
 
 const PROVIDER_PARSERS = new Map<LivestreamUrlProvider, _LivestreamUrlParser>([

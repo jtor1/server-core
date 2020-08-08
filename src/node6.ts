@@ -6,6 +6,7 @@ import { VERSION } from './utils/const';
 import {
   LivestreamUrlParseResult,
   LivestreamUrlProvider,
+  livestreamGraphQL,
   parseLivestreamUrl,
 } from './utils/livestream';
 import {
@@ -20,6 +21,7 @@ export {
 
   LivestreamUrlParseResult,
   LivestreamUrlProvider,
+  livestreamGraphQL,
   parseLivestreamUrl,
 
   sessionMiddleware,

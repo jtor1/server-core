@@ -53,6 +53,7 @@ import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import {
   LivestreamUrlParseResult,
   LivestreamUrlProvider,
+  livestreamGraphQL,
   parseLivestreamUrl,
 } from './utils/livestream';
 import {
@@ -145,6 +146,7 @@ export {
 
   LivestreamUrlParseResult,
   LivestreamUrlProvider,
+  livestreamGraphQL,
   parseLivestreamUrl,
 
   callService,
