@@ -14,12 +14,28 @@ import * as schema from './schema';
 export const virtualEventGraphQL = schema;
 
 
-const PROVIDER_PARSERS = new Map<VirtualEventProvider, _VirtualEventLinkParser>([
-  [ VirtualEventProvider.zoom, parseZoomUrl ],
-  [ VirtualEventProvider.youtube, parseYouTubeUrl ],
-  [ VirtualEventProvider.googleMeet, parseGoogleMeetUrl ],
-  [ VirtualEventProvider.eventlive, parseEventLiveUrl ],
-]);
+type _VirtualEventLinkProviderToolkit = {
+  provider: VirtualEventProvider,
+  parseLink: _VirtualEventLinkParser,
+};
+const PROVIDER_TOOLKITS: Array<_VirtualEventLinkProviderToolkit> = [
+  {
+    provider: VirtualEventProvider.zoom,
+    parseLink: parseZoomUrl,
+  },
+  {
+    provider: VirtualEventProvider.youtube,
+    parseLink: parseYouTubeUrl,
+  },
+  {
+    provider: VirtualEventProvider.googleMeet,
+    parseLink: parseGoogleMeetUrl,
+  },
+  {
+    provider: VirtualEventProvider.eventlive,
+    parseLink: parseEventLiveUrl,
+  },
+];
 
 
 // @public
@@ -34,8 +50,8 @@ export function parseVirtualEventLink(text: string): VirtualEventLinkParseResult
     return match;
   }
 
-  for (let [ provider, parser ] of PROVIDER_PARSERS.entries()) {
-    const parsed = parser(text);
+  for (let { provider, parseLink } of PROVIDER_TOOLKITS) {
+    const parsed = parseLink(text);
     if (parsed) {
       match = {
         ...parsed,

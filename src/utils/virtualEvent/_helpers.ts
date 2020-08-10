@@ -66,7 +66,7 @@ export function _firstMatchFromLines(lines: string[], regExps: RegExp[]): RegExp
 }
 
 export function _parsedSearchFromUrl(url: UrlObject): Record<string, any> {
-  const search = url?.search;
+  const search = url.search;
   if (! search) {
     return {};
   }
