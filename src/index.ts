@@ -91,6 +91,10 @@ import {
 import { SortKeyProvider } from './utils/sortKey/provider';
 import * as sortKeyBase64 from './utils/sortKey/base64';
 import * as sortKeyPaddedNumeric from './utils/sortKey/paddedNumeric';
+import {
+  applyMixinClasses,
+} from './utils/typescript';
+
 
 export {
   VERSION,
@@ -188,5 +192,7 @@ export {
   sortKeyBase64,
   sortKeyPaddedNumeric,
 
-  encodeForFirebaseKey
+  encodeForFirebaseKey,
+
+  applyMixinClasses,
 };
