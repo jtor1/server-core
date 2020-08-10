@@ -1,4 +1,3 @@
-import 'jest';
 import { first, last, times } from 'lodash';
 
 import {

@@ -1,4 +1,14 @@
+//
+// @see README.md + "Node 6 Support"
+//
+
 import { VERSION } from './utils/const';
+import {
+  VirtualEventLinkParseResult,
+  VirtualEventProvider,
+  virtualEventGraphQL,
+  parseVirtualEventLink,
+} from './utils/virtualEvent';
 import {
   sessionMiddleware,
   SESSION_COOKIE_NAME,
@@ -8,6 +18,11 @@ import {
 
 export {
   VERSION,
+
+  VirtualEventLinkParseResult,
+  VirtualEventProvider,
+  virtualEventGraphQL,
+  parseVirtualEventLink,
 
   sessionMiddleware,
   SESSION_COOKIE_NAME,

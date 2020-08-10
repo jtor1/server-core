@@ -1,4 +1,3 @@
-import 'jest';
 import { Socket } from 'net';
 import { noop } from 'lodash';
 import * as TypeMoq from 'typemoq';

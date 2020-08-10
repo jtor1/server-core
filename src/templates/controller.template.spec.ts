@@ -1,4 +1,3 @@
-import 'jest';
 import { ControllerTemplate } from './controller.template';
 import { FakeModelWithIndex } from './fake.model';
 

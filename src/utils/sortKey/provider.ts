@@ -1,11 +1,9 @@
 /*
   a Provider Class for String-based sortKeys
     @see joy.git:modules/app-server-api/handlers/gqlResolvers/event/rsvpQuestions/_sortKeyUtils.js
+
+  it performs "Fractional Indexing" implementation using Strings
 */
-import { findIndex, identity, isString } from 'lodash';
-
-import assert from 'assert';
-
 interface ISortKeyProviderOptions {
   chars: string;
 };

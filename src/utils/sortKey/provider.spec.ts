@@ -1,4 +1,3 @@
-import 'jest';
 import { first, last, times, noop } from 'lodash';
 
 import { SortKeyProvider } from './provider';

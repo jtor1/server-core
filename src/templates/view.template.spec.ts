@@ -1,4 +1,3 @@
-import 'jest';
 import * as TypeMoq from 'typemoq';
 
 import { ModelViewTemplate } from './view.template';

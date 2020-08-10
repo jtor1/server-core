@@ -29,11 +29,16 @@ function _tupleByMiddlewareName(handler: RequestHandler): [ string, RequestHandl
 }
 
 // @protected -- exported only for Test Suite, not '/index.ts'
-export function _morganFormatter(tokens: TokenIndexer, req: Request, res: Response): string | null {
+//
+// NOTE: `tokens: any` because `morgan.TokenIndexer` is incompatible across Node 6 + 10
+//   Node 6:  "Type 'TokenIndexer<Request, Response>' is not assignable to type 'TokenIndexer<IncomingMessage, ServerResponse>'."
+//   Node 10:  "Argument of type 'IncomingMessage' is not assignable to parameter of type 'Request'."
+//
+export function _morganFormatter(tokens: any, req: Request, res: Response): string | null {
   const reqAsAny: any = req;
 
   const path = tokens.url(req, res);
-  if (path.startsWith('/healthy')) {
+  if (path && path.startsWith('/healthy')) {
     // health checks should not spam the logs
     return null;
   }

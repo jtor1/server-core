@@ -1,4 +1,3 @@
-import 'jest';
 import { ModelTemplate } from '../templates/model.template';
 import {
   IModelReorderNeighbors,

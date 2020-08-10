@@ -11,9 +11,12 @@
 
 # production
 /dist
+/dist-node6-test
 
 # misc
 .DS_Store
+/*.tgz
+
 .env.local
 .env.development.local
 .env.test.local

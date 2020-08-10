@@ -1,4 +1,3 @@
-import 'jest';
 import { Socket } from 'net';
 import { noop, omit } from 'lodash';
 import { Request, Response } from 'express'

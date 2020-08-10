@@ -1,4 +1,3 @@
-import 'jest';
 import * as TypeMoq from 'typemoq';
 import { noop, omit } from 'lodash';
 import { createRequest, createResponse, Headers } from 'node-mocks-http';

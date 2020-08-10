@@ -1,4 +1,3 @@
-import 'jest';
 import jwt from 'jsonwebtoken';
 import lolex, { InstalledClock, NodeClock } from 'lolex';
 

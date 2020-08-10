@@ -1,4 +1,3 @@
-import 'jest';
 import { gql } from 'apollo-server-core';
 
 import { coreTypeDefs, coreResolvers } from '../../src/graphql/core.types';

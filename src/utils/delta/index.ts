@@ -1,6 +1,6 @@
 import { Repository, DeepPartial } from 'typeorm';
 
-import { ModelTemplate, ModelTemplateClass } from '../templates/model.template';
+import { ModelTemplate, ModelTemplateClass } from '../../templates/model.template';
 
 
 const EMPTY_OBJECT = Object.freeze({});
@@ -70,6 +70,11 @@ export function isNoOpDelta(delta: IModelDelta<ModelTemplate>): boolean {
   return (! isDirtyDelta(delta));
 }
 
+
+export function shallowCloneDelta<T extends ModelTemplate>(delta: IModelDelta<T>): IModelDelta<T> {
+  // for node < 8.6, @see https://node.green/
+  return Object.assign({}, delta, { newModel: Object.assign({}, delta.newModel) });
+}
 
 export function mutateDelta<T extends ModelTemplate>(delta: IModelDelta<T>, changes: Record<string, any>): IModelDelta<T> {
   // apply updates directly to the Model

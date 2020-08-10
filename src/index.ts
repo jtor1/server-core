@@ -1,5 +1,3 @@
-// also:  @see node6.ts
-
 import { VERSION } from './utils/const';
 import {
   Context,
@@ -53,6 +51,12 @@ import {
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import {
+  VirtualEventLinkParseResult,
+  VirtualEventProvider,
+  virtualEventGraphQL,
+  parseVirtualEventLink,
+} from './utils/virtualEvent';
+import {
   callService,
   ServiceCaller,
   createServiceCaller,
@@ -69,6 +73,7 @@ import {
   isDeleteDelta,
   buildNoOpDelta,
   isNoOpDelta,
+  shallowCloneDelta,
   mutateDelta,
   saveDelta,
   primaryModelOfDelta,
@@ -86,6 +91,10 @@ import {
 import { SortKeyProvider } from './utils/sortKey/provider';
 import * as sortKeyBase64 from './utils/sortKey/base64';
 import * as sortKeyPaddedNumeric from './utils/sortKey/paddedNumeric';
+import {
+  applyMixinClasses,
+} from './utils/typescript';
+
 
 export {
   VERSION,
@@ -140,6 +149,11 @@ export {
   EdgeWrapper,
   edgeWrapperType,
 
+  VirtualEventLinkParseResult,
+  VirtualEventProvider,
+  virtualEventGraphQL,
+  parseVirtualEventLink,
+
   callService,
   ServiceCaller,
   createServiceCaller,
@@ -160,6 +174,7 @@ export {
   isDeleteDelta,
   buildNoOpDelta,
   isNoOpDelta,
+  shallowCloneDelta,
   mutateDelta,
   saveDelta,
   primaryModelOfDelta,
@@ -177,5 +192,7 @@ export {
   sortKeyBase64,
   sortKeyPaddedNumeric,
 
-  encodeForFirebaseKey
+  encodeForFirebaseKey,
+
+  applyMixinClasses,
 };
