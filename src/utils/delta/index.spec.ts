@@ -1,8 +1,8 @@
 import * as TypeMoq from 'typemoq';
-import { noop, isEmpty } from 'lodash';
+import { isEmpty } from 'lodash';
 import { Repository } from 'typeorm';
 
-import { ModelTemplate } from '../templates/model.template';
+import { ModelTemplate } from '../../templates/model.template';
 import {
   ModelDeltaType,
   IModelDelta,
@@ -15,13 +15,14 @@ import {
   buildNoOpDelta,
   isNoOpDelta,
 
+  shallowCloneDelta,
   mutateDelta,
   saveDelta,
 
   primaryModelOfDelta,
   deriveIsDirtyFlagsFromDelta,
   isDirtyDelta,
-} from './delta';
+} from './index';
 
 class Model extends ModelTemplate {
   public value: string;
@@ -183,6 +184,32 @@ describe('core/delta', () => {
         value: MUTATED,
       });
       expect( isNoOpDelta(delta) ).toBe(false);
+    });
+  });
+
+  describe('shallowCloneDelta', () => {
+    it('creates a delta with a shallow clone of the Model', () => {
+      const delta = buildSnapshotDelta(model);
+      expect(delta.newModel).toBe(model);
+
+      const { oldModel, newModel } = shallowCloneDelta(delta);
+      expect(newModel).not.toBe(delta.newModel);
+      expect(newModel).toEqual(delta.newModel);
+
+      expect(delta.oldModel.value).toBe(ORIGINAL);
+      expect(oldModel.value).toBe(ORIGINAL);
+      expect(delta.newModel.value).toBe(ORIGINAL);
+      expect(newModel.value).toBe(ORIGINAL);
+
+      // it('does not clone the old Model')
+      //   it is a shared resource
+      oldModel.value = 'OLD';
+      newModel.value = 'NEW';
+
+      expect(delta.oldModel.value).toBe('OLD');
+      expect(oldModel.value).toBe('OLD');
+      expect(delta.newModel.value).toBe(ORIGINAL);
+      expect(newModel.value).toBe('NEW');
     });
   });
 
