@@ -1,5 +1,5 @@
 import {
-  _LivestreamUrlParser,
+  _VirtualEventLinkParser,
 
   _safelyParseUrl,
   _domainMatchFromUrl,
@@ -10,9 +10,9 @@ const RECOGNIZED_DOMAINS = [ 'evt.live' ];
 const PATH_DELIMITER = '/';
 
 
-export const parseUrl: _LivestreamUrlParser = (urlOriginal: string) => {
+export const parseLink: _VirtualEventLinkParser = (text: string) => {
   // the URL must be from a domain that we recognize
-  const url = _safelyParseUrl(urlOriginal)!;
+  const url = _safelyParseUrl(text)!;
   const domain = _domainMatchFromUrl(url, RECOGNIZED_DOMAINS);
   if (! domain) {
     return null;
@@ -32,7 +32,7 @@ export const parseUrl: _LivestreamUrlParser = (urlOriginal: string) => {
   const streamId = pathSegements.slice(0, 2).join(PATH_DELIMITER);
 
   return {
-    urlOriginal,
+    urlLinkText: text,
     streamId,
     passwordDetected: false,
   };

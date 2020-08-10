@@ -51,11 +51,11 @@ import {
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import {
-  LivestreamUrlParseResult,
-  LivestreamUrlProvider,
-  livestreamGraphQL,
-  parseLivestreamUrl,
-} from './utils/livestream';
+  VirtualEventLinkParseResult,
+  VirtualEventProvider,
+  virtualEventGraphQL,
+  parseVirtualEventLink,
+} from './utils/virtualEvent';
 import {
   callService,
   ServiceCaller,
@@ -144,10 +144,10 @@ export {
   EdgeWrapper,
   edgeWrapperType,
 
-  LivestreamUrlParseResult,
-  LivestreamUrlProvider,
-  livestreamGraphQL,
-  parseLivestreamUrl,
+  VirtualEventLinkParseResult,
+  VirtualEventProvider,
+  virtualEventGraphQL,
+  parseVirtualEventLink,
 
   callService,
   ServiceCaller,

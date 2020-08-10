@@ -1,23 +1,23 @@
 import { expect as chaiExpects } from 'chai';
 
 import {
-  parseUrl,
+  parseLink,
 } from './youtube';
 
 
-describe('service/livestreamUrl/youtube', () => {
+describe('service/virtualEvent/youtube', () => {
   describe('parseUrl', () => {
     it('has minimum requirements', () => {
-      chaiExpects( parseUrl(<unknown>null as string) ).to.equal(null);
-      chaiExpects( parseUrl('') ).to.equal(null);
-      chaiExpects( parseUrl('http-ish String') ).to.equal(null);
+      chaiExpects( parseLink(<unknown>null as string) ).to.equal(null);
+      chaiExpects( parseLink('') ).to.equal(null);
+      chaiExpects( parseLink('http-ish String') ).to.equal(null);
 
       // it('constrains on domain')
-      chaiExpects( parseUrl('https://not-youtube.com/dQw4w9WgXcQ') ).to.equal(null);
+      chaiExpects( parseLink('https://not-youtube.com/dQw4w9WgXcQ') ).to.equal(null);
 
       // it('requires a Stream ID')
-      chaiExpects( parseUrl('https://youtube.com?t=43') ).to.equal(null);
-      chaiExpects( parseUrl('https://youtu.be/?t=43') ).to.equal(null);
+      chaiExpects( parseLink('https://youtube.com?t=43') ).to.equal(null);
+      chaiExpects( parseLink('https://youtu.be/?t=43') ).to.equal(null);
     });
 
 
@@ -25,14 +25,14 @@ describe('service/livestreamUrl/youtube', () => {
       it('parses a URL', () => {
         const TEXT = 'https://youtube.com/watch?v=dQw4w9WgXcQ&t=43';
 
-        chaiExpects( parseUrl(TEXT) ).to.deep.equal({
-          urlOriginal: TEXT,
+        chaiExpects( parseLink(TEXT) ).to.deep.equal({
+          urlLinkText: TEXT,
           streamId: 'dQw4w9WgXcQ',
           passwordDetected: false,
         });
 
         // it('honors sub-domains')
-        chaiExpects( parseUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ') ).to.include({
+        chaiExpects( parseLink('https://www.youtube.com/watch?v=dQw4w9WgXcQ') ).to.include({
           streamId: 'dQw4w9WgXcQ',
         });
       });
@@ -43,8 +43,8 @@ describe('service/livestreamUrl/youtube', () => {
       it('parses a URL', () => {
         const TEXT = 'https://youtu.be/dQw4w9WgXcQ?t=43';
 
-        chaiExpects( parseUrl(TEXT) ).to.deep.equal({
-          urlOriginal: TEXT,
+        chaiExpects( parseLink(TEXT) ).to.deep.equal({
+          urlLinkText: TEXT,
           streamId: 'dQw4w9WgXcQ',
           passwordDetected: false,
         });

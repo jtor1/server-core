@@ -1,5 +1,5 @@
 import {
-  _LivestreamUrlParser,
+  _VirtualEventLinkParser,
   _URL_REGEXP,
 
   _safelyParseUrl,
@@ -25,7 +25,7 @@ const PASSWORD_REGEXPS = [
 ].map(Object.freeze) as RegExp[];
 
 
-export const parseUrl: _LivestreamUrlParser = (text: string) => {
+export const parseLink: _VirtualEventLinkParser = (text: string) => {
   if (! text) {
     return null;
   }
@@ -41,8 +41,8 @@ export const parseUrl: _LivestreamUrlParser = (text: string) => {
   }
 
   // the URL must be from a domain that we recognize
-  const [ _text, urlOriginal ] = textUrlMatch;
-  const url = _safelyParseUrl(urlOriginal)!;
+  const [ _text, urlLinkText ] = textUrlMatch;
+  const url = _safelyParseUrl(urlLinkText)!;
   if (! _domainMatchFromUrl(url, RECOGNIZED_DOMAINS)) {
     return null;
   }
@@ -88,7 +88,7 @@ export const parseUrl: _LivestreamUrlParser = (text: string) => {
   const passwordText = (passwordTextMatch && passwordTextMatch[1]) || undefined;
 
   return {
-    urlOriginal,
+    urlLinkText,
     urlApp,
     urlBrowser,
     streamId,

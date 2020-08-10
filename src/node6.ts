@@ -4,11 +4,11 @@
 
 import { VERSION } from './utils/const';
 import {
-  LivestreamUrlParseResult,
-  LivestreamUrlProvider,
-  livestreamGraphQL,
-  parseLivestreamUrl,
-} from './utils/livestream';
+  VirtualEventLinkParseResult,
+  VirtualEventProvider,
+  virtualEventGraphQL,
+  parseVirtualEventLink,
+} from './utils/virtualEvent';
 import {
   sessionMiddleware,
   SESSION_COOKIE_NAME,
@@ -19,10 +19,10 @@ import {
 export {
   VERSION,
 
-  LivestreamUrlParseResult,
-  LivestreamUrlProvider,
-  livestreamGraphQL,
-  parseLivestreamUrl,
+  VirtualEventLinkParseResult,
+  VirtualEventProvider,
+  virtualEventGraphQL,
+  parseVirtualEventLink,
 
   sessionMiddleware,
   SESSION_COOKIE_NAME,

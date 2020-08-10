@@ -8,8 +8,8 @@ import {
 } from 'querystring';
 import { omit } from 'lodash';
 
-export type _LivestreamUrlParseFragment = {
-  urlOriginal: string;
+export type _VirtualEventLinkParseFragment = {
+  urlLinkText: string;
   urlApp?: string;
   urlBrowser?: string; // for Grandma
   streamId: string;
@@ -18,7 +18,7 @@ export type _LivestreamUrlParseFragment = {
   passwordText?: string;
 };
 
-export type _LivestreamUrlParser = (text: string) => _LivestreamUrlParseFragment | null;
+export type _VirtualEventLinkParser = (text: string) => _VirtualEventLinkParseFragment | null;
 
 export const _URL_REGEXP = Object.freeze( /(http[^ ]+)/ ) as RegExp;
 

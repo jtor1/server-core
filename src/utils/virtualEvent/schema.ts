@@ -13,17 +13,17 @@ export const markup = (options: {
   noExtend?: boolean,
 }): string => (`
 
-  enum LivestreamUrlProvider {
+  enum VirtualEventProvider {
     zoom
     youtube
     googleMeet
     eventlive
   }
 
-  type LivestreamUrlParseResult {
-    provider: LivestreamUrlProvider!
-    text: String!
-    urlOriginal: String!
+  type VirtualEventLinkParseResult {
+    provider: VirtualEventProvider!
+    linkText: String!
+    urlLinkText: String!
     urlApp: String
     urlBrowser: String
     streamId: String!
@@ -33,7 +33,7 @@ export const markup = (options: {
   }
 
   ${ options.noExtend ? '' : 'extend' } type ${ options.queryTypeName } {
-    parseLivestreamUrl(text: String!): LivestreamUrlParseResult
+    parseVirtualEventLink(text: String!): VirtualEventLinkParseResult
   }
 
 `);
@@ -50,17 +50,17 @@ const astSchema = buildASTSchema( gql( markup({
   noExtend: true,
 }) ) );
 
-const LivestreamUrlProvider = typeFromAST(astSchema, {
+const VirtualEventProvider = typeFromAST(astSchema, {
   kind: 'NamedType',
-  name: { kind: 'Name', value: 'LivestreamUrlProvider' },
+  name: { kind: 'Name', value: 'VirtualEventProvider' },
 })! as GraphQLEnumType;
-const LivestreamUrlParseResult = typeFromAST(astSchema, {
+const VirtualEventLinkParseResult = typeFromAST(astSchema, {
   kind: 'NamedType',
-  name: { kind: 'Name', value: 'LivestreamUrlParseResult' },
+  name: { kind: 'Name', value: 'VirtualEventLinkParseResult' },
 })! as GraphQLObjectType;
 
 
 export const types = {
-  LivestreamUrlProvider,
-  LivestreamUrlParseResult,
+  VirtualEventProvider,
+  VirtualEventLinkParseResult,
 };

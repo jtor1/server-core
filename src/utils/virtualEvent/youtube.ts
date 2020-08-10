@@ -1,5 +1,5 @@
 import {
-  _LivestreamUrlParser,
+  _VirtualEventLinkParser,
 
   _safelyParseUrl,
   _domainMatchFromUrl,
@@ -12,9 +12,9 @@ const SHORTENED_DOMAIN = 'youtu.be';
 const RECOGNIZED_DOMAINS = [ FULL_DOMAIN, SHORTENED_DOMAIN ];
 
 
-export const parseUrl: _LivestreamUrlParser = (urlOriginal: string) => {
+export const parseLink: _VirtualEventLinkParser = (text: string) => {
   // the URL must be from a domain that we recognize
-  const url = _safelyParseUrl(urlOriginal)!;
+  const url = _safelyParseUrl(text)!;
   const domain = _domainMatchFromUrl(url, RECOGNIZED_DOMAINS);
   if (! domain) {
     return null;
@@ -38,7 +38,7 @@ export const parseUrl: _LivestreamUrlParser = (urlOriginal: string) => {
   }
 
   return {
-    urlOriginal,
+    urlLinkText: text,
     streamId,
     // "Is there any way to password-protect a live stream?"
     //   https://support.google.com/youtube/thread/36280684?hl=en
