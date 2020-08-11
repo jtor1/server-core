@@ -11,9 +11,20 @@ describe('service/virtualEvent', () => {
     it('matches nothing', () => {
       chaiExpects( parseVirtualEventLink(<unknown>null as string) ).to.equal(null);
       chaiExpects( parseVirtualEventLink('') ).to.equal(null);
-      chaiExpects( parseVirtualEventLink('http-ish String') ).to.equal(null);
+    });
 
-      chaiExpects( parseVirtualEventLink('https://withjoy.com/meetjoy') ).to.equal(null);
+    it('matches text that it does not recognize', () => {
+      chaiExpects( parseVirtualEventLink('http-ish String') ).to.deep.equal({
+        provider: VirtualEventProvider.unknown,
+        linkText: 'http-ish String',
+        passwordDetected: false,
+      });
+
+      chaiExpects( parseVirtualEventLink('https://withjoy.com/meetjoy') ).to.deep.equal({
+        provider: VirtualEventProvider.unknown,
+        linkText: 'https://withjoy.com/meetjoy',
+        passwordDetected: false,
+      });
     });
 
     it('matches Zoom', () => {

@@ -9,10 +9,10 @@ import {
 import { omit } from 'lodash';
 
 export type _VirtualEventLinkParseFragment = {
-  urlLinkText: string;
+  urlLinkText?: string;
   urlApp?: string;
   urlBrowser?: string; // for Grandma
-  streamId: string;
+  streamId?: string;
   passwordDetected: boolean;
   passwordUrlEmbed?: string;
   passwordText?: string;

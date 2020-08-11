@@ -14,6 +14,7 @@ export const markup = (options: {
 }): string => (`
 
   enum VirtualEventProvider {
+    unknown
     zoom
     youtube
     googleMeet
@@ -23,10 +24,10 @@ export const markup = (options: {
   type VirtualEventLinkParseResult {
     provider: VirtualEventProvider!
     linkText: String!
-    urlLinkText: String!
+    urlLinkText: String
     urlApp: String
     urlBrowser: String
-    streamId: String!
+    streamId: String
     passwordDetected: Boolean!
     passwordUrlEmbed: String
     passwordText: String

@@ -45,10 +45,16 @@ export {
 };
 
 export function parseVirtualEventLink(text: string): VirtualEventLinkParseResult | null {
-  let match: VirtualEventLinkParseResult | null = null;
   if (! text) {
-    return match;
+    return null;
   }
+
+  // assume unknown
+  let match: VirtualEventLinkParseResult = {
+    provider: VirtualEventProvider.unknown,
+    linkText: text,
+    passwordDetected: false,
+  };
 
   for (let { provider, parseLink } of PROVIDER_TOOLKITS) {
     const parsed = parseLink(text);
