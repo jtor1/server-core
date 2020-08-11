@@ -5,6 +5,7 @@ import {
 
 // @public
 export enum VirtualEventProvider {
+  unknown = 'unknown',
   zoom = 'zoom',
   youtube = 'youtube',
   googleMeet = 'googleMeet',
