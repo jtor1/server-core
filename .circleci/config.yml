@@ -21,8 +21,15 @@ jobs:
           name: Install Packages
           # `yarn.lock` enforcement, just like the Dockerfile
           command: >
+            # allow ENV-driven `npm` token; CircleCI-only
+            cp ~/tmp-node10/.npmrc /tmp/.npmrc;
+            echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ~/tmp-node10/.npmrc;
+
             rm -f npm-shrinkwrap.json;
             yarn install --frozen-lockfile;
+
+            # revert ENV-driven `npm` token
+            cp /tmp/.npmrc ~/tmp-node10/.npmrc;
 
       - save_cache:
           paths:
@@ -64,8 +71,15 @@ jobs:
           # https://docs.npmjs.com/cli/install
           #   "If the package has a ... shrinkwrap file, the installation of dependencies will be driven by that."
           command: >
+            # allow ENV-driven `npm` token; CircleCI-only
+            cp ~/tmp-node10/.npmrc /tmp/.npmrc;
+            echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ~/tmp-node10/.npmrc;
+
             rm -f yarn.lock;
             npm install;
+
+            # revert ENV-driven `npm` token
+            cp /tmp/.npmrc ~/tmp-node10/.npmrc;
 
       - save_cache:
           paths:
