@@ -6722,6 +6722,11 @@ url-parse-lax@^3.0.0:
   dependencies:
     prepend-http "^2.0.0"
 
+url-regexp@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/url-regexp/-/url-regexp-1.0.2.tgz#3c0f433095b4c98b93aab8aabf2186a9c59e108e"
+  integrity sha1-PA9DMJW0yYuTqriqvyGGqcWeEI4=
+
 url-to-options@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/url-to-options/-/url-to-options-1.0.1.tgz#1505a03a289a48cbd7a434efbaeec5055f5633a9"

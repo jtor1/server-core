@@ -13,7 +13,7 @@ describe('service/virtualEvent/googleMeet', () => {
       chaiExpects( parseLink('http-ish String') ).to.equal(null);
 
       // it('constrains on protocol')
-      chaiExpects( parseLink('ftp://meet.google.com/thr-four-ee3') ).to.equal(null);
+      chaiExpects( parseLink('gopher://meet.google.com/thr-four-ee3') ).to.equal(null);
 
       // it('constrains on domain')
       chaiExpects( parseLink('https://not-meet.google.com/thr-four-ee3') ).to.equal(null);
@@ -25,18 +25,26 @@ describe('service/virtualEvent/googleMeet', () => {
 
 
     describe('from a full URL', () => {
-      it('parses a URL', () => {
-        const TEXT = 'https://meet.google.com/thr-four-ee3';
+      const URL = 'https://meet.google.com/thr-four-ee3';
 
-        chaiExpects( parseLink(TEXT) ).to.deep.equal({
-          urlLinkText: TEXT,
+      it('parses a URL', () => {
+        chaiExpects( parseLink(URL) ).to.deep.equal({
+          urlLinkText: URL,
           streamId: 'thr-four-ee3',
-          passwordDetected: false,
+          isPasswordDetected: false,
         });
 
         // it('honors sub-domains')
         chaiExpects( parseLink('https://whitelabeled.meet.google.com/thr-four-ee3') ).to.include({
           streamId: 'thr-four-ee3',
+        });
+      });
+
+      it('derives a URL from anywhere within the text', () => {
+        chaiExpects( parseLink(`Link Text: ${ URL }`) ).to.deep.equal({
+          urlLinkText: URL,
+          streamId: 'thr-four-ee3',
+          isPasswordDetected: false,
         });
       });
     });
@@ -49,7 +57,7 @@ describe('service/virtualEvent/googleMeet', () => {
         chaiExpects( parseLink(TEXT) ).to.deep.equal({
           urlLinkText: TEXT,
           streamId: 'thr-four-ee3',
-          passwordDetected: false,
+          isPasswordDetected: false,
         });
       });
     });
@@ -66,7 +74,7 @@ To view more phone numbers, click this link: https://tel.meet/thr-four-ee3?hs=5
         chaiExpects( parseLink(TEXT) ).to.deep.equal({
           urlLinkText: 'https://meet.google.com/thr-four-ee3',
           streamId: 'thr-four-ee3',
-          passwordDetected: false,
+          isPasswordDetected: false,
         });
       });
     });

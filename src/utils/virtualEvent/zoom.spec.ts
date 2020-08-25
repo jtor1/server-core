@@ -13,7 +13,7 @@ describe('service/virtualEvent/zoom', () => {
       chaiExpects( parseLink('http-ish String') ).to.equal(null);
 
       // it('constrains on protocol')
-      chaiExpects( parseLink('ftp://zoom.us/j/4155551212') ).to.equal(null);
+      chaiExpects( parseLink('gopher://zoom.us/j/4155551212') ).to.equal(null);
 
       // it('constrains on domain')
       chaiExpects( parseLink('https://not-zoom.us/j/4155551212') ).to.equal(null);
@@ -26,17 +26,16 @@ describe('service/virtualEvent/zoom', () => {
 
     describe('from a URL', () => {
       // eg. "Copy Invite Link" text
+      const URL = 'https://zoom.us/wc/4155551212';
 
       it('parses a URL', () => {
         // it('parses a Web-Client-launching URL')
-        const TEXT = 'https://zoom.us/wc/4155551212';
-
-        chaiExpects( parseLink(TEXT) ).to.deep.equal({
-          urlLinkText: TEXT,
+        chaiExpects( parseLink(URL) ).to.deep.equal({
+          urlLinkText: URL,
           urlApp: 'https://zoom.us/j/4155551212',
-          urlBrowser: TEXT,
+          urlBrowser: URL,
           streamId: '4155551212',
-          passwordDetected: false,
+          isPasswordDetected: false,
           passwordUrlEmbed: undefined,
           passwordText: undefined,
         });
@@ -45,6 +44,18 @@ describe('service/virtualEvent/zoom', () => {
         chaiExpects( parseLink('https://zoom.us/wc/more/paths/4155551212') ).to.include({
           urlBrowser: 'https://zoom.us/wc/4155551212',
           streamId: '4155551212',
+        });
+      });
+
+      it('derives a URL from anywhere within the text', () => {
+        chaiExpects( parseLink(`Link Text: ${ URL }`) ).to.deep.equal({
+          urlLinkText: URL,
+          urlApp: 'https://zoom.us/j/4155551212',
+          urlBrowser: URL,
+          streamId: '4155551212',
+          isPasswordDetected: false,
+          passwordUrlEmbed: undefined,
+          passwordText: undefined,
         });
       });
 
@@ -59,7 +70,7 @@ describe('service/virtualEvent/zoom', () => {
           urlApp: 'https://zoom.us/j/4155551212?pwd=P4s5w0r6',
           urlBrowser: 'https://zoom.us/wc/4155551212?pwd=P4s5w0r6',
           streamId: '4155551212',
-          passwordDetected: true,
+          isPasswordDetected: true,
           passwordUrlEmbed: 'P4s5w0r6',
           passwordText: undefined,
         });
@@ -80,7 +91,7 @@ describe('service/virtualEvent/zoom', () => {
           urlApp: undefined,
           urlBrowser: undefined,
           streamId: '4155551212',
-          passwordDetected: false,
+          isPasswordDetected: false,
           passwordUrlEmbed: undefined,
           passwordText: undefined,
         });
@@ -94,7 +105,7 @@ describe('service/virtualEvent/zoom', () => {
           urlApp: 'https://zoom.us/j/4155551212',
           urlBrowser: 'https://zoom.us/wc/4155551212',
           streamId: '4155551212',
-          passwordDetected: true,
+          isPasswordDetected: true,
           passwordUrlEmbed: undefined,
           passwordText: 'PASSWORD',
         });
@@ -117,7 +128,7 @@ Meeting ID: 415 555 1212
           urlApp: 'https://zoom.us/j/2675551212',
           urlBrowser: 'https://zoom.us/wc/2675551212',
           streamId: '2675551212',
-          passwordDetected: false,
+          isPasswordDetected: false,
           passwordUrlEmbed: undefined,
           passwordText: undefined,
         });
@@ -144,7 +155,7 @@ Passcode: PASSWORD
           urlApp: 'https://zoom.us/j/2675551212?pwd=P4s5w0r6',
           urlBrowser: 'https://zoom.us/wc/2675551212?pwd=P4s5w0r6',
           streamId: '2675551212',
-          passwordDetected: true,
+          isPasswordDetected: true,
           passwordUrlEmbed: 'P4s5w0r6',
           passwordText: 'PASSWORD',
         });
@@ -168,7 +179,7 @@ Passcode: PASSWORD
           urlApp: undefined,
           urlBrowser: undefined,
           streamId: '2125551212',
-          passwordDetected: true,
+          isPasswordDetected: true,
           passwordUrlEmbed: 'P4s5w0r6',
           passwordText: 'PASSWORD',
         });
@@ -192,7 +203,7 @@ Passcode: PASSWORD
           urlApp: 'https://zoom.us/j/2125551212',
           urlBrowser: 'https://zoom.us/wc/2125551212',
           streamId: '2125551212',
-          passwordDetected: true,
+          isPasswordDetected: true,
           passwordUrlEmbed: undefined,
           passwordText: 'PASSWORD',
         });

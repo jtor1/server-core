@@ -65,7 +65,8 @@
     "morgan": "1.9.1",
     "node-fetch": "2.3.0",
     "typeorm": "0.2.13",
-    "typescript": "^3.7.3"
+    "typescript": "^3.7.3",
+    "url-regexp": "^1.0.2"
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",

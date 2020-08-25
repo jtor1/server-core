@@ -1,6 +1,7 @@
 import {
   _VirtualEventLinkParser,
 
+  _deriveUrlLinkText,
   _safelyParseUrl,
   _domainMatchFromUrl,
 } from './_helpers';
@@ -11,8 +12,13 @@ const PATH_DELIMITER = '/';
 
 
 export const parseLink: _VirtualEventLinkParser = (text: string) => {
+  const urlLinkText = _deriveUrlLinkText(text);
+  if (! urlLinkText) {
+    return null;
+  }
+
   // the URL must be from a domain that we recognize
-  const url = _safelyParseUrl(text)!;
+  const url = _safelyParseUrl(urlLinkText)!;
   const domain = _domainMatchFromUrl(url, RECOGNIZED_DOMAINS);
   if (! domain) {
     return null;
@@ -32,8 +38,8 @@ export const parseLink: _VirtualEventLinkParser = (text: string) => {
   const streamId = pathSegements.slice(0, 2).join(PATH_DELIMITER);
 
   return {
-    urlLinkText: text,
+    urlLinkText,
     streamId,
-    passwordDetected: false,
+    isPasswordDetected: false,
   };
 }

@@ -9,6 +9,7 @@ import { parseLink as parseZoomUrl } from './zoom';
 import { parseLink as parseYouTubeUrl } from './youtube';
 import { parseLink as parseGoogleMeetUrl } from './googleMeet';
 import { parseLink as parseEventLiveUrl } from './eventlive';
+import { parseLink as parseUnknownUrl } from './unknown';
 
 import * as schema from './schema';
 export const virtualEventGraphQL = schema;
@@ -35,6 +36,11 @@ const PROVIDER_TOOLKITS: Array<_VirtualEventLinkProviderToolkit> = [
     provider: VirtualEventProvider.eventlive,
     parseLink: parseEventLiveUrl,
   },
+  // always last
+  {
+    provider: VirtualEventProvider.unknown,
+    parseLink: parseUnknownUrl,
+  },
 ];
 
 
@@ -44,30 +50,31 @@ export {
   VirtualEventLinkParseResult,
 };
 
-export function parseVirtualEventLink(text: string): VirtualEventLinkParseResult | null {
-  if (! text) {
+export function parseVirtualEventLink(linkText: string): VirtualEventLinkParseResult | null {
+  if (! linkText) {
     return null;
   }
 
-  // assume unknown
-  let match: VirtualEventLinkParseResult = {
-    provider: VirtualEventProvider.unknown,
-    linkText: text,
-    passwordDetected: false,
-  };
-
   for (let { provider, parseLink } of PROVIDER_TOOLKITS) {
-    const parsed = parseLink(text);
+    const parsed = parseLink(linkText);
     if (parsed) {
-      match = {
-        ...parsed,
-
+      return {
         provider,
-        linkText: text,
+        linkText,
+        isLinkValid: true,
+
+        ...parsed,
       };
-      break;
     }
   }
 
-  return match;
+  // whatever the Couple cut-and-pasted to us, we echo back;
+  //   no known Provider
+  //   we detected nothing useful
+  return {
+    provider: VirtualEventProvider.unknown,
+    linkText,
+    isLinkValid: false,
+    isPasswordDetected: false,
+  };
 }

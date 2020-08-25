@@ -25,7 +25,9 @@ export const markup = (options: {
     provider: VirtualEventProvider!
     "The raw text of the Virtual Event link provided to us"
     linkText: String!
-    "The 'original' Virtual Event URL, as derived from the link text"
+    "We detected a valid Virtual Event URL in the link text"
+    isLinkValid: Boolean!
+    "The Virtual Event URL derived from the link text"
     urlLinkText: String
     "An optional URL which launches the Provider's App (via browser) to stream the Virtual Event"
     urlApp: String
@@ -34,7 +36,7 @@ export const markup = (options: {
     "Unique ID of the Provider's Virtual Event stream"
     streamId: String
     "A clear-text or embedded password has been detected in the text"
-    passwordDetected: Boolean!
+    isPasswordDetected: Boolean!
     "The password parameter value embedded in 'urlLinkText', if detected"
     passwordUrlEmbed: String
     "The clear-text password called out in the link text, if detected"

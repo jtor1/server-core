@@ -7,21 +7,33 @@ import {
   parse as parseQuerysting,
 } from 'querystring';
 import { omit } from 'lodash';
+// `url-regexp` is not TypeScript'd
+const URLRegExp = require('url-regexp');
 
 export type _VirtualEventLinkParseFragment = {
   urlLinkText?: string;
   urlApp?: string;
   urlBrowser?: string; // for Grandma
   streamId?: string;
-  passwordDetected: boolean;
+  isPasswordDetected: boolean;
   passwordUrlEmbed?: string;
   passwordText?: string;
 };
 
 export type _VirtualEventLinkParser = (text: string) => _VirtualEventLinkParseFragment | null;
 
-export const _URL_REGEXP = Object.freeze( /(http[^ ]+)/ ) as RegExp;
 
+export function _deriveUrlLinkText(text: string): string | null {
+  try {
+    const matches = URLRegExp.match(text);
+
+    // assume the first one is what we want (until we learn otherwise)
+    return matches[0] || null;
+  }
+  catch (err) {
+    return null;
+  }
+}
 
 export function _safelyParseUrl(urlString: string): UrlObject | null {
   // NOTE:  implemented using the [Legacy URL API](https://nodejs.org/dist/latest/docs/api/url.html#url_legacy_url_api)
