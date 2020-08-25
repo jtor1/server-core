@@ -1,6 +1,6 @@
 {
   "name": "@withjoy/server-core",
-  "version": "1.14.3",
+  "version": "1.14.4",
   "description": "Joy Server Base and Utils",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
