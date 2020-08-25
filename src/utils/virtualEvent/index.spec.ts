@@ -8,22 +8,25 @@ import {
 
 describe('service/virtualEvent', () => {
   describe('parseVirtualEventLink', () => {
-    it('matches nothing', () => {
+    it('cannot match a lack-of-text', () => {
       chaiExpects( parseVirtualEventLink(<unknown>null as string) ).to.equal(null);
       chaiExpects( parseVirtualEventLink('') ).to.equal(null);
     });
 
-    it('matches text that it does not recognize', () => {
+    it('matches text without a URL', () => {
       chaiExpects( parseVirtualEventLink('http-ish String') ).to.deep.equal({
         provider: VirtualEventProvider.unknown,
         linkText: 'http-ish String',
-        passwordDetected: false,
+        isLinkValid: false,
+        isPasswordDetected: false,
       });
 
-      chaiExpects( parseVirtualEventLink('https://withjoy.com/meetjoy') ).to.deep.equal({
+      // it('even matches minimal whitespace')
+      chaiExpects( parseVirtualEventLink(' ') ).to.deep.equal({
         provider: VirtualEventProvider.unknown,
-        linkText: 'https://withjoy.com/meetjoy',
-        passwordDetected: false,
+        linkText: ' ',
+        isLinkValid: false,
+        isPasswordDetected: false,
       });
     });
 
@@ -33,11 +36,12 @@ describe('service/virtualEvent', () => {
       chaiExpects( parseVirtualEventLink(TEXT) ).to.deep.equal({
         provider: VirtualEventProvider.zoom,
         linkText: TEXT,
+        isLinkValid: true,
         urlLinkText: TEXT,
         urlApp: TEXT,
         urlBrowser: 'https://zoom.us/wc/4155551212?pwd=P4s5w0r6',
         streamId: '4155551212',
-        passwordDetected: true,
+        isPasswordDetected: true,
         passwordUrlEmbed: 'P4s5w0r6',
         passwordText: undefined,
       });
@@ -49,9 +53,10 @@ describe('service/virtualEvent', () => {
       chaiExpects( parseVirtualEventLink(TEXT) ).to.deep.equal({
         provider: VirtualEventProvider.youtube,
         linkText: TEXT,
+        isLinkValid: true,
         urlLinkText: TEXT,
         streamId: 'dQw4w9WgXcQ',
-        passwordDetected: false,
+        isPasswordDetected: false,
       });
     });
 
@@ -61,9 +66,10 @@ describe('service/virtualEvent', () => {
       chaiExpects( parseVirtualEventLink(TEXT) ).to.deep.equal({
         provider: VirtualEventProvider.googleMeet,
         linkText: TEXT,
+        isLinkValid: true,
         urlLinkText: TEXT,
         streamId: 'thr-four-ee3',
-        passwordDetected: false,
+        isPasswordDetected: false,
       });
     });
 
@@ -73,9 +79,22 @@ describe('service/virtualEvent', () => {
       chaiExpects( parseVirtualEventLink(TEXT) ).to.deep.equal({
         provider: VirtualEventProvider.eventlive,
         linkText: TEXT,
+        isLinkValid: true,
         urlLinkText: TEXT,
         streamId: 'ACCOUNT/STREAM',
-        passwordDetected: false,
+        isPasswordDetected: false,
+      });
+    });
+
+    it('matches an unknown Provider', () => {
+      const TEXT = 'https://withjoy.com/meetjoy';
+
+      chaiExpects( parseVirtualEventLink(TEXT) ).to.deep.equal({
+        provider: VirtualEventProvider.unknown,
+        linkText: TEXT,
+        urlLinkText: TEXT,
+        isLinkValid: true,
+        isPasswordDetected: false,
       });
     });
   });

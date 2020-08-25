@@ -22,13 +22,13 @@ describe('service/virtualEvent/eventlive', () => {
 
 
     describe('from a URL', () => {
-      it('parses a URL', () => {
-        const TEXT = 'https://evt.live/ACCOUNT/STREAM';
+      const URL = 'https://evt.live/ACCOUNT/STREAM';
 
-        chaiExpects( parseLink(TEXT) ).to.deep.equal({
-          urlLinkText: TEXT,
+      it('parses a URL', () => {
+        chaiExpects( parseLink(URL) ).to.deep.equal({
+          urlLinkText: URL,
           streamId: 'ACCOUNT/STREAM',
-          passwordDetected: false,
+          isPasswordDetected: false,
         });
 
         // it('honors sub-domains')
@@ -40,6 +40,14 @@ describe('service/virtualEvent/eventlive', () => {
         //   https://broadcaster.eventlive.pro/event/<STREAM>/embed
         chaiExpects( parseLink('https://my.evt.live/ACCOUNT/STREAM/embed') ).to.include({
           streamId: 'ACCOUNT/STREAM',
+        });
+      });
+
+      it('derives a URL from anywhere within the text', () => {
+        chaiExpects( parseLink(`Link Text: ${ URL }`) ).to.deep.equal({
+          urlLinkText: URL,
+          streamId: 'ACCOUNT/STREAM',
+          isPasswordDetected: false,
         });
       });
     });

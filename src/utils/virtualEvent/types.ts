@@ -15,4 +15,5 @@ export enum VirtualEventProvider {
 export type VirtualEventLinkParseResult = _VirtualEventLinkParseFragment & {
   provider: VirtualEventProvider;
   linkText: string;
+  isLinkValid: boolean;
 }

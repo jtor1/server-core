@@ -60,9 +60,14 @@ Make sure to keep these files in-sync:
 And here's the basic process:
 
 ```bash
+# fresh clone of the repo
+#   so as not to conflict with Node 10's installed `node_modules`
+git clone git@github.com:joylifeinc/server-core.git
+cd server-core
+
 nvm use 6  # ... obviously
 
-# rebuild the source & `npm-shrinkwrap.json`
+# install Node 6 modules, then rebuild the source & `npm-shrinkwrap.json`
 npm run node6:build
 
 # build & run the Test Suite
@@ -98,3 +103,10 @@ These files are related, but won't change often (if ever)
 
 - `tsconfig.node6-test.json`
 - `.circleci/config.yml`
+
+
+## CircleCI
+
+Its Project uses the following Environment Variables:
+
+- NPM_TOKEN

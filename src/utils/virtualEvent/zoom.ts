@@ -1,7 +1,7 @@
 import {
   _VirtualEventLinkParser,
-  _URL_REGEXP,
 
+  _deriveUrlLinkText,
   _safelyParseUrl,
   _domainMatchFromUrl,
   _firstMatchFromLines,
@@ -26,22 +26,12 @@ const PASSWORD_REGEXPS = [
 
 
 export const parseLink: _VirtualEventLinkParser = (text: string) => {
-  if (! text) {
-    return null;
-  }
-
-  // line termination is significant whitespace;
-  //   mutli-line RegExps aren't the right strategy
-  const lines = text.split(/\n/);
-
-  // the text must contain a valid URL of some sort
-  const textUrlMatch = _firstMatchFromLines(lines, [ _URL_REGEXP ]);
-  if (! textUrlMatch) {
+  const urlLinkText = _deriveUrlLinkText(text);
+  if (! urlLinkText) {
     return null;
   }
 
   // the URL must be from a domain that we recognize
-  const [ _text, urlLinkText ] = textUrlMatch;
   const url = _safelyParseUrl(urlLinkText)!;
   if (! _domainMatchFromUrl(url, RECOGNIZED_DOMAINS)) {
     return null;
@@ -78,6 +68,11 @@ export const parseLink: _VirtualEventLinkParser = (text: string) => {
     });
   }
 
+
+  // line termination is significant whitespace;
+  //   mutli-line RegExps aren't the right strategy
+  const lines = text.split(/\n/);
+
   // the URL may have a password
   const passwordUrlEmbed = parsedSearch[PASSWORD_EMBED_PARAM] || undefined;
 
@@ -92,7 +87,7 @@ export const parseLink: _VirtualEventLinkParser = (text: string) => {
     urlApp,
     urlBrowser,
     streamId,
-    passwordDetected: (!! (passwordUrlEmbed || passwordText)),
+    isPasswordDetected: (!! (passwordUrlEmbed || passwordText)),
     passwordUrlEmbed,
     passwordText,
   };

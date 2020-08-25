@@ -1,7 +1,7 @@
 import {
   _VirtualEventLinkParser,
-  _URL_REGEXP,
 
+  _deriveUrlLinkText,
   _safelyParseUrl,
   _domainMatchFromUrl,
   _firstMatchFromLines,
@@ -15,22 +15,12 @@ const RECOGNIZED_DOMAINS = [ 'meet.google.com', 'go.meet' ];
 
 
 export const parseLink: _VirtualEventLinkParser = (text: string) => {
-  if (! text) {
-    return null;
-  }
-
-  // line termination is significant whitespace;
-  //   mutli-line RegExps aren't the right strategy
-  const lines = text.split(/\n/);
-
-  // the text must contain a valid URL of some sort
-  const textUrlMatch = _firstMatchFromLines(lines, [ _URL_REGEXP ]);
-  if (! textUrlMatch) {
+  const urlLinkText = _deriveUrlLinkText(text);
+  if (! urlLinkText) {
     return null;
   }
 
   // the URL must be from a domain that we recognize
-  const [ _text, urlLinkText ] = textUrlMatch;
   const url = _safelyParseUrl(urlLinkText)!;
   const domain = _domainMatchFromUrl(url, RECOGNIZED_DOMAINS);
   if (! domain) {
@@ -51,6 +41,6 @@ export const parseLink: _VirtualEventLinkParser = (text: string) => {
     // "Creating a meeting code or password"
     //   https://support.google.com/meet/thread/53513441?hl=en
     //   "If passcode means password there is no such thing in Google Meet."
-    passwordDetected: false,
+    isPasswordDetected: false,
   };
 }

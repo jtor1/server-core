@@ -22,18 +22,26 @@ describe('service/virtualEvent/youtube', () => {
 
 
     describe('from a full URL', () => {
-      it('parses a URL', () => {
-        const TEXT = 'https://youtube.com/watch?v=dQw4w9WgXcQ&t=43';
+      const URL = 'https://youtube.com/watch?v=dQw4w9WgXcQ&t=43';
 
-        chaiExpects( parseLink(TEXT) ).to.deep.equal({
-          urlLinkText: TEXT,
+      it('parses a URL', () => {
+        chaiExpects( parseLink(URL) ).to.deep.equal({
+          urlLinkText: URL,
           streamId: 'dQw4w9WgXcQ',
-          passwordDetected: false,
+          isPasswordDetected: false,
         });
 
         // it('honors sub-domains')
         chaiExpects( parseLink('https://www.youtube.com/watch?v=dQw4w9WgXcQ') ).to.include({
           streamId: 'dQw4w9WgXcQ',
+        });
+      });
+
+      it('derives a URL from anywhere within the text', () => {
+        chaiExpects( parseLink(`Link Text: ${ URL }`) ).to.deep.equal({
+          urlLinkText: URL,
+          streamId: 'dQw4w9WgXcQ',
+          isPasswordDetected: false,
         });
       });
     });
@@ -46,7 +54,7 @@ describe('service/virtualEvent/youtube', () => {
         chaiExpects( parseLink(TEXT) ).to.deep.equal({
           urlLinkText: TEXT,
           streamId: 'dQw4w9WgXcQ',
-          passwordDetected: false,
+          isPasswordDetected: false,
         });
       });
     });

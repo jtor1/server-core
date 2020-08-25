@@ -1,6 +1,7 @@
 import {
   _VirtualEventLinkParser,
 
+  _deriveUrlLinkText,
   _safelyParseUrl,
   _domainMatchFromUrl,
   _parsedSearchFromUrl,
@@ -13,8 +14,13 @@ const RECOGNIZED_DOMAINS = [ FULL_DOMAIN, SHORTENED_DOMAIN ];
 
 
 export const parseLink: _VirtualEventLinkParser = (text: string) => {
+  const urlLinkText = _deriveUrlLinkText(text);
+  if (! urlLinkText) {
+    return null;
+  }
+
   // the URL must be from a domain that we recognize
-  const url = _safelyParseUrl(text)!;
+  const url = _safelyParseUrl(urlLinkText)!;
   const domain = _domainMatchFromUrl(url, RECOGNIZED_DOMAINS);
   if (! domain) {
     return null;
@@ -38,7 +44,7 @@ export const parseLink: _VirtualEventLinkParser = (text: string) => {
   }
 
   return {
-    urlLinkText: text,
+    urlLinkText,
     streamId,
     // "Is there any way to password-protect a live stream?"
     //   https://support.google.com/youtube/thread/36280684?hl=en
@@ -47,6 +53,6 @@ export const parseLink: _VirtualEventLinkParser = (text: string) => {
     //   "There are three options you can use:
     //    Public, Private, Unlisted.
     //    If you don’t want other people to see your live stream, then choose the unlisted setting ..."
-    passwordDetected: false,
+    isPasswordDetected: false,
   };
 }
