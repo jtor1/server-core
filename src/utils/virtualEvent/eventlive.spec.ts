@@ -21,32 +21,53 @@ describe('service/virtualEvent/eventlive', () => {
     });
 
 
-    describe('from a URL', () => {
+    describe('from a Viewer URL', () => {
       const URL = 'https://evt.live/ACCOUNT/STREAM';
 
       it('parses a URL', () => {
         chaiExpects( parseLink(URL) ).to.deep.equal({
           urlLinkText: URL,
-          streamId: 'ACCOUNT/STREAM',
+          streamId: 'STREAM',
           isPasswordDetected: false,
         });
 
         // it('honors sub-domains')
         chaiExpects( parseLink('https://my.evt.live/ACCOUNT/STREAM') ).to.include({
-          streamId: 'ACCOUNT/STREAM',
+          streamId: 'STREAM',
         });
 
         // it('honors more extenstive pathnames')
         //   https://broadcaster.eventlive.pro/event/<STREAM>/embed
         chaiExpects( parseLink('https://my.evt.live/ACCOUNT/STREAM/embed') ).to.include({
-          streamId: 'ACCOUNT/STREAM',
+          streamId: 'STREAM',
         });
       });
 
       it('derives a URL from anywhere within the text', () => {
         chaiExpects( parseLink(`Link Text: ${ URL }`) ).to.deep.equal({
           urlLinkText: URL,
-          streamId: 'ACCOUNT/STREAM',
+          streamId: 'STREAM',
+          isPasswordDetected: false,
+        });
+      });
+    });
+
+
+    describe('from a Broadcaster URL', () => {
+      const URL = 'https://broadcaster.eventlive.pro/event/STREAM';
+
+      it('parses a URL', () => {
+        chaiExpects( parseLink(URL) ).to.deep.equal({
+          urlLinkText: URL,
+          streamId: 'STREAM',
+          isPasswordDetected: false,
+        });
+      });
+
+      it('derives a URL from anywhere within the text', () => {
+        chaiExpects( parseLink(`Link Text: ${ URL }`) ).to.deep.equal({
+          urlLinkText: URL,
+          streamId: 'STREAM',
           isPasswordDetected: false,
         });
       });

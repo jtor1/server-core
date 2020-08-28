@@ -10,6 +10,7 @@ import { omit } from 'lodash';
 // `url-regexp` is not TypeScript'd
 const URLRegExp = require('url-regexp');
 
+
 export type _VirtualEventLinkParseFragment = {
   urlLinkText?: string;
   urlApp?: string;
@@ -22,6 +23,8 @@ export type _VirtualEventLinkParseFragment = {
 
 export type _VirtualEventLinkParser = (text: string) => _VirtualEventLinkParseFragment | null;
 
+
+export const _PATH_DELIMITER = '/';
 
 export function _deriveUrlLinkText(text: string): string | null {
   try {

@@ -67,7 +67,7 @@ describe('service/virtualEvent/googleMeet', () => {
       it('parses a URL', () => {
         const TEXT = `
 To join the video meeting, click this link: https://meet.google.com/thr-four-ee3
-Otherwise, to join by phone, dial +1 252-986-3126 and enter this PIN: 333 333 333#
+Otherwise, to join by phone, dial +1 415-555-1212 and enter this PIN: 333 333 333#
 To view more phone numbers, click this link: https://tel.meet/thr-four-ee3?hs=5
         `.trim();
 
