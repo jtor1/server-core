@@ -1,6 +1,26 @@
 # server-core
 
 
+## Publishing
+
+To publish a new version of this module,
+
+- *do not* up-version on your development branch
+- merge your fixes into `master`
+- from the `master` branch,
+
+```
+yarn version --patch  # or whatever is suitable
+```
+
+As a follow-up,
+
+- `package.json` is up-versioned
+- a semver-ish tag is pushed to Git
+- CircleCI will perform the `yarn publish` operation when it detects the tag
+- it's ready once the 'versions' in `yarn info @withjoy/server-core` have been updated
+
+
 ## Development w/ `npm link` (or `yarn link`)
 
 You may see the following when trying to use `npm link` and co-develop this module and one of our Apps (eg. `event_service`):
@@ -109,4 +129,4 @@ These files are related, but won't change often (if ever)
 
 Its Project uses the following Environment Variables:
 
-- NPM_TOKEN
+- NPM_TOKEN, which must have Publish rights
