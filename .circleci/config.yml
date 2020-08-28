@@ -5,9 +5,9 @@ version: 2.1
 jobs:
   build-and-test-node10:
     docker:
-      - image: node:10
+      - image: &image node:10
 
-    working_directory: ~/tmp-node10
+    working_directory: &working_directory ~/tmp-node10
 
     steps:
       - checkout
@@ -19,17 +19,17 @@ jobs:
 
       - run:
           name: Install Packages
-          # `yarn.lock` enforcement, just like the Dockerfile
+          # NOTES:
+          #   allow ENV-driven `npm` token; CircleCI-only, reverted after install
+          #   `yarn.lock` enforcement, just like the Dockerfile
           command: >
-            # allow ENV-driven `npm` token; CircleCI-only
-            cp ~/tmp-node10/.npmrc /tmp/.npmrc;
-            echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ~/tmp-node10/.npmrc;
+            cp ./.npmrc /tmp/.npmrc;
+            echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ./.npmrc;
 
             rm -f npm-shrinkwrap.json;
             yarn install --frozen-lockfile;
 
-            # revert ENV-driven `npm` token
-            cp /tmp/.npmrc ~/tmp-node10/.npmrc;
+            cp /tmp/.npmrc ./.npmrc;
 
       - save_cache:
           paths:
@@ -44,6 +44,7 @@ jobs:
           name: Test Suite
           command: "yarn run test:ci"
 
+      # we will do our publish from this Workspace
       - persist_to_workspace:
           root: .
           paths:
@@ -68,18 +69,18 @@ jobs:
 
       - run:
           name: Install Packages
-          # https://docs.npmjs.com/cli/install
-          #   "If the package has a ... shrinkwrap file, the installation of dependencies will be driven by that."
+          # NOTES:
+          #   allow ENV-driven `npm` token; CircleCI-only, reverted after install
+          #   https://docs.npmjs.com/cli/install
+          #     "If the package has a ... shrinkwrap file, the installation of dependencies will be driven by that."
           command: >
-            # allow ENV-driven `npm` token; CircleCI-only
-            cp ~/tmp-node10/.npmrc /tmp/.npmrc;
-            echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ~/tmp-node10/.npmrc;
+            cp ./.npmrc /tmp/.npmrc;
+            echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ./.npmrc;
 
             rm -f yarn.lock;
             npm install;
 
-            # revert ENV-driven `npm` token
-            cp /tmp/.npmrc ~/tmp-node10/.npmrc;
+            cp /tmp/.npmrc ./.npmrc;
 
       - save_cache:
           paths:
@@ -94,10 +95,31 @@ jobs:
           name: Test Suite
           command: "npm run node6:test:ci"
 
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
+  publish:
+    docker:
+      - image: *image
+
+    working_directory: *working_directory
+
+    steps:
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: Publish to npm
+          # NOTES:
+          #   allow ENV-driven `npm` token; CircleCI-only
+          #   the Git tag embeds the version number (vs. scraping it from `package.json`)
+          #   `yarn` doesn't need to run 'prepare', 'prepublish', etc.; they've already been covered
+          command: >
+            cp ./.npmrc /tmp/.npmrc;
+            echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ./.npmrc;
+
+            export SEMVER=$( echo "$CIRCLE_BRANCH" | sed s/^v// );
+            echo "publishing version $SEMVER ..."
+
+            yarn publish --ignore-scripts --new-version "$SEMVER";
+
 
 workflows:
   version: 2.1
@@ -111,3 +133,14 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - publish:
+          requires:
+            - build-and-test-node10
+            - build-and-test-node6
+          filters:
+            tags:
+              # from `yarn version`
+              only: /^v[0-9]+[.].*/
+            branches:
+              # 100% tag-driven
+              ignore: /.*/

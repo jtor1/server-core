@@ -1,3 +1,4 @@
+import { IFieldResolver, IResolvers } from 'apollo-server';
 import gql from 'graphql-tag';
 import {
   DocumentNode,
@@ -6,6 +7,10 @@ import {
   buildASTSchema,
   typeFromAST,
 } from 'graphql';
+
+import { Context } from '../../server/apollo.context';
+import { VirtualEventLinkParseResult } from './types';
+import { parseLink } from './aggregator';
 
 
 export const markup = (options: {
@@ -53,6 +58,19 @@ export const markup = (options: {
 export const typeDefs: DocumentNode = gql( markup({
   queryTypeName: 'Query',
 }) );
+
+
+
+// as Resolvers
+const parseVirtualEventLink: IFieldResolver<null, Context, { text: string }> = (_, args, _context): VirtualEventLinkParseResult | null => {
+  return parseLink(args.text);
+}
+
+export const resolvers: IResolvers = {
+  Query: {
+    parseVirtualEventLink,
+  },
+};
 
 
 // as individual GraphQL Types
