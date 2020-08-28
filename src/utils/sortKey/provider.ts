@@ -8,7 +8,7 @@ interface ISortKeyProviderOptions {
   chars: string;
 };
 
-const NO_KEY: string = '';
+export const NO_KEY: string = '';
 
 export class SortKeyProvider {
   private _CHARS: string;
