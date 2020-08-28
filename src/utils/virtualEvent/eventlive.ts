@@ -1,5 +1,6 @@
 import {
   _VirtualEventLinkParser,
+  _PATH_DELIMITER,
 
   _deriveUrlLinkText,
   _safelyParseUrl,
@@ -7,8 +8,7 @@ import {
 } from './_helpers';
 
 
-const RECOGNIZED_DOMAINS = [ 'evt.live' ];
-const PATH_DELIMITER = '/';
+const RECOGNIZED_DOMAINS = [ 'evt.live', 'eventlive.pro' ];
 
 
 export const parseLink: _VirtualEventLinkParser = (text: string) => {
@@ -30,12 +30,14 @@ export const parseLink: _VirtualEventLinkParser = (text: string) => {
   }
 
   // derive the Stream ID
-  //   '/<ACCOUNT>/<STREAM>'
-  const pathSegements = pathname.slice(1).split(PATH_DELIMITER);
-  if (pathSegements.length < 2) {
+  //   'evt.live/<ACCOUNT>/<STREAM>'
+  //   'eventlive.pro/event/<STREAM>'
+  //   ... which suggests that STREAM is unique across the platform (vs. just ACCOUNT)
+  const pathSegments = pathname.slice(1).split(_PATH_DELIMITER);
+  if (pathSegments.length < 2) {
     return null;
   }
-  const streamId = pathSegements.slice(0, 2).join(PATH_DELIMITER);
+  const streamId = pathSegments[1];
 
   return {
     urlLinkText,

@@ -1,20 +1,20 @@
 import { expect as chaiExpects } from 'chai';
 
+import { VirtualEventProvider } from './types';
 import {
-  VirtualEventProvider,
-  parseVirtualEventLink,
-} from './index';
+  parseLink,
+} from './aggregator';
 
 
-describe('service/virtualEvent', () => {
-  describe('parseVirtualEventLink', () => {
+describe('service/virtualEvent/aggregator', () => {
+  describe('parseLink', () => {
     it('cannot match a lack-of-text', () => {
-      chaiExpects( parseVirtualEventLink(<unknown>null as string) ).to.equal(null);
-      chaiExpects( parseVirtualEventLink('') ).to.equal(null);
+      chaiExpects( parseLink(<unknown>null as string) ).to.equal(null);
+      chaiExpects( parseLink('') ).to.equal(null);
     });
 
     it('matches text without a URL', () => {
-      chaiExpects( parseVirtualEventLink('http-ish String') ).to.deep.equal({
+      chaiExpects( parseLink('http-ish String') ).to.deep.equal({
         provider: VirtualEventProvider.unknown,
         linkText: 'http-ish String',
         isLinkValid: false,
@@ -22,7 +22,7 @@ describe('service/virtualEvent', () => {
       });
 
       // it('even matches minimal whitespace')
-      chaiExpects( parseVirtualEventLink(' ') ).to.deep.equal({
+      chaiExpects( parseLink(' ') ).to.deep.equal({
         provider: VirtualEventProvider.unknown,
         linkText: ' ',
         isLinkValid: false,
@@ -33,13 +33,13 @@ describe('service/virtualEvent', () => {
     it('matches Zoom', () => {
       const TEXT = 'https://zoom.us/j/4155551212?pwd=P4s5w0r6';
 
-      chaiExpects( parseVirtualEventLink(TEXT) ).to.deep.equal({
+      chaiExpects( parseLink(TEXT) ).to.deep.equal({
         provider: VirtualEventProvider.zoom,
         linkText: TEXT,
         isLinkValid: true,
         urlLinkText: TEXT,
         urlApp: TEXT,
-        urlBrowser: 'https://zoom.us/wc/4155551212?pwd=P4s5w0r6',
+        urlBrowser: 'https://zoom.us/wc/join/4155551212?pwd=P4s5w0r6',
         streamId: '4155551212',
         isPasswordDetected: true,
         passwordUrlEmbed: 'P4s5w0r6',
@@ -50,7 +50,7 @@ describe('service/virtualEvent', () => {
     it('matches YouTube', () => {
       const TEXT = 'https://youtube.com/watch?v=dQw4w9WgXcQ&t=43';
 
-      chaiExpects( parseVirtualEventLink(TEXT) ).to.deep.equal({
+      chaiExpects( parseLink(TEXT) ).to.deep.equal({
         provider: VirtualEventProvider.youtube,
         linkText: TEXT,
         isLinkValid: true,
@@ -63,7 +63,7 @@ describe('service/virtualEvent', () => {
     it('matches Google Meet', () => {
       const TEXT = 'https://meet.google.com/thr-four-ee3';
 
-      chaiExpects( parseVirtualEventLink(TEXT) ).to.deep.equal({
+      chaiExpects( parseLink(TEXT) ).to.deep.equal({
         provider: VirtualEventProvider.googleMeet,
         linkText: TEXT,
         isLinkValid: true,
@@ -76,12 +76,12 @@ describe('service/virtualEvent', () => {
     it('matches EventLive', () => {
       const TEXT = 'https://evt.live/ACCOUNT/STREAM';
 
-      chaiExpects( parseVirtualEventLink(TEXT) ).to.deep.equal({
+      chaiExpects( parseLink(TEXT) ).to.deep.equal({
         provider: VirtualEventProvider.eventlive,
         linkText: TEXT,
         isLinkValid: true,
         urlLinkText: TEXT,
-        streamId: 'ACCOUNT/STREAM',
+        streamId: 'STREAM',
         isPasswordDetected: false,
       });
     });
@@ -89,7 +89,7 @@ describe('service/virtualEvent', () => {
     it('matches an unknown Provider', () => {
       const TEXT = 'https://withjoy.com/meetjoy';
 
-      chaiExpects( parseVirtualEventLink(TEXT) ).to.deep.equal({
+      chaiExpects( parseLink(TEXT) ).to.deep.equal({
         provider: VirtualEventProvider.unknown,
         linkText: TEXT,
         urlLinkText: TEXT,

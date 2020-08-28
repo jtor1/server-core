@@ -1,5 +1,6 @@
 import {
   _VirtualEventLinkParser,
+  _PATH_DELIMITER,
 
   _deriveUrlLinkText,
   _safelyParseUrl,
@@ -15,9 +16,12 @@ import {
 //   https://marketplace.zoom.us/docs/guides/guides/client-url-schemes
 const CANONICAL_DOMAIN = 'zoom.us';
 const RECOGNIZED_DOMAINS = [ CANONICAL_DOMAIN ];
-const PATHNAME_PREFIX_APP = '/j';
-const PATHNAME_PREFIX_WEB_CLIENT = '/wc';
-const PATHNAME_ID_REGEXP = Object.freeze( /([^/]+)$/ ) as RegExp;  // everything after the last slash
+const PATHNAME_PREFIX_APP = '/j';  // launches the Zoom App
+const PATHNAME_PREFIX_WEB_CLIENT = '/wc/join';  // streams from the browser / Web Client
+const RECOGNIZED_PREFIXES = [
+  PATHNAME_PREFIX_APP,
+  PATHNAME_PREFIX_WEB_CLIENT,
+];
 const PASSWORD_EMBED_PARAM = 'pwd';
 const PASSWORD_REGEXPS = [
   /\((?:Password|Passcode):[ ]+([^\n]+)\)/,  // "Copy Invite Link" text
@@ -38,35 +42,34 @@ export const parseLink: _VirtualEventLinkParser = (text: string) => {
   }
 
   const { pathname } = url;
-  const parsedSearch = _parsedSearchFromUrl(url);
   if (! pathname) {
     return null;
   }
 
-  // derive the Stream ID
-  const streamIdMatch = PATHNAME_ID_REGEXP.exec(pathname);
-  if (! streamIdMatch) {
+  // we are strict about what pathname structures we can parse
+  const recognizedPrefix = RECOGNIZED_PREFIXES.find((prefix) => pathname.startsWith(prefix));
+  if (! recognizedPrefix) {
     return null;
   }
-  const streamId = streamIdMatch[1];
 
-  // identify what type of URL we're dealing with
-  const isUrlApp = pathname.startsWith(PATHNAME_PREFIX_APP);
-  const isUrlWebClient = pathname.startsWith(PATHNAME_PREFIX_WEB_CLIENT);
-  let urlApp: string | undefined = undefined;
-  let urlBrowser: string | undefined = undefined;
-
-  if (isUrlApp || isUrlWebClient) {
-    // only go down this road if we truly "grok" the URL format
-    urlApp = _stringifiedUrl(url, {
-      hostname: CANONICAL_DOMAIN,
-      pathname: `${ PATHNAME_PREFIX_APP }/${ streamId }`,
-    });
-    urlBrowser = _stringifiedUrl(url, {
-      hostname: CANONICAL_DOMAIN,
-      pathname: `${ PATHNAME_PREFIX_WEB_CLIENT }/${ streamId }`,
-    });
+  // derive the Stream ID
+  const streamId = pathname
+  .substring(recognizedPrefix.length) // excluding the prefix
+  .split(_PATH_DELIMITER)
+  .pop(); // the last path segment
+  if (! streamId) {
+    return null;
   }
+
+  // create known variants on the URL
+  const urlApp = _stringifiedUrl(url, {
+    hostname: CANONICAL_DOMAIN,
+    pathname: `${ PATHNAME_PREFIX_APP }/${ streamId }`,
+  });
+  const urlBrowser = _stringifiedUrl(url, {
+    hostname: CANONICAL_DOMAIN,
+    pathname: `${ PATHNAME_PREFIX_WEB_CLIENT }/${ streamId }`,
+  });
 
 
   // line termination is significant whitespace;
@@ -74,6 +77,7 @@ export const parseLink: _VirtualEventLinkParser = (text: string) => {
   const lines = text.split(/\n/);
 
   // the URL may have a password
+  const parsedSearch = _parsedSearchFromUrl(url);
   const passwordUrlEmbed = parsedSearch[PASSWORD_EMBED_PARAM] || undefined;
 
   // the text may have a password, even if the URL does not embed it
