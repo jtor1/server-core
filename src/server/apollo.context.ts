@@ -185,10 +185,10 @@ export interface ContextConstructorArgs {
   req?: Request;
   token?: string;
   userId?: string;
+  locale?: string;
   identityUrl?: string;
   identityCache?: Cache | null; // `null` to disable
   identityCacheTtl?: number;
-  locale?: string;
 }
 
 export class Context

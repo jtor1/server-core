@@ -1,31 +1,36 @@
-import { gql } from 'apollo-server-core';
+import { gql } from 'apollo-server';
 
+import { Context } from '../../src/server/apollo.context';
 import { coreTypeDefs, coreResolvers } from '../../src/graphql/core.types';
 import { testSetupApollo } from '../helpers/apollo';
 
 
-// features
-//   EST vs. UTC
-//   has millisecond precision
-const DATE_ISO = '2016-11-09T02:30:00.5-05:00';
-const TZ_IANA = 'America/New_York';
+const TYPEDEFS = [
+  coreTypeDefs,
+  gql`
+    # implement the Resolver in the Test Suite
+    type Query {
+      date: Date!
+    }
+  `,
+];
+
+const EPOCH = 1478677500;
+const MILLIS = EPOCH * 1000;
+const DATE_ISO = '2016-11-09T07:45:00.000Z';  // without offset
+const TZ_QUEBECOIS = 'America/Montreal'; // IANA code
+const LOCALE_QUEBECOIS = 'fr-CA'; // IETF code
 
 
 describe('the GraphQL Date and Time TypeDefs', () => {
+  let context: Context;
   let client: { query: Function };
 
 
   describe('with an ISO-8601 Date string', () => {
     beforeEach(async () => {
       const setup = await testSetupApollo({
-        typeDefs: [
-          coreTypeDefs,
-          gql`
-            type Query {
-              date: Date!
-            }
-          `,
-        ],
+        typeDefs: TYPEDEFS,
         resolvers: {
           ...coreResolvers,
 
@@ -35,16 +40,26 @@ describe('the GraphQL Date and Time TypeDefs', () => {
           },
         },
       });
+
       client = setup.client;
+      context = setup.context;
+
+      expect(context.locale).toBe('en_US');
     });
 
 
-    it('resolves an ISO-8601 timestamp', async () => {
+    it('resolves its default payload', async () => {
       const { query } = client;
       const res = await query({
         query: gql`
           query {
-            date { timestamp }
+            date {
+              dateString
+              timezone
+              timestamp
+              unixTimestamp
+              milliseconds
+            }
           }
         `
       });
@@ -52,198 +67,77 @@ describe('the GraphQL Date and Time TypeDefs', () => {
       const { data } = res;
       expect(data).toMatchObject({
         date: {
-          timestamp: '2016-11-09T07:30:00.500Z',
-        },
-      });
-    });
-
-    it('resolves a millisecond timestamp', async () => {
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            date { milliseconds }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        date: {
-          milliseconds: 1478676600500,
-        },
-      });
-    });
-
-    it('resolves a Unix timestamp without millisecond precision', async () => {
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            date { unixTimestamp }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        date: {
-          unixTimestamp: 1478676600,
-        },
-      });
-    });
-
-    it('resolves the associated timezone as UTC', async () => {
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            defaultFormat: date { timezone }
-            long: date { timezone(format: long) }
-            short: date { timezone(format: short) }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        defaultFormat: {
+          dateString: 'Wednesday, November 9, 2016 7:45 AM',
           timezone: 'Etc/UTC',
-        },
-        long: {
-          timezone: 'Etc/UTC',
-        },
-        short: {
-          timezone: 'UTC',
+          timestamp: '2016-11-09T07:45:00+00:00',
+          unixTimestamp: EPOCH,
+          milliseconds: MILLIS,
         },
       });
     });
 
-    it('formats a Date string for the current locale', async () => {
-      // ... which happens to be 'en'
-      //   @see testSetupApollo
-
+    it('resolves its parameterized payload', async () => {
       const { query } = client;
       const res = await query({
         query: gql`
           query {
-            defaultFormat: date { dateString }
-            numerical: date { dateString(dateFormat: numerical) }
-            short: date { dateString(dateFormat: short) }
-            long: date { dateString(dateFormat: long) }
-            full: date { dateString(dateFormat: full) }
+            date {
+              dateStringShort: dateString(dateFormat: short)
+              dateStringWithSeconds: dateString(timeFormat: timeWithSeconds)
+              dateStringShortWithSeconds: dateString(dateFormat: short, timeFormat: timeWithSeconds)
+              timezoneShort: timezone(format: short)
+            }
           }
         `
       });
 
       const { data } = res;
       expect(data).toMatchObject({
-        defaultFormat: {
-          dateString: 'Wednesday, November 9, 2016 7:30 AM',
-        },
-        numerical: {
-          dateString: '11/9/2016',
-        },
-        short: {
-          dateString: 'Nov 9, 2016',
-        },
-        long: {
-          dateString: 'November 9, 2016',
-        },
-        full: {
-          dateString: 'Wednesday, November 9, 2016 7:30 AM',
-        },
-      });
-    });
-
-    it('formats a Time string for the current locale', async () => {
-      // ... which happens to be 'en'
-      //   @see testSetupApollo
-
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            defaultFormat: date { dateString }
-            time: date { dateString(timeFormat: time) }
-            timeWithSeconds: date { dateString(timeFormat: timeWithSeconds) }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        defaultFormat: {
-          dateString: 'Wednesday, November 9, 2016 7:30 AM',
-        },
-        time: {
-          dateString: '7:30 AM',
-        },
-        timeWithSeconds: {
-          dateString: '7:30:00 AM',
-        },
-      });
-    });
-
-    it('formats a Date-and-Time string for the current locale', async () => {
-      // ... which happens to be 'en'
-      //   @see testSetupApollo
-
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            shortTime: date { dateString(dateFormat: short, timeFormat: time) }
-            longTimeWithSeconds: date { dateString(dateFormat: long, timeFormat: timeWithSeconds) }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        shortTime: {
-          dateString: 'Nov 9, 2016 7:30 AM',
-        },
-        longTimeWithSeconds: {
-          dateString: 'November 9, 2016 7:30:00 AM',
+        date: {
+          dateStringShort: 'Nov 9, 2016',
+          dateStringWithSeconds: '7:45:00 AM',
+          dateStringShortWithSeconds: 'Nov 9, 2016 7:45:00 AM',
+          timezoneShort: 'UTC',
         },
       });
     });
   });
 
 
-  describe('with an ISO-8601 Date string + IANA time zone', () => {
+  describe('with an ISO-8601 Date string, timezone, and locale', () => {
     beforeEach(async () => {
       const setup = await testSetupApollo({
-        typeDefs: [
-          coreTypeDefs,
-          gql`
-            type Query {
-              date: Date!
-            }
-          `,
-        ],
+        typeDefs: TYPEDEFS,
         resolvers: {
           ...coreResolvers,
 
           Query: {
             // include a timezone
-            date: () => [ DATE_ISO, TZ_IANA ],
+            date: () => [ DATE_ISO, TZ_QUEBECOIS ],
           },
         },
       });
+
       client = setup.client;
+      context = setup.context;
+
+      // force the locale
+      Reflect.set(context, 'locale', LOCALE_QUEBECOIS);
     });
 
 
-    it('resolves an ISO-8601 timestamp which does not reflect the specified timezone offset', async () => {
-      // ... which seems odd; why not provide the offset that the caller requested?
-
+    it('resolves its default payload', async () => {
       const { query } = client;
       const res = await query({
         query: gql`
           query {
-            date { timestamp }
+            date {
+              dateString
+              timezone
+              timestamp
+              unixTimestamp
+              milliseconds
+            }
           }
         `
       });
@@ -251,17 +145,26 @@ describe('the GraphQL Date and Time TypeDefs', () => {
       const { data } = res;
       expect(data).toMatchObject({
         date: {
-          timestamp: '2016-11-09T07:30:00.500Z',
+          dateString: 'mercredi 9 novembre 2016 02:45',
+          timezone: TZ_QUEBECOIS,
+          timestamp: '2016-11-09T02:45:00-05:00',
+          unixTimestamp: EPOCH,
+          milliseconds: MILLIS,
         },
       });
     });
 
-    it('resolves a millisecond timestamp', async () => {
+    it('resolves its parameterized payload', async () => {
       const { query } = client;
       const res = await query({
         query: gql`
           query {
-            date { milliseconds }
+            date {
+              dateStringShort: dateString(dateFormat: short)
+              dateStringWithSeconds: dateString(timeFormat: timeWithSeconds)
+              dateStringShortWithSeconds: dateString(dateFormat: short, timeFormat: timeWithSeconds)
+              timezoneShort: timezone(format: short)
+            }
           }
         `
       });
@@ -269,344 +172,99 @@ describe('the GraphQL Date and Time TypeDefs', () => {
       const { data } = res;
       expect(data).toMatchObject({
         date: {
-          milliseconds: 1478676600500,
-        },
-      });
-    });
-
-    it('resolves a Unix timestamp without millisecond precision', async () => {
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            date { unixTimestamp }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        date: {
-          unixTimestamp: 1478676600,
-        },
-      });
-    });
-
-    it('resolves the associated timezone', async () => {
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            defaultFormat: date { timezone }
-            long: date { timezone(format: long) }
-            short: date { timezone(format: short) }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        defaultFormat: {
-          timezone: 'America/New_York',
-        },
-        long: {
-          timezone: 'America/New_York',
-        },
-        short: {
-          timezone: 'EST',
-        },
-      });
-    });
-
-    it('formats a Date string for the current locale', async () => {
-      // ... which happens to be 'en'
-      //   @see testSetupApollo
-
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            defaultFormat: date { dateString }
-            numerical: date { dateString(dateFormat: numerical) }
-            short: date { dateString(dateFormat: short) }
-            long: date { dateString(dateFormat: long) }
-            full: date { dateString(dateFormat: full) }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        defaultFormat: {
-          dateString: 'Wednesday, November 9, 2016 2:30 AM',
-        },
-        numerical: {
-          dateString: '11/9/2016',
-        },
-        short: {
-          dateString: 'Nov 9, 2016',
-        },
-        long: {
-          dateString: 'November 9, 2016',
-        },
-        full: {
-          dateString: 'Wednesday, November 9, 2016 2:30 AM',
-        },
-      });
-    });
-
-    it('formats a Time string for the current locale', async () => {
-      // ... which happens to be 'en'
-      //   @see testSetupApollo
-
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            defaultFormat: date { dateString }
-            time: date { dateString(timeFormat: time) }
-            timeWithSeconds: date { dateString(timeFormat: timeWithSeconds) }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        defaultFormat: {
-          dateString: 'Wednesday, November 9, 2016 2:30 AM',
-        },
-        time: {
-          dateString: '2:30 AM',
-        },
-        timeWithSeconds: {
-          dateString: '2:30:00 AM',
-        },
-      });
-    });
-
-    it('formats a Date-and-Time string for the current locale', async () => {
-      // ... which happens to be 'en'
-      //   @see testSetupApollo
-
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            shortTime: date { dateString(dateFormat: short, timeFormat: time) }
-            longTimeWithSeconds: date { dateString(dateFormat: long, timeFormat: timeWithSeconds) }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        shortTime: {
-          dateString: 'Nov 9, 2016 2:30 AM',
-        },
-        longTimeWithSeconds: {
-          dateString: 'November 9, 2016 2:30:00 AM',
+          dateStringShort: '9 nov. 2016',
+          dateStringWithSeconds: '02:45:00',
+          dateStringShortWithSeconds: '9 nov. 2016 02:45:00',
+          timezoneShort: 'EST',
         },
       });
     });
   });
 
 
-  describe('with an ISO-8601 Date string + a missing time zone', () => {
-    beforeEach(async () => {
-      const setup = await testSetupApollo({
-        typeDefs: [
-          coreTypeDefs,
-          gql`
-            type Query {
-              date: Date!
-            }
-          `,
-        ],
-        resolvers: {
-          ...coreResolvers,
+  it('resolves a payload for a crappy Date', async () => {
+    const setup = await testSetupApollo({
+      typeDefs: TYPEDEFS,
+      resolvers: {
+        ...coreResolvers,
 
-          Query: {
-            // include a timezone,
-            //   which the caller probably doesn't know is blank
-            date: () => [ DATE_ISO, '' ],
-          },
+        Query: {
+          // just the Date string; no timezone specified
+          date: () => 'CRAPPY',
         },
-      });
-      client = setup.client;
+      },
     });
 
+    client = setup.client;
+    context = setup.context;
 
-    it('resolves an ISO-8601 timestamp which does not reflect the specified timezone offset', async () => {
-      // ... which seems odd; why not provide the offset that the caller requested?
-
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            date { timestamp }
+    const { query } = client;
+    const res = await query({
+      query: gql`
+        query {
+          date {
+            dateString
+            timezone
+            timestamp
+            unixTimestamp
+            milliseconds
           }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        date: {
-          timestamp: '2016-11-09T07:30:00.500Z',
-        },
-      });
+        }
+      `
     });
 
-    it('resolves a millisecond timestamp', async () => {
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            date { milliseconds }
-          }
-        `
-      });
+    const { data } = res;
+    expect(data).toMatchObject({
+      date: {
+        dateString: 'Thursday, January 1, 1970 12:00 AM',
+        timezone: 'Etc/UTC',
+        timestamp: '1970-01-01T00:00:00+00:00',
+        unixTimestamp: 0,
+        milliseconds: 0,
+      },
+    });
+  });
 
-      const { data } = res;
-      expect(data).toMatchObject({
-        date: {
-          milliseconds: 1478676600500,
+
+  it('resolves a payload for a crappy timezone', async () => {
+    const setup = await testSetupApollo({
+      typeDefs: TYPEDEFS,
+      resolvers: {
+        ...coreResolvers,
+
+        Query: {
+          date: () => [ DATE_ISO, 'CRAPPY' ],
         },
-      });
+      },
     });
 
-    it('resolves a Unix timestamp without millisecond precision', async () => {
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            date { unixTimestamp }
-          }
-        `
-      });
+    client = setup.client;
+    context = setup.context;
 
-      const { data } = res;
-      expect(data).toMatchObject({
-        date: {
-          unixTimestamp: 1478676600,
-        },
-      });
+    const { query } = client;
+    const res = await query({
+      query: gql`
+        query {
+          date {
+            dateString
+            timezone
+            timestamp
+            unixTimestamp
+            milliseconds
+          }
+        }
+      `
     });
 
-    it('resolves the associated timezone as UTC', async () => {
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            defaultFormat: date { timezone }
-            long: date { timezone(format: long) }
-            short: date { timezone(format: short) }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        defaultFormat: {
-          timezone: 'Etc/UTC',
-        },
-        long: {
-          timezone: 'Etc/UTC',
-        },
-        short: {
-          timezone: 'UTC',
-        },
-      });
-    });
-
-    it('formats a Date string for the current locale', async () => {
-      // ... which happens to be 'en'
-      //   @see testSetupApollo
-
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            defaultFormat: date { dateString }
-            numerical: date { dateString(dateFormat: numerical) }
-            short: date { dateString(dateFormat: short) }
-            long: date { dateString(dateFormat: long) }
-            full: date { dateString(dateFormat: full) }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        defaultFormat: {
-          dateString: 'Wednesday, November 9, 2016 7:30 AM',
-        },
-        numerical: {
-          dateString: '11/9/2016',
-        },
-        short: {
-          dateString: 'Nov 9, 2016',
-        },
-        long: {
-          dateString: 'November 9, 2016',
-        },
-        full: {
-          dateString: 'Wednesday, November 9, 2016 7:30 AM',
-        },
-      });
-    });
-
-    it('formats a Time string for the current locale', async () => {
-      // ... which happens to be 'en'
-      //   @see testSetupApollo
-
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            defaultFormat: date { dateString }
-            time: date { dateString(timeFormat: time) }
-            timeWithSeconds: date { dateString(timeFormat: timeWithSeconds) }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        defaultFormat: {
-          dateString: 'Wednesday, November 9, 2016 7:30 AM',
-        },
-        time: {
-          dateString: '7:30 AM',
-        },
-        timeWithSeconds: {
-          dateString: '7:30:00 AM',
-        },
-      });
-    });
-
-    it('formats a Date-and-Time string for the current locale', async () => {
-      // ... which happens to be 'en'
-      //   @see testSetupApollo
-
-      const { query } = client;
-      const res = await query({
-        query: gql`
-          query {
-            shortTime: date { dateString(dateFormat: short, timeFormat: time) }
-            longTimeWithSeconds: date { dateString(dateFormat: long, timeFormat: timeWithSeconds) }
-          }
-        `
-      });
-
-      const { data } = res;
-      expect(data).toMatchObject({
-        shortTime: {
-          dateString: 'Nov 9, 2016 7:30 AM',
-        },
-        longTimeWithSeconds: {
-          dateString: 'November 9, 2016 7:30:00 AM',
-        },
-      });
+    const { data } = res;
+    expect(data).toMatchObject({
+      date: {
+        dateString: 'Wednesday, November 9, 2016 7:45 AM',
+        timezone: 'Etc/UTC',
+        timestamp: '2016-11-09T07:45:00+00:00',
+        unixTimestamp: EPOCH,
+        milliseconds: MILLIS,
+      },
     });
   });
 });

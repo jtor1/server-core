@@ -12,7 +12,7 @@ describe('the GraphQL Color TypeDefs', () => {
   let client: { query: Function };
 
 
-  beforeEach(async () => {
+  it('resolves a payload', async () => {
     const setup = await testSetupApollo({
       typeDefs: [
         coreTypeDefs,
@@ -26,16 +26,12 @@ describe('the GraphQL Color TypeDefs', () => {
         ...coreResolvers,
 
         Query: {
-          // just the Date string; no timezone specified
           color: () => COLOR_HEX,
         },
       },
     });
     client = setup.client;
-  });
 
-
-  it('formats the Color', async () => {
     const { query } = client;
     const res = await query({
       query: gql`
@@ -54,6 +50,50 @@ describe('the GraphQL Color TypeDefs', () => {
       color: {
         hex: '#e55982',
         rgba: [ 229, 89, 130, 1 ],
+        isLight: false,
+      },
+    });
+  });
+
+
+  it('resolves a payload for crappy data', async () => {
+    const setup = await testSetupApollo({
+      typeDefs: [
+        coreTypeDefs,
+        gql`
+          type Query {
+            color: Color!
+          }
+        `,
+      ],
+      resolvers: {
+        ...coreResolvers,
+
+        Query: {
+          color: () => 'CRAPPY',
+        },
+      },
+    });
+    client = setup.client;
+
+    const { query } = client;
+    const res = await query({
+      query: gql`
+        query {
+          color {
+            hex
+            rgba
+            isLight
+          }
+        }
+      `
+    });
+
+    const { data } = res;
+    expect(data).toMatchObject({
+      color: {
+        hex: '#000000',
+        rgba: [ 0, 0, 0, 1 ],
         isLight: false,
       },
     });
