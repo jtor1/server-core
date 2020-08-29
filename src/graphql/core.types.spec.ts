@@ -9,6 +9,8 @@ import {
 
   resolveCoreTypeDate,
   parseCoreTypeInputDate,
+  formatCoreTypeDateTimestamp,
+
   coreResolvers,
 } from './core.types';
 
@@ -64,6 +66,25 @@ describe('graphql/core.types', () => {
       expect(() => {
         return parseCoreTypeInputDate(DATE.toLocaleString());
       }).toThrow(TypeError);
+    });
+  });
+
+
+  describe('formatCoreTypeDateTimestamp', () => {
+    it('outputs the same format as `Date.timezone`', () => {
+      expect(formatCoreTypeDateTimestamp(MILLIS, 'Etc/UTC')).toBe('2016-11-09T07:45:00+00:00');
+
+      expect(formatCoreTypeDateTimestamp(DATE, TZ_QUEBECOIS)).toBe('2016-11-09T02:45:00-05:00');
+      expect(formatCoreTypeDateTimestamp(DATE_ISO, TZ_QUEBECOIS)).toBe('2016-11-09T02:45:00-05:00');
+    });
+
+    it('does not tolerate invalid dates', () => {
+      expect(() => formatCoreTypeDateTimestamp('INVALID', TZ_QUEBECOIS)).toThrow(TypeError);
+      expect(() => formatCoreTypeDateTimestamp(Number.MIN_SAFE_INTEGER, TZ_QUEBECOIS)).toThrow(TypeError);
+    });
+
+    it('does not tolerate invalid timezones', () => {
+      expect(() => formatCoreTypeDateTimestamp(MILLIS, 'INVALID')).toThrow(TypeError);
     });
   });
 

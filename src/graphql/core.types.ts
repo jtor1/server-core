@@ -5,7 +5,10 @@ import { Context } from 'src/server/apollo.context';
 
 const UTC_LONG = 'Etc/UTC';
 const UTC_SHORT = 'UTC';
-const FORMAT_TIMESTAMP = 'YYYY-MM-DD[T]HH:mm:ssZ'; // ISO-8601, with '+00:00' (vs. 'Z') for GMT
+
+// ISO-8601, with '+00:00' (vs. 'Z') for GMT
+//   @see `scalar Timestamp`
+const FORMAT_TIMESTAMP = 'YYYY-MM-DD[T]HH:mm:ssZ';
 
 export const coreTypeDefs = gql`
 
@@ -177,12 +180,23 @@ export function parseCoreTypeInputDate(input: string | null | undefined): Date |
   return parsed.toDate();
 }
 
+export function formatCoreTypeDateTimestamp(date: string | number | Date, timezone: string): string {
+  const converted = moment(date);
+  if (! converted.isValid()) {
+    throw new TypeError(`formatCoreTypeDateTimestamp: invalid date: "${ timezone }"`);
+  }
+  if (! moment.tz.zone(timezone)) {
+    throw new TypeError(`formatCoreTypeDateTimestamp: invalid timezone: "${ date }"`);
+  }
+  return converted.tz(timezone).format(FORMAT_TIMESTAMP);
+}
+
 
 export const coreResolvers: IResolvers = {
   Date: {
     timestamp: (date: _CoreTypeDateTuple): string => {
       const convertedDate = _convertDateTupleToMoment(date);
-      return convertedDate.format(FORMAT_TIMESTAMP); // @see `scalar Timestamp`
+      return convertedDate.format(FORMAT_TIMESTAMP);
     },
     timezone: (date: _CoreTypeDateTuple, args: { format: TimezoneFormat }): string => {
       const { format } = args;
