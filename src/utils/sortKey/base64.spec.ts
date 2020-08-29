@@ -9,6 +9,8 @@ import {
   sortKeyAtFirstBefore,
   sortKeyAtLastAfter,
   sortKeyComparator,
+
+  sortKeyFromPaddedNumeric,
 } from './base64';
 
 const ITERATIONS = 100; // good enough
@@ -87,6 +89,22 @@ describe('sortKey/base64', () => {
 
       const sorted = [ SORT_KEY_LOWEST, beforeInitial, initial, afterInitial, SORT_KEY_HIGHEST ];
       expect( sorted.slice().reverse().sort() ).toEqual(sorted);
+    });
+  });
+
+  describe('sortKeyFromPaddedNumeric', () => {
+    it('safely converts the key to our radix', () => {
+      const initial = sortKeyInitialItem();
+
+      const PADDED_NUMERIC = '  1';
+      expect(() => sortKeyAtFirstBefore(PADDED_NUMERIC)).toThrow();
+      expect(() => sortKeyAtLastAfter(PADDED_NUMERIC)).toThrow();
+      expect(() => sortKeyBetween(PADDED_NUMERIC, initial)).toThrow();
+
+      const BASE_64 = sortKeyFromPaddedNumeric(PADDED_NUMERIC);
+      expect(sortKeyAtFirstBefore(BASE_64)).toBe('--0');
+      expect(sortKeyAtLastAfter(BASE_64)).toBe('UV0');
+      expect(sortKeyBetween(BASE_64, initial)).toBe('Ek0')
     });
   });
 });

@@ -7,7 +7,11 @@
     @Kaiwalya suggested that it might be, but it doesn't make sense
     because behavior close to the lower bound -- eg. '-01', '-yz' -- would be unpredictable
 */
-import { SortKeyProvider } from './provider';
+import {
+  NO_KEY,
+  SortKeyProvider,
+} from './provider';
+
 
 const singleton = new SortKeyProvider({
   chars: '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz',
@@ -24,3 +28,11 @@ export const {
   sortKeyComparator,
   sortKeyPopulateMissing,
 } = singleton;
+
+
+export function sortKeyFromPaddedNumeric(key: string): string {
+  return (key
+    ? key.replace(/ /g, '-') // member of our charset (radix)
+    : NO_KEY
+  );
+}
