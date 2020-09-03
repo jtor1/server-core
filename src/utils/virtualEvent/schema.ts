@@ -46,9 +46,6 @@ export const markup = (options: {
     passwordUrlEmbed: String
     "The clear-text password called out in the link text, if detected"
     passwordText: String
-
-    # FIXME:  @deprecated
-    passwordDetected: Boolean!  @deprecated(reason: "replaced by \`isPasswordDetected\`")
   }
 
   ${ options.noExtend ? '' : 'extend' } type ${ options.queryTypeName } {

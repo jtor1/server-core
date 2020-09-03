@@ -19,8 +19,6 @@ describe('service/virtualEvent/aggregator', () => {
         linkText: 'http-ish String',
         isLinkValid: false,
         isPasswordDetected: false,
-        // FIXME:  @deprecated
-        passwordDetected: false,
       });
 
       // it('even matches minimal whitespace')
@@ -29,8 +27,6 @@ describe('service/virtualEvent/aggregator', () => {
         linkText: ' ',
         isLinkValid: false,
         isPasswordDetected: false,
-        // FIXME:  @deprecated
-        passwordDetected: false,
       });
     });
 
@@ -48,8 +44,6 @@ describe('service/virtualEvent/aggregator', () => {
         isPasswordDetected: true,
         passwordUrlEmbed: 'P4s5w0r6',
         passwordText: undefined,
-        // FIXME:  @deprecated
-        passwordDetected: true,
       });
     });
 
@@ -63,8 +57,6 @@ describe('service/virtualEvent/aggregator', () => {
         urlLinkText: TEXT,
         streamId: 'dQw4w9WgXcQ',
         isPasswordDetected: false,
-        // FIXME:  @deprecated
-        passwordDetected: false,
       });
     });
 
@@ -78,8 +70,6 @@ describe('service/virtualEvent/aggregator', () => {
         urlLinkText: TEXT,
         streamId: 'thr-four-ee3',
         isPasswordDetected: false,
-        // FIXME:  @deprecated
-        passwordDetected: false,
       });
     });
 
@@ -93,8 +83,6 @@ describe('service/virtualEvent/aggregator', () => {
         urlLinkText: TEXT,
         streamId: 'STREAM',
         isPasswordDetected: false,
-        // FIXME:  @deprecated
-        passwordDetected: false,
       });
     });
 
@@ -107,8 +95,6 @@ describe('service/virtualEvent/aggregator', () => {
         urlLinkText: TEXT,
         isLinkValid: true,
         isPasswordDetected: false,
-        // FIXME:  @deprecated
-        passwordDetected: false,
       });
     });
   });

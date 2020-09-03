@@ -56,9 +56,6 @@ export function parseLink(linkText: string): VirtualEventLinkParseResult | null 
         isLinkValid: true,
 
         ...parsed,
-
-        // FIXME:  @deprecated
-        passwordDetected: parsed.isPasswordDetected,
       };
     }
   }
@@ -71,7 +68,5 @@ export function parseLink(linkText: string): VirtualEventLinkParseResult | null 
     linkText,
     isLinkValid: false,
     isPasswordDetected: false,
-    // FIXME:  @deprecated
-    passwordDetected: false,
   };
 }

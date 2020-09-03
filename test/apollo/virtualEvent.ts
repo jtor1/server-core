@@ -48,9 +48,6 @@ describe('the GraphQL Color TypeDefs', () => {
               isPasswordDetected
               passwordUrlEmbed
               passwordText
-
-              # FIXME:  @deprecated
-              passwordDetected
             }
           }
         `
@@ -69,7 +66,6 @@ describe('the GraphQL Color TypeDefs', () => {
           isPasswordDetected: true,
           passwordUrlEmbed: 'P4s5w0r6',
           passwordText: 'PASSWORD!',
-          passwordDetected: true,
         },
       });
     });
@@ -90,9 +86,6 @@ describe('the GraphQL Color TypeDefs', () => {
               isPasswordDetected
               passwordUrlEmbed
               passwordText
-
-              # FIXME:  @deprecated
-              passwordDetected
             }
           }
         `
@@ -111,7 +104,6 @@ describe('the GraphQL Color TypeDefs', () => {
           isPasswordDetected: false,
           passwordUrlEmbed: null,
           passwordText: null,
-          passwordDetected: false,
         },
       });
     });
