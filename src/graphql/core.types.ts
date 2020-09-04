@@ -6,9 +6,10 @@ import { Context } from 'src/server/apollo.context';
 const UTC_LONG = 'Etc/UTC';
 const UTC_SHORT = 'UTC';
 
-// ISO-8601, with '+00:00' (vs. 'Z') for GMT
+// ISO-8601 timestamp, with millisecond precision, expressing its timezone offset
+//   eg. '+00:00' (vs. 'Z') for GMT
 //   @see `scalar Timestamp`
-const FORMAT_TIMESTAMP = 'YYYY-MM-DD[T]HH:mm:ssZ';
+const FORMAT_TIMESTAMP = 'YYYY-MM-DD[T]HH:mm:ss.SSSZ';
 
 export const coreTypeDefs = gql`
 
@@ -61,7 +62,7 @@ export const coreTypeDefs = gql`
     timeWithSeconds
   }
 
-  "An ISO-8601 timestamp, with one-second precision, expressing its timezone offset"
+  "An ISO-8601 timestamp, with millisecond precision, expressing its timezone offset"
   scalar Timestamp
 
   type Date {

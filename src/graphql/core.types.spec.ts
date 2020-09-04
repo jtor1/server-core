@@ -71,11 +71,11 @@ describe('graphql/core.types', () => {
 
 
   describe('formatCoreTypeDateTimestamp', () => {
-    it('outputs the same format as `Date.timezone`', () => {
-      expect(formatCoreTypeDateTimestamp(MILLIS, 'Etc/UTC')).toBe('2016-11-09T07:45:00+00:00');
+    it('outputs the same format as `Date.timestamp`', () => {
+      expect(formatCoreTypeDateTimestamp(MILLIS, 'Etc/UTC')).toBe('2016-11-09T07:45:00.000+00:00');
 
-      expect(formatCoreTypeDateTimestamp(DATE, TZ_QUEBECOIS)).toBe('2016-11-09T02:45:00-05:00');
-      expect(formatCoreTypeDateTimestamp(DATE_ISO, TZ_QUEBECOIS)).toBe('2016-11-09T02:45:00-05:00');
+      expect(formatCoreTypeDateTimestamp(DATE, TZ_QUEBECOIS)).toBe('2016-11-09T02:45:00.000-05:00');
+      expect(formatCoreTypeDateTimestamp(DATE_ISO, TZ_QUEBECOIS)).toBe('2016-11-09T02:45:00.000-05:00');
     });
 
     it('does not tolerate invalid dates', () => {
@@ -103,24 +103,24 @@ describe('graphql/core.types', () => {
       describe('#timestamp', () => {
         it('resolves a CoreTypeDate as an ISO-8601 string', () => {
           const asGMT = resolver.timestamp(DATE_ISO);
-          expect(asGMT).toBe('2016-11-09T07:45:00+00:00');
+          expect(asGMT).toBe('2016-11-09T07:45:00.000+00:00');
           // it('resolves a parseable ISO-8601 string / can eat its own dogfood')
           expect(parseCoreTypeInputDate(asGMT)!.valueOf()).toBe(MILLIS);
 
           const withOffset = resolver.timestamp(DATE_AND_TZ);
-          expect(withOffset).toBe('2016-11-09T02:45:00-05:00');
+          expect(withOffset).toBe('2016-11-09T02:45:00.000-05:00');
           expect(parseCoreTypeInputDate(withOffset)!.valueOf()).toBe(MILLIS);
         });
 
-        it('resolves one-second precision', () => {
+        it('resolves millisecond precision', () => {
           const halfSecondLater = MILLIS + 500;
           const withMilliPrecision = new Date(halfSecondLater).toISOString();
-          const withSecondPrecision = resolver.timestamp(withMilliPrecision);
-          expect(withSecondPrecision).toBe('2016-11-09T07:45:00+00:00');
+          const timestamp = resolver.timestamp(withMilliPrecision);
+          expect(timestamp).toBe('2016-11-09T07:45:00.500+00:00');
 
-          const dogfood = new Date(withSecondPrecision).valueOf();
-          expect(dogfood).toBe(MILLIS);
-          expect(dogfood + 500).toBe(halfSecondLater);
+          // it('resolves a parseable ISO-8601 string / can eat its own dogfood')
+          const dogfood = new Date(timestamp).valueOf();
+          expect(dogfood).toBe(halfSecondLater);
         });
 
         it('resolves its timezone offset as a parseable representation', () => {
@@ -136,13 +136,13 @@ describe('graphql/core.types', () => {
 
         it('falls back to the Epoch for an unparseable Date', () => {
           // ... which may or may not be appropriate
-          expect(resolver.timestamp(INVALID_DATE)).toBe('1970-01-01T00:00:00+00:00');
-          expect(resolver.timestamp(INVALID_DATE_AND_TZ)).toBe('1970-01-01T00:00:00+00:00');
+          expect(resolver.timestamp(INVALID_DATE)).toBe('1970-01-01T00:00:00.000+00:00');
+          expect(resolver.timestamp(INVALID_DATE_AND_TZ)).toBe('1970-01-01T00:00:00.000+00:00');
         });
 
         it('falls back to GMT for an invalid timezone', () => {
           // ... which may or may not be appropriate
-          expect(resolver.timestamp(INVALID_TZ)).toBe('2016-11-09T07:45:00+00:00');
+          expect(resolver.timestamp(INVALID_TZ)).toBe('2016-11-09T07:45:00.000+00:00');
         });
       });
 

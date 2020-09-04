@@ -120,6 +120,8 @@ jobs:
 
             yarn publish --ignore-scripts --new-version "$SEMVER";
 
+            cp /tmp/.npmrc ./.npmrc;
+
 
 workflows:
   version: 2.1

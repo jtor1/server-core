@@ -1,7 +1,11 @@
 import { gql } from 'apollo-server';
 
 import { Context } from '../../src/server/apollo.context';
-import { coreTypeDefs, coreResolvers } from '../../src/graphql/core.types';
+import {
+  coreTypeDefs,
+  coreResolvers,
+  formatCoreTypeDateTimestamp,
+} from '../../src/graphql/core.types';
 import { testSetupApollo } from '../helpers/apollo';
 
 
@@ -69,7 +73,7 @@ describe('the GraphQL Date and Time TypeDefs', () => {
         date: {
           dateString: 'Wednesday, November 9, 2016 7:45 AM',
           timezone: 'Etc/UTC',
-          timestamp: '2016-11-09T07:45:00+00:00',
+          timestamp: formatCoreTypeDateTimestamp(DATE_ISO, 'Etc/UTC'),
           unixTimestamp: EPOCH,
           milliseconds: MILLIS,
         },
@@ -147,7 +151,7 @@ describe('the GraphQL Date and Time TypeDefs', () => {
         date: {
           dateString: 'mercredi 9 novembre 2016 02:45',
           timezone: TZ_QUEBECOIS,
-          timestamp: '2016-11-09T02:45:00-05:00',
+          timestamp: formatCoreTypeDateTimestamp(DATE_ISO, TZ_QUEBECOIS),
           unixTimestamp: EPOCH,
           milliseconds: MILLIS,
         },
@@ -183,6 +187,8 @@ describe('the GraphQL Date and Time TypeDefs', () => {
 
 
   it('resolves a payload for a crappy Date', async () => {
+    const EPOCH_ISO = new Date(0).toISOString();
+
     const setup = await testSetupApollo({
       typeDefs: TYPEDEFS,
       resolvers: {
@@ -218,7 +224,7 @@ describe('the GraphQL Date and Time TypeDefs', () => {
       date: {
         dateString: 'Thursday, January 1, 1970 12:00 AM',
         timezone: 'Etc/UTC',
-        timestamp: '1970-01-01T00:00:00+00:00',
+        timestamp: formatCoreTypeDateTimestamp(EPOCH_ISO, 'Etc/UTC'),
         unixTimestamp: 0,
         milliseconds: 0,
       },
@@ -261,7 +267,7 @@ describe('the GraphQL Date and Time TypeDefs', () => {
       date: {
         dateString: 'Wednesday, November 9, 2016 7:45 AM',
         timezone: 'Etc/UTC',
-        timestamp: '2016-11-09T07:45:00+00:00',
+        timestamp: formatCoreTypeDateTimestamp(DATE_ISO, 'Etc/UTC'),
         unixTimestamp: EPOCH,
         milliseconds: MILLIS,
       },
