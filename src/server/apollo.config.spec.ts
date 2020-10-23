@@ -133,11 +133,11 @@ describe('server/apollo.config', () => {
           //   specify your Service name
           //   consume the schema from your local Service
           //   current variant = 'development'
-          //   future variant = 'development'
+          //   you cannot push from your local environment
           list: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql',
-          check: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql --serviceName=testSuite',
+          check: '--key=API_KEY --variant=production --endpoint=http://localhost:90210/graphql --serviceName=testSuite',
           diff: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql --serviceName=testSuite',
-          push: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-dev.withjoy.com/graphql --serviceName=testSuite',
+          push: '',
         },
         graphVariants: {
           current: 'development',
@@ -167,7 +167,6 @@ describe('server/apollo.config', () => {
           //   specify your Service name
           //   consume the schema from the Service code deployed to Staging, as proxied by the Federating Service
           //   current variant = 'staging'
-          //   future variant = 'production'
           list: '--key=API_KEY --variant=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql',
           check: '--key=API_KEY --variant=production --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceName=testSuite',
           diff: '--key=API_KEY --variant=staging --endpoint=https://bliss-gateway-staging.withjoy.com/testSuite/graphql --serviceName=testSuite',
@@ -204,10 +203,9 @@ describe('server/apollo.config', () => {
           //   no Service name; the Federating Service registers its schema as the 'default' service
           //   consume the schema from your local Service
           //   current variant = 'development'
-          //   future variant = 'development'
           //   you can check the Federated schema, but you cannot push
           list: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql',
-          check: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql',
+          check: '--key=API_KEY --variant=production --endpoint=http://localhost:90210/graphql',
           diff: '--key=API_KEY --variant=development --endpoint=http://localhost:90210/graphql',
           push: '',
         },
@@ -241,7 +239,6 @@ describe('server/apollo.config', () => {
           //   no Service name; the Federating Service registers its schema as the 'default' service
           //   consume the Federated schema from the Service code deployed to Staging
           //   current variant = 'staging'
-          //   future variant = 'production'
           //   you can check the Federated schema, but you cannot push
           list: '--key=API_KEY --variant=staging --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
           check: '--key=API_KEY --variant=production --endpoint=https://bliss-gateway-staging.withjoy.com/graphql',
@@ -256,44 +253,6 @@ describe('server/apollo.config', () => {
           endpoint: {
             name: 'stitch',
             url: 'https://bliss-gateway-staging.withjoy.com/graphql',
-          },
-        },
-      });
-    });
-
-    it('can be asked to always consume the schema from your local Service', () => {
-      const configStaging = deriveApolloEnvironmentConfig({
-        ...DEFAULT_CONFIG_ARGS,
-        variant: ApolloEnvironmentVariant.staging,
-
-        serviceName: 'testCase',
-        useLocalEndpoint: true,
-      });
-
-      expect(configStaging).toMatchObject({
-        variant: ApolloEnvironmentVariant.staging,
-        serviceName: 'testCase',
-        servicePort: 90210,
-
-        cliArguments: {
-          // expectations:
-          //   no Service name; the Federating Service registers its schema as the 'default' service
-          //   consume the Federated schema from the Service code deployed to Staging
-          //   current variant = 'staging'
-          //   future variant = 'production'
-          list: '--key=API_KEY --variant=staging --endpoint=http://localhost:90210/graphql',
-          check: '--key=API_KEY --variant=production --endpoint=http://localhost:90210/graphql --serviceName=testCase',
-          diff: '--key=API_KEY --variant=staging --endpoint=http://localhost:90210/graphql --serviceName=testCase',
-          push: '--key=API_KEY --variant=staging --endpoint=http://localhost:90210/graphql --serviceURL=https://bliss-gateway-staging.withjoy.com/graphql --serviceName=testCase',
-        },
-        graphVariants: {
-          current: 'staging',
-          future: 'production',
-        },
-        serviceConfig: {
-          endpoint: {
-            name: 'testCase',
-            url: 'http://localhost:90210/graphql',
           },
         },
       });
