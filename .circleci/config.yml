@@ -89,7 +89,7 @@ jobs:
 
       - run:
           name: Build
-          command: "npm run build"
+          command: "npm run node6:build"
 
       - run:
           name: Test Suite

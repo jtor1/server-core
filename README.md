@@ -88,7 +88,11 @@ cd server-core
 nvm use 6  # ... obviously
 
 # install Node 6 modules, then rebuild the source & `npm-shrinkwrap.json`
+npm install
 npm run node6:build
+
+# or, when you're forced to update the shrinkwrap,
+npm run node6:build:relock
 
 # build & run the Test Suite
 npm run node6:test:build
