@@ -30,6 +30,8 @@ function _makeCLIArgs(lines: string[]) {
 }
 
 
+type ApolloEnvironmentVariantName = 'development' | 'staging' | 'production';  // only registered Variants
+
 export interface ApolloEnvironmentConfig {
   // like ApolloEnvironmentConfigArgs
   variant: ApolloEnvironmentVariant;
@@ -39,15 +41,15 @@ export interface ApolloEnvironmentConfig {
   apiKey: string;
 
   graphVariants: {
-    current: string;
-    future: string; // the next sequential environment
+    current: ApolloEnvironmentVariantName;
+    future: ApolloEnvironmentVariantName; // the next sequential environment
   };
 
   // for use in package.json 'script's
   cliArguments: {
-    list: string; // "who are my peers?"
-    check: string; // "is it safe to promote this schema?"
-    diff: string; // "what's new in the schema i've deployed?"
+    list: string; // "who are my peer registered Services?"
+    check: string; // "how does the deployed schema fare against Production traffic?"
+    diff: string; // "what's different between the deployed schema and what was last registered?"
     push: string; // "register the deployed schema"
   };
 
@@ -66,7 +68,7 @@ export interface ApolloEnvironmentConfig {
 
 
 export enum ApolloEnvironmentVariant {
-  local = 'local',
+  local = 'local',  // it's not a Variant registered with Apollo, but it is a valid Environment
   development = 'development',
   staging = 'staging',
   production = 'production',
@@ -91,8 +93,6 @@ function _enumerateApolloEnvironmentVariant(variant: ApolloEnvironmentVariant | 
 
 export interface ApolloEnvironmentConfigArgs {
   variant?: ApolloEnvironmentVariant; // defaults to environment settings
-  useLocalEndpoint?: boolean; // use your local service as the `endpointUrl` for every variant
-
   serviceName: string,
   servicePort: string | number;
 };
@@ -101,7 +101,6 @@ export interface ApolloEnvironmentConfigArgs {
 export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs): ApolloEnvironmentConfig {
   const serviceName = args.serviceName;
   const servicePort = parseInt(String(args.servicePort), 10);
-  const useLocalEndpoint = args.useLocalEndpoint || false;
   const isFederatingService = (serviceName === FEDERATING_SERVICE_NAME);
   const env = process.env;
 
@@ -128,18 +127,19 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     throw new Error(`unrecognized variant: "${ variantAsString }"`);
   }
 
-  const endpointUrlLocal = `http://localhost:${ servicePort }/graphql`;
+  const isLocalVariant = (variant === ApolloEnvironmentVariant.local);
   const endpointRoute = (isFederatingService
     ? '/graphql'
     : `/${ serviceName }/graphql` // proxied by the Federating Service
   );
 
+  // the current Variant
   const VARIANT_CONFIG: Record<string, any> = ({
     [ ApolloEnvironmentVariant.local ]: {
       // "The url of your service"
       //   from which your schema can be derived
       endpoint: {
-        url: endpointUrlLocal, // provides the pending schema
+        url: `http://localhost:${ servicePort }/graphql`, // provides the deployed schema
         skipSSLValidation: true,
       },
       // "the url to the location of the implementing service for a federated graph"
@@ -149,7 +149,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
         skipSSLValidation: true,
       },
       graphVariants: {
-        current: 'development', // there is no 'local'
+        current: 'development', // 'local' isn't a registered Variant
         future: 'development',
       },
       serverOptions: {
@@ -160,7 +160,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     },
     [ ApolloEnvironmentVariant.development ]: {
       endpoint: {
-        url: (useLocalEndpoint ? endpointUrlLocal : `https://bliss-gateway-dev.withjoy.com${ endpointRoute }`),
+        url: `https://bliss-gateway-dev.withjoy.com${ endpointRoute }`,
         skipSSLValidation: false,
       },
       federatingService: {
@@ -179,7 +179,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     },
     [ ApolloEnvironmentVariant.staging ]: {
       endpoint: {
-        url: (useLocalEndpoint ? endpointUrlLocal : `https://bliss-gateway-staging.withjoy.com${ endpointRoute }`),
+        url: `https://bliss-gateway-staging.withjoy.com${ endpointRoute }`,
         skipSSLValidation: false,
       },
       federatingService: {
@@ -198,7 +198,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     },
     [ ApolloEnvironmentVariant.production ]: {
       endpoint: {
-        url: (useLocalEndpoint ? endpointUrlLocal : `https://bliss-gateway-prod.withjoy.com${ endpointRoute }`),
+        url: `https://bliss-gateway-prod.withjoy.com${ endpointRoute }`,
         skipSSLValidation: false,
       },
       federatingService: {
@@ -224,7 +224,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
     apiKey,
     graphVariants: VARIANT_CONFIG.graphVariants,
     cliArguments: {
-      // "who are my peers?"
+      // "who are my peer registered Services?"
       //   `apollo service:list` for current Environment
       //   https://github.com/apollographql/apollo-tooling#apollo-servicelist
       list: _makeCLIArgs([
@@ -233,12 +233,13 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
         `--endpoint=${ endpointUrl }`,
       ]),
 
-      // "is it safe to promote this schema?"
-      //   `apollo service:check` against *future* Environment
+      // "how does the deployed schema fare against Production traffic?"
+      //   eg. "would this schema break Production?"
+      //   `apollo service:check` of *current* Environment against Production
       //   https://github.com/apollographql/apollo-tooling#apollo-servicecheck
       check: _makeCLIArgs([
         `--key=${ apiKey }`,
-        `--variant=${ VARIANT_CONFIG.graphVariants.future }`,
+        `--variant=${ ApolloEnvironmentVariant.production }`,
         `--endpoint=${ endpointUrl }`,
         // you *can* check the schema from the Federating Service perspective;
         //   it'll check the federated schema as a whole.
@@ -246,7 +247,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
         (isFederatingService ? '' : `--serviceName=${ serviceName }`),
       ]),
 
-      // "what's new in the schema i've deployed?"
+      // "what's different between the deployed schema and what was last registered?"
       //   `apollo service:check` against *current* Environment
       //   https://github.com/apollographql/apollo-tooling#apollo-servicecheck
       diff: _makeCLIArgs([
@@ -259,8 +260,11 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
       // "register the deployed schema"
       //   `apollo service:push` to *current* Environment
       //   https://github.com/apollographql/apollo-tooling#apollo-servicepush
-      push: _makeCLIArgs(isFederatingService
-        // you *cannot* push from the Federating Service perspective;
+      push: _makeCLIArgs((isLocalVariant || isFederatingService)
+        // you *cannot* push a schema from your 'local' environment;
+        //   in theory, it *could* go to 'development' ...
+        //   but we'd prefer that it get deployed there first
+        // you *cannot* push the Federating Service's schema;
         //   you can only push the schema for the individual Services.
         //   "The model of the service registry is that the graph's schema is computed by composing underlying services."
         ? [] // => "Error: No service found to link to Engine" (because you should never do this)
