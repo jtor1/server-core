@@ -10,6 +10,8 @@ import {
   resolveCoreTypeDate,
   parseCoreTypeInputDate,
   formatCoreTypeDateTimestamp,
+  parseCoreTypeInputDateAndTimezone,
+  parseCoreTypeInputTimezone,
 
   coreResolvers,
 } from './core.types';
@@ -20,6 +22,9 @@ const DATE = new Date(MILLIS);
 const DATE_ISO = '2016-11-09T07:45:00.000Z';  // without offset
 const TZ_QUEBECOIS = 'America/Montreal'; // IANA code
 const LOCALE_QUEBECOIS = 'fr-CA'; // IETF code
+const TIMEZONE = 'America/Montreal'
+const FULL_TIMESTAMP = "2016-11-09T00:00:00.000-05:00"
+const TRUNC_TIMESTAMP = '2016-11-09'
 
 
 describe('graphql/core.types', () => {
@@ -67,6 +72,22 @@ describe('graphql/core.types', () => {
         return parseCoreTypeInputDate(DATE.toLocaleString());
       }).toThrow(TypeError);
     });
+    it ('cannot format a truncated timestamp without a timezone', () => {
+      expect(() => {
+        return parseCoreTypeInputDate(TRUNC_TIMESTAMP);
+      }).toThrow(TypeError);
+    });
+  });
+
+  describe('parseCoreTypeInputTimezone', () => {
+    it ('returns the timezone if valid', () => {
+        expect(parseCoreTypeInputTimezone('America/Montreal')).toBe('America/Montreal');
+    });
+    it ('does not tolerate invalid timezones', () => {
+        expect(() => {
+            return parseCoreTypeInputTimezone('INVALID_TIMEZONE');
+        }).toThrow(TypeError);
+    })
   });
 
 
@@ -87,6 +108,57 @@ describe('graphql/core.types', () => {
       expect(() => formatCoreTypeDateTimestamp(MILLIS, 'INVALID')).toThrow(TypeError);
     });
   });
+
+  describe('parseCoreTypeInputDateAndTimezone', () => {
+    it ('is able to format truncated timestamps', () => {
+
+        expect(parseCoreTypeInputDateAndTimezone(TRUNC_TIMESTAMP, TIMEZONE))
+        .toStrictEqual(new Date("2016-11-09T00:00:00.000-05:00"))
+
+        // it('fails on truncated date variants')
+        const VARIANT_TIMESTAMP = '2016-2-9'
+        expect(() => {
+            parseCoreTypeInputDateAndTimezone(VARIANT_TIMESTAMP, TIMEZONE)
+        })
+        .toThrow(TypeError)
+    });
+    it ('works for fully formatted timestamps', () => {
+
+        expect(parseCoreTypeInputDateAndTimezone(FULL_TIMESTAMP, TIMEZONE))
+        .toStrictEqual(new Date(FULL_TIMESTAMP));
+
+    });
+    it ('fails if there is a timezone but no date', () => {
+      expect(() => {
+        parseCoreTypeInputDateAndTimezone(undefined, TIMEZONE)
+      })
+      .toThrow(TypeError);
+    })
+    it ('fails if date is invalid CoreTypeTimestamp format', () => {
+        const INVALID_DATE = '2016/11/09T00:00:00.000-05:00'
+        expect(() => {
+            parseCoreTypeInputDateAndTimezone(INVALID_DATE, TIMEZONE)
+        })
+        .toThrow(TypeError);
+
+    });
+    it ('fails if a date is out of bounds for month', () => {
+        const INVALID_DATE = '2020-13-01'
+        expect(() => {
+            parseCoreTypeInputDateAndTimezone(INVALID_DATE, TIMEZONE)
+        })
+        .toThrow(TypeError);
+    });
+
+    it ('fails if a date is out of bounds for day', () => {
+      const INVALID_DATE = '2020-12-32'
+      expect(() => {
+          parseCoreTypeInputDateAndTimezone(INVALID_DATE, TIMEZONE)
+      })
+      .toThrow(TypeError);
+  });
+
+});
 
 
   describe('coreResolvers', () => {
