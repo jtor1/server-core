@@ -5,6 +5,7 @@ import { Context } from 'src/server/apollo.context';
 
 const UTC_LONG = 'Etc/UTC';
 const UTC_SHORT = 'UTC';
+const REGEX_FORMAT = /^\d{4}-\d{2}-\d{2}$/
 
 // ISO-8601 timestamp, with millisecond precision, expressing its timezone offset
 //   eg. '+00:00' (vs. 'Z') for GMT
@@ -174,23 +175,60 @@ export function parseCoreTypeInputDate(input: string | null | undefined): Date |
   if (! input) {
     return undefined;
   }
+
   const parsed = moment(input, moment.ISO_8601);
   if (! parsed.isValid()) {
     throw new TypeError(`parseCoreTypeDateInput: invalid ISO-8601 Date: ${ JSON.stringify(input) }`)
   }
+
+  if (! input.includes('T')) {
+    throw new TypeError(`parseCoreTypeDateInput: does not contain time: ${JSON.stringify(input)}`)
+  }
   return parsed.toDate();
 }
+
+export function parseCoreTypeInputTimezone(timezone: string): string {
+  if (!moment.tz.zone(timezone)) {
+    throw new TypeError(`parseCoreTypeInputTimezone: invalid timezone: "${ timezone }"`);
+  }
+  return timezone;
+}
+
 
 export function formatCoreTypeDateTimestamp(date: string | number | Date, timezone: string): string {
   const converted = moment(date);
   if (! converted.isValid()) {
-    throw new TypeError(`formatCoreTypeDateTimestamp: invalid date: "${ timezone }"`);
+    throw new TypeError(`formatCoreTypeDateTimestamp: invalid date: "${ date }"`);
   }
-  if (! moment.tz.zone(timezone)) {
-    throw new TypeError(`formatCoreTypeDateTimestamp: invalid timezone: "${ date }"`);
-  }
-  return converted.tz(timezone).format(FORMAT_TIMESTAMP);
+
+  const parsedTimezone = parseCoreTypeInputTimezone(timezone);
+
+  return converted.tz(parsedTimezone).format(FORMAT_TIMESTAMP);
 }
+
+export function parseCoreTypeInputDateAndTimezone(date: string | null | undefined, timezone: string | null | undefined): Date | undefined {
+  // checking if date is formatted correctly
+  if (timezone) {
+    const parsedTimezone = parseCoreTypeInputTimezone(timezone);
+    if (! date) {
+      throw new TypeError(`parseCoreTypeInputDateAndTimezone: date is required with a timezone`);
+    }
+
+    //Regex to match if the date is truncated
+    if (REGEX_FORMAT.test(date)) {
+      const parsed = moment.tz(date, parsedTimezone);
+      if (! parsed.isValid()) {
+        throw new TypeError(`parseCoreTypeInputDateAndTimezone: invalid date format: "${date}"`);
+      }
+      return parseCoreTypeInputDate(parsed.format(FORMAT_TIMESTAMP));
+    }
+    return parseCoreTypeInputDate(date);
+  } else {
+    return parseCoreTypeInputDate(date);
+  }
+}
+
+
 
 
 export const coreResolvers: IResolvers = {

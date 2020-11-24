@@ -48,6 +48,8 @@ import {
   resolveCoreTypeDate,
   parseCoreTypeInputDate,
   formatCoreTypeDateTimestamp,
+  parseCoreTypeInputDateAndTimezone,
+  parseCoreTypeInputTimezone,
 } from './graphql/core.types'
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
@@ -146,6 +148,8 @@ export {
   resolveCoreTypeDate,
   parseCoreTypeInputDate,
   formatCoreTypeDateTimestamp,
+  parseCoreTypeInputDateAndTimezone,
+  parseCoreTypeInputTimezone,
   createGraphQLEnumValues,
 
   EdgeWrapper,
