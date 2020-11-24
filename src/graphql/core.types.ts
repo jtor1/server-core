@@ -5,6 +5,7 @@ import { Context } from 'src/server/apollo.context';
 
 const UTC_LONG = 'Etc/UTC';
 const UTC_SHORT = 'UTC';
+const REGEX_FORMAT = /^\d{4}-\d{2}-\d{2}$/
 
 // ISO-8601 timestamp, with millisecond precision, expressing its timezone offset
 //   eg. '+00:00' (vs. 'Z') for GMT
@@ -212,16 +213,13 @@ export function parseCoreTypeInputDateAndTimezone(date: string | null | undefine
     if (! date) {
       throw new TypeError(`parseCoreTypeInputDateAndTimezone: date is required with a timezone`);
     }
-    const regex = /^\d{4}-\d{2}-\d{2}$/
 
-    if (regex.test(date)) {
-      //const p = moment(date).format(FORMAT_TRUNC_TIMESTAMP).tz( parsedTimezone).format(FORMAT_TIMESTAMP)
+    //Regex to match if the date is truncated
+    if (REGEX_FORMAT.test(date)) {
       const parsed = moment.tz(date, parsedTimezone);
-      //Check if truncated date is malformated
       if (! parsed.isValid()) {
         throw new TypeError(`parseCoreTypeInputDateAndTimezone: invalid date format: "${date}"`);
       }
-      //console.log(moment.tz(date, parsedTimezone).format(FORMAT_TIMESTAMP));
       return parseCoreTypeInputDate(parsed.format(FORMAT_TIMESTAMP));
     }
     return parseCoreTypeInputDate(date);
