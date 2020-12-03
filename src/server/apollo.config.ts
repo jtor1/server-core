@@ -49,8 +49,8 @@ export interface ApolloEnvironmentConfig {
   cliArguments: {
     list: string; // "who are my peer registered Services?"
     check: string; // "how does the deployed schema fare against Production traffic?"
-    diff: string; // "what's different between the deployed schema and what was last registered?"
-    push: string; // "register the deployed schema"
+    diff: string; // "what's different between the deployed schema and what was last published?"
+    push: string; // "publish the deployed schema"
   };
 
   // https://www.apollographql.com/docs/apollo-server/api/apollo-server/
@@ -247,7 +247,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
         (isFederatingService ? '' : `--serviceName=${ serviceName }`),
       ]),
 
-      // "what's different between the deployed schema and what was last registered?"
+      // "what's different between the deployed schema and what was last published?"
       //   `apollo service:check` against *current* Environment
       //   https://github.com/apollographql/apollo-tooling#apollo-servicecheck
       diff: _makeCLIArgs([
@@ -257,7 +257,7 @@ export function deriveApolloEnvironmentConfig(args: ApolloEnvironmentConfigArgs)
         (isFederatingService ? '' : `--serviceName=${ serviceName }`),
       ]),
 
-      // "register the deployed schema"
+      // "publish the deployed schema"
       //   `apollo service:push` to *current* Environment
       //   https://github.com/apollographql/apollo-tooling#apollo-servicepush
       push: _makeCLIArgs((isLocalVariant || isFederatingService)
