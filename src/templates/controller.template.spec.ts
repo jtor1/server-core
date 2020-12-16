@@ -1,28 +1,34 @@
 import { ControllerTemplate } from './controller.template';
 import { FakeModelWithIndex } from './fake.model';
 
-const FAKE_MODELS = [
+const FAKE_MODELS: FakeModelWithIndex[] = [
   Object.assign(new FakeModelWithIndex(), {
     id: '1',
+    code: 'ODD',
+    index: 0, // back-filled by the fake DataLoader logic
     fakeData: 'FAKE_1',
   }),
   Object.assign(new FakeModelWithIndex(), {
     id: '2',
+    code: 'EVEN',
+    index: 0,
     fakeData: 'FAKE_2',
   }),
   Object.assign(new FakeModelWithIndex(), {
     id: '3',
+    code: 'ODD',
+    index: 0,
     fakeData: 'FAKE_3',
   }),
 ];
 const MAYBE_FAKE_MODELS = [
   null,
-  FAKE_MODELS[1],
+  FAKE_MODELS[1], // the only EVEN
   undefined,
-] as Array<FakeModelWithIndex>;
+] as FakeModelWithIndex[]; // tolerate the maybes
 
 
-type LoaderKeys = 'byId' | 'byFakeId';
+type LoaderKeys = 'byId' | 'byFakeId' | 'multiByCode';
 class FakeController extends ControllerTemplate<FakeModelWithIndex, LoaderKeys> {
   private indexCount: number = 0; // a new index is allocated for every fake Model we construct
 
@@ -37,6 +43,7 @@ class FakeController extends ControllerTemplate<FakeModelWithIndex, LoaderKeys> 
 
         return Object.assign(new FakeModelWithIndex(), {
           id,
+          code: id,
           index,
         });
       });
@@ -49,11 +56,25 @@ class FakeController extends ControllerTemplate<FakeModelWithIndex, LoaderKeys> 
 
         return Object.assign(new FakeModelWithIndex(), {
           id: fakeId, // will NOT collide with 'byId'
+          code: fakeId,
           fakeData: fakeId,
           index,
         });
       });
       return this.orderResultsByIds(fakeIds, fakeModels, 'fakeData');
+    });
+
+    this.loadersMulti['multiByCode'] = this.wrapQueryInDataLoaderMulti(async (codes: string[]) => {
+      // driven by a fixed set of Models, vs. the `codes` provided
+      const fakeModels = FAKE_MODELS.map((fakeModel) => {
+        const index = ++this.indexCount;
+
+        return Object.assign(new FakeModelWithIndex(), {
+          ...fakeModel,
+          index,
+        });
+      });
+      return this.groupAndOrderMultiResultsByIds(codes, fakeModels, (model) => model.code);
     });
   }
 
@@ -63,6 +84,10 @@ class FakeController extends ControllerTemplate<FakeModelWithIndex, LoaderKeys> 
 
   async getByFakeIds(fakeDatas: string[]) {
     return this.loaders['byFakeId'].loadMany(fakeDatas);
+  }
+
+  async getByCodes(codes: string[]) {
+    return this.loadersMulti['multiByCode'].loadMany(codes);
   }
 }
 
@@ -82,14 +107,27 @@ describe('ControllerTemplate', () => {
 
       const byFakeIds = await controller.getByFakeIds([ 'C', 'B', 'A' ]);
       expect(byFakeIds.map((model) => model.id)).toEqual([ 'C', 'B', 'A' ]);
+
+      const byCodes = await controller.getByCodes([ 'ODD', 'EVEN' ]);
+      expect(byCodes.map((models) => models[0].code)).toEqual([ 'ODD', 'EVEN' ]);
     });
 
     it('only loads Models which it has not previously loaded', async () => {
+      // as proven out by cumulative increments to the instance-scoped `indexCount`
+
       const byIds = await controller.getByIds([ 'A', 'B', 'C' ]);
       expect(byIds.map((model) => model.index)).toEqual([ 1, 2, 3 ]);
+      const byIdsAgain = await controller.getByIds([ 'B', 'D', 'A', 'E', 'C', 'F' ]);
+      expect(byIdsAgain.map((model) => model.index)).toEqual([ 2, 4, 1, 5, 3, 6 ]);
 
-      const byIdsAgain = await controller.getByIds([ 'B', 'D', 'A', 'E', 'C' ]);
-      expect(byIdsAgain.map((model) => model.index)).toEqual([ 2, 4, 1, 5, 3 ]);
+      // indexes 7 & 9 are allocated, but they're part of the ODD set
+      const byCodes = await controller.getByCodes([ 'EVEN' ]);
+      expect(byCodes.map((models) => (models.map((model) => model.index)))).toEqual([ [ 8 ] ]);
+      // index 11 is allocated, but its already cached (by EVEN above) as 8
+      //   (yes, the indexes don't align with ODD / EVEN-ness, because there's an odd number of Fixtures)
+      //   (and even if it was an even count, odds are it'd still be an odd setup)
+      const byCodesAgain = await controller.getByCodes([ 'ODD', 'EVEN' ]);
+      expect(byCodesAgain.map((models) => (models.map((model) => model.index)))).toEqual([ [ 10, 12 ], [ 8 ] ]);
     });
 
     it('has independent keyspaces for each DataLoader', async () => {
@@ -98,6 +136,16 @@ describe('ControllerTemplate', () => {
 
       const byFakeIds = await controller.getByFakeIds([ 'C', 'B', 'A' ]);
       expect(byFakeIds.map((model) => model.index)).toEqual([ 4, 5, 6 ]);
+
+      // `loadersMulti` would work the same
+    });
+
+    it('gracefully handles missing Models', async () => {
+      // the `loaders` examples can't generate gaps
+
+      const byCodes = await controller.getByCodes([ 'ODD', 'IMAGINARY', 'EVEN' ]);
+      expect(byCodes.every((models) => Array.isArray(models))).toBe(true);
+      expect(byCodes.map((models) => (models.map((model) => model.id)))).toEqual([ [ '1', '3' ], [], [ '2' ] ]);
     });
   });
 
@@ -153,6 +201,24 @@ describe('ControllerTemplate', () => {
     it('is tolerant of missing Models', () => {
       const list1 = controller.orderResultsByMatchingModel(['1', '2', '3'], MAYBE_FAKE_MODELS, modelDeriver);
       expect(list1).toEqual(MAYBE_FAKE_MODELS);
+    });
+  });
+
+  describe('groupAndOrderMultiResultsByIds', () => {
+    const idDeriver = ((model: FakeModelWithIndex) => (model && model.code));
+    const FAKE_ODDS = [ FAKE_MODELS[0], FAKE_MODELS[2] ];
+    const FAKE_EVENS = [ FAKE_MODELS[1] ];
+
+    it('should group & order results by the derived id', () => {
+      const list1 = controller.groupAndOrderMultiResultsByIds(['ODD', 'EVEN'], FAKE_MODELS, idDeriver);
+      expect(list1).toEqual([ FAKE_ODDS, FAKE_EVENS ]);
+      const list2 = controller.groupAndOrderMultiResultsByIds(['EVEN', 'ODD'], FAKE_MODELS, idDeriver);
+      expect(list2).toEqual([ FAKE_EVENS, FAKE_ODDS ]);
+    });
+
+    it('is tolerant of unmatched ids', () => {
+      const list1 = controller.groupAndOrderMultiResultsByIds(['ODD', 'IMAGINARY', 'EVEN'], MAYBE_FAKE_MODELS, idDeriver);
+      expect(list1).toEqual([ [], [], FAKE_EVENS ]);
     });
   });
 

@@ -6,7 +6,7 @@ import {
   GraphQLBoolean,
   GraphQLObjectTypeConfig
 } from 'graphql';
-import { Context, IContext } from '../server/apollo.context';
+import { IContext } from '../server/apollo.context';
 
 import { ModelViewTemplate } from '../templates/view.template';
 

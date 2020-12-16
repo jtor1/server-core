@@ -10,25 +10,32 @@ describe('ModelViewTemplate<T>', () => {
 
   describe('getter methods', () => {
     it('should return data from the Model used in the contructor', () => {
+      const DATE = new Date();
+
       const fakeData1 = new FakeModel();
       fakeData1.key = 1;
       fakeData1.id = '1';
+      fakeData1.createAt = DATE;
+      fakeData1.updateAt = DATE;
       const fakeData2 = new FakeModel();
       fakeData1.key = 2;
       fakeData2.id = '2';
       const viewTemplate1 = new ModelViewTemplate(contextMock.object, fakeData1);
       const viewTemplate2 = new ModelViewTemplate(contextMock.object, fakeData2);
+
       expect(viewTemplate1.context).toBe(contextMock.object);
       expect(viewTemplate1.data).toBe(fakeData1);
       expect(viewTemplate1.key).toEqual(fakeData1.key);
       expect(viewTemplate1.id).toEqual(fakeData1.id);
-      expect(viewTemplate1.createdAt).toEqual(fakeData1.createAt);
-      expect(viewTemplate1.updatedAt).toEqual(fakeData1.updateAt);
+      expect(viewTemplate1.updatedAt).toBe(fakeData1.createAt.toISOString());
+      expect(viewTemplate1.createdAt).toBe(fakeData1.updateAt.toISOString());
+
+      expect(viewTemplate2.context).toBe(contextMock.object);
       expect(viewTemplate2.data).toBe(fakeData2);
       expect(viewTemplate2.key).toEqual(fakeData2.key);
       expect(viewTemplate2.id).toEqual(fakeData2.id);
-      expect(viewTemplate2.createdAt).toEqual(fakeData2.createAt);
-      expect(viewTemplate2.updatedAt).toEqual(fakeData2.updateAt);
+      expect(viewTemplate2.createdAt).toBeNull();
+      expect(viewTemplate2.updatedAt).toBeNull();
     });
   });
 
