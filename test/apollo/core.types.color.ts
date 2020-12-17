@@ -4,8 +4,10 @@ import { coreTypeDefs, coreResolvers } from '../../src/graphql/core.types';
 import { testSetupApollo } from '../helpers/apollo';
 
 
-// PANTONE 17-1937 TCX Hot Pink @ 100%
-const COLOR_HEX = '#E55982FF';
+// PANTONE 130 U @ 100%
+//   https://www.reddit.com/r/sanfrancisco/comments/ipmrpu/til_the_apocalypse_is_pantone_130_u_oak_gough_noon/
+//   https://www.pantone.com/color-finder/130-U
+const COLOR_HEX = '#F79B2FFF';
 
 
 describe('the GraphQL Color TypeDefs', () => {
@@ -48,8 +50,8 @@ describe('the GraphQL Color TypeDefs', () => {
     const { data } = res;
     expect(data).toMatchObject({
       color: {
-        hex: '#e55982',
-        rgba: [ 229, 89, 130, 1 ],
+        hex: '#f79b2f',
+        rgba: [ 247, 155, 47, 1 ],
         isLight: false,
       },
     });

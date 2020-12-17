@@ -38,7 +38,7 @@ import {
   NotFoundError
 } from './server/errors';
 
-import { ControllerTemplate } from './templates/controller.template';
+import { ControllerTemplate, ControllerTemplateWithContext } from './templates/controller.template';
 import { ModelViewTemplate, ViewTemplate } from './templates/view.template';
 import { ModelTemplate, ModelTemplateClass } from './templates/model.template';
 import {
@@ -51,6 +51,13 @@ import {
   parseCoreTypeInputDateAndTimezone,
   parseCoreTypeInputTimezone,
 } from './graphql/core.types'
+import {
+  FederatedTypeReference,
+  federatedUserById,
+  federatedEventById,
+  federatedPhotoById,
+  federatedVideoById,
+} from './graphql/federated.types'
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import {
@@ -143,6 +150,7 @@ export {
   SESSION_REQUEST_PROPERTY,
 
   ControllerTemplate,
+  ControllerTemplateWithContext,
   ModelTemplate,
   ModelTemplateClass,
   ModelViewTemplate,
@@ -164,6 +172,11 @@ export {
   formatCoreTypeDateTimestamp,
   parseCoreTypeInputDateAndTimezone,
   parseCoreTypeInputTimezone,
+  FederatedTypeReference,
+  federatedUserById,
+  federatedEventById,
+  federatedPhotoById,
+  federatedVideoById,
   createGraphQLEnumValues,
 
   EdgeWrapper,

@@ -1,5 +1,10 @@
 import { IContext } from '../server/apollo.context';
 import { ModelTemplate } from './model.template';
+import {
+  CoreTypeDate,
+  resolveCoreTypeDate,
+} from '../graphql/core.types';
+
 
 export class ViewTemplate<T, C extends IContext> {
   public data: T;
@@ -16,7 +21,8 @@ export class ViewTemplate<T, C extends IContext> {
 }
 
 export class ModelViewTemplate<T extends ModelTemplate, C extends IContext> extends ViewTemplate<T, C> {
-
+  // convenience method; do *NOT* expose via GraphQL
+  //   we should only expose our public-facing UUIDs
   get key() {
     return this.data.key;
   }
@@ -25,11 +31,13 @@ export class ModelViewTemplate<T extends ModelTemplate, C extends IContext> exte
     return this.data.id;
   }
 
-  get createdAt() {
-    return this.data.createAt;
+  get createdAt(): CoreTypeDate | null {
+    // timezone-agonistic
+    return resolveCoreTypeDate(this.data.createAt, undefined);
   }
 
-  get updatedAt() {
-    return this.data.updateAt;
+  get updatedAt(): CoreTypeDate | null {
+    // timezone-agonistic
+    return resolveCoreTypeDate(this.data.updateAt, undefined);
   }
 }
