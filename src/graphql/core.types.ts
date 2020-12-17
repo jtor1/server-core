@@ -33,7 +33,7 @@ export const coreTypeDefs = gql`
     postalCode: String
   }
 
-  type Location {
+  interface LocationInterface {
     placeId: String
     latitude: Float
     longitude: Float
@@ -86,6 +86,32 @@ export const coreTypeDefs = gql`
 
 
 type _CoreTypeDateTuple = [ string, string ] | string;
+
+type _LocationInput = {
+  placeId?: string;
+  latitude?: number;
+  longitude?: number;
+  name?: string;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+};
+
+export interface LocationInterface {
+  placeId?: string
+  latitude?: number
+  longitude?: number
+  name?: string
+  address1?: string
+  address2?: string
+  city?: string
+  state?: string
+  country?: string
+  postalCode?: string
+}
 
 const _FALLBACK_DATE = moment(0).tz(UTC_LONG);
 function _convertDateTupleToMoment(dateTuple: _CoreTypeDateTuple): Moment {
@@ -143,6 +169,8 @@ function _convertEnumToMomentFormat(format?: DateFormat | TimeFormat) {
 
 
 export type CoreTypeDate = _CoreTypeDateTuple | null;
+
+export type CoreTypeLocationInput = _LocationInput | null;
 
 export enum TimezoneFormat {
   long = 'long',

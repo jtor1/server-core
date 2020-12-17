@@ -97,6 +97,20 @@ import * as sortKeyPaddedNumeric from './utils/sortKey/paddedNumeric';
 import {
   applyMixinClasses,
 } from './utils/typescript';
+import {
+  shouldLocationBeFetched,
+  reproducibleLocationId,
+  GooglePlacesConfig,
+  GooglePlacesClient,
+  googlePlacesClient,
+} from './utils/location';
+import {
+  Location
+} from './graphql/location/model';
+import {
+  LocationView,
+  DecoratedLocationView,
+} from './graphql/location/view';
 
 
 export {
@@ -201,4 +215,15 @@ export {
   encodeForFirebaseKey,
 
   applyMixinClasses,
+
+  shouldLocationBeFetched,
+  reproducibleLocationId,
+  GooglePlacesConfig,
+  GooglePlacesClient,
+  googlePlacesClient,
+
+  Location,
+  LocationView,
+  DecoratedLocationView,
+
 };
