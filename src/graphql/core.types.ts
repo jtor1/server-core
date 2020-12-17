@@ -1,7 +1,10 @@
 import { gql, IResolvers } from 'apollo-server';
 import moment, { Moment } from 'moment-timezone';
 import chroma, { Color } from 'chroma-js';
+import { GraphQLJSONObject } from 'graphql-type-json';
+
 import { Context } from 'src/server/apollo.context';
+
 
 const UTC_LONG = 'Etc/UTC';
 const UTC_SHORT = 'UTC';
@@ -13,6 +16,8 @@ const REGEX_FORMAT = /^\d{4}-\d{2}-\d{2}$/
 const FORMAT_TIMESTAMP = 'YYYY-MM-DD[T]HH:mm:ss.SSSZ';
 
 export const coreTypeDefs = gql`
+
+  scalar JSONObject
 
   type Color {
     hex: String!
@@ -229,9 +234,9 @@ export function parseCoreTypeInputDateAndTimezone(date: string | null | undefine
 }
 
 
-
-
 export const coreResolvers: IResolvers = {
+  JSONObject: GraphQLJSONObject,
+
   Date: {
     timestamp: (date: _CoreTypeDateTuple): string => {
       const convertedDate = _convertDateTupleToMoment(date);
@@ -276,6 +281,7 @@ export const coreResolvers: IResolvers = {
       }
     },
   },
+
   Color: {
     hex: (color: string | number): string => {
       return _convertColorToChroma(color).hex();
