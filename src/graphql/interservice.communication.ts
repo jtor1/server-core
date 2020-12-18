@@ -4,8 +4,7 @@ import { HttpLink } from 'apollo-link-http';
 import { execute, FetchResult } from 'apollo-link';
 import { DocumentNode } from 'graphql';
 import { telemetry, deriveTelemetryContextFromError } from '@withjoy/telemetry';
-// @ts-ignore: TS6059
-import packageJson from '../../package.json';
+const packageJson = require('../../package.json');
 
 const DEFAULT_APOLLO_CLIENT_NAME = packageJson.name;
 const DEFAULT_APOLLO_CLIENT_VERSION = packageJson.version;
