@@ -4,7 +4,9 @@
     "types": ["node", "jest"],
     "allowJs": true,
     "module": "umd",
-    "resolveJsonModule": false
+    "resolveJsonModule": false,
+    // "'rootDir' is expected to contain all source files."
+    "rootDir": "./",
   },
   "include": [
     "src/**/*.spec.ts",
