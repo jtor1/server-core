@@ -1,6 +1,6 @@
 {
   "name": "@withjoy/server-core",
-  "version": "1.18.0",
+  "version": "1.18.3",
   "description": "Joy Server Base and Utils",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,7 +10,9 @@
   },
   "engineStrict": true,
   "files": [
-    "dist/**/*"
+    "dist",
+    "npm-shrinkwrap.json",
+    "yarn.lock"
   ],
   "scripts": {
     "build": "tsc",
@@ -26,6 +28,7 @@
     "prepare": "yarn build",
     "prepublishOnly": "yarn test",
     "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
+    "test:build": "tsc --build tsconfig.spec.json",
     "test:ci": "yarn test",
     "test:only": "NODE_ENV=test TERM=dumb  node  node_modules/.bin/jest  -i --no-coverage --no-verbose  --detectOpenHandles --forceExit --config jest.config.js",
     "version": "git add -A  src test  yarn.lock npm-shrinkwrap.json"
@@ -46,6 +49,7 @@
     "@withjoy/telemetry": "^0.6.0",
     "@google/maps": "^1.0.2",
     "apollo": "^2.16.2",
+    "apollo-engine-reporting": "^2.3.0",
     "apollo-link": "1.2.14",
     "apollo-link-http": "1.5.17",
     "apollo-server": "^2.7.2",

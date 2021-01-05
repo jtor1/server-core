@@ -4,6 +4,10 @@ import { HttpLink } from 'apollo-link-http';
 import { execute, FetchResult } from 'apollo-link';
 import { DocumentNode } from 'graphql';
 import { telemetry, deriveTelemetryContextFromError } from '@withjoy/telemetry';
+const packageJson = require('../../package.json');
+
+const DEFAULT_APOLLO_CLIENT_NAME = packageJson.name;
+const DEFAULT_APOLLO_CLIENT_VERSION = packageJson.version;
 
 
 export const callService = <Query, Variables = undefined>(
@@ -59,6 +63,8 @@ export const callService = <Query, Variables = undefined>(
 export interface IServiceCallerOptions<Query> {
   serviceUrl: string;
   query: DocumentNode;
+  clientName?: string;
+  clientVersion?: string;
 }
 export interface IServiceCallerArgs<Variables = undefined> {
   token: string;
@@ -132,8 +138,16 @@ export class ServiceCaller<Output, Query, Variables = undefined> {
   }
 
   async fetch(args: IServiceCallerArgs<Variables>): Promise<FetchResult<Query>> {
-    const { serviceUrl, query } = this.options;
-    const { token, variables, headers } = args;
+    const { serviceUrl, query, clientName, clientVersion } = this.options;
+    const { token, variables, headers: argsHeaders } = args;
+    const headers = {
+      // Apollo Client identifier
+      //   https://www.apollographql.com/docs/studio/client-awareness/
+      'apollographql-client-name': (clientName || DEFAULT_APOLLO_CLIENT_NAME),
+      'apollographql-client-version': (clientVersion || DEFAULT_APOLLO_CLIENT_VERSION),
+
+      ...argsHeaders,
+    };
 
     return callService(serviceUrl, token, query, variables, headers);
   }

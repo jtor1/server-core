@@ -4,8 +4,6 @@ import { DocumentNode } from 'graphql';
 import { gql } from 'apollo-server';
 
 import {
-  callService,
-
   ServiceCaller,
   createServiceCaller,
 
@@ -17,6 +15,8 @@ import {
 const SERVICE_URL = 'https://SERVICE_URL';
 const TOKEN = 'TOKEN';
 const VARIABLE = 'VARIABLE';
+const CLIENT_NAME = 'CLIENT_NAME';
+const CLIENT_VERSION = 'CLIENT_VERSION';
 const HEADERS = Object.freeze({
   'x-joy-header': 'X-JOY-HEADER',
 });
@@ -49,6 +49,8 @@ describe('graphql/interservice.communication', () => {
     const OPTIONS = {
       serviceUrl: SERVICE_URL,
       query: TEST_QUERY,
+      clientName: CLIENT_NAME,
+      clientVersion: CLIENT_VERSION,
     };
     const ARGS = {
       token: TOKEN,
@@ -85,6 +87,11 @@ describe('graphql/interservice.communication', () => {
           reqheaders: {
             // it('provides the headers passed in args')
             ...HEADERS,
+
+            // it('identifies the Client')
+            'apollographql-client-name': CLIENT_NAME,
+            'apollographql-client-version': CLIENT_VERSION,
+
             // it('provides the token for authorization')
             authorization: TOKEN,
           },
