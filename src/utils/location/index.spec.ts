@@ -2,7 +2,7 @@ import { now } from 'lodash';
 import { PLACE_ID } from '../../../test/helpers/const';
 
 import { FETCH_RETENTION_INTERVAL, shouldLocationBeFetched, reproducibleLocationId } from './index'
-import { Location } from '../../graphql/location/model';
+import { Location } from '../../data/location/model';
 
 describe('#LocationUtilsIndex', () => {
 
@@ -26,7 +26,7 @@ describe('#LocationUtilsIndex', () => {
     it('location entry is a week old', () => {
       const location = Object.assign(new Location(), {
         placeId: PLACE_ID,
-        fetchedAt: new Date(now() - FETCH_RETENTION_INTERVAL- 1)
+        fetchedAt: new Date(now() - (FETCH_RETENTION_INTERVAL + 1))
       });
 
       expect(shouldLocationBeFetched(location)).toBe(true);

@@ -1,6 +1,6 @@
 import { Entity, Column, Index } from 'typeorm';
 
-import { LocationInterface } from '../core.types';
+import { LocationInterface } from '../../graphql/core.types';
 import { ModelTemplate } from '../../templates/model.template';
 
 
@@ -31,7 +31,7 @@ export class Location extends ModelTemplate implements LocationInterface {
   @Column('float', { nullable: true })
   public longitude?: number;
 
-  @Column('float', { nullable: true })
+  @Column('text', { nullable: true })
   public name?: string;
 
   // https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder

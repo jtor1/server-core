@@ -113,11 +113,11 @@ import {
 } from './utils/location';
 import {
   Location
-} from './graphql/location/model';
+} from './data/location/model';
 import {
   LocationView,
   DecoratedLocationView,
-} from './graphql/location/view';
+} from './data/location/view';
 
 
 export {

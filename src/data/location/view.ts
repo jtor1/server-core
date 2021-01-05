@@ -1,16 +1,15 @@
-import { ViewTemplate } from '../../templates/view.template';
+import { isEmpty } from 'lodash';
+import { ViewTemplate, ModelViewTemplate } from '../../templates/view.template';
 import { Location } from './model';
 import { Context } from '../../server/apollo.context';
-import { LocationInterface } from '../core.types';
+import { LocationInterface } from '../../graphql/core.types';
 
-export class LocationView extends ViewTemplate<Location, Context> { //Model View Template?
+export const NO_LOCATION = Object.freeze(new Location());
+
+export class LocationView extends ModelViewTemplate<Location, Context> implements LocationInterface{ //Model View Template?
 
   constructor(context: Context, location: Location) {
-    super(context, location);
-  }
-
-  get id() {
-    return this.data.id;
+    super(context, location || NO_LOCATION);
   }
 
   get address1() {
@@ -49,77 +48,92 @@ export class LocationView extends ViewTemplate<Location, Context> { //Model View
     return this.data.placeId;
   }
 
+  get name() {
+    return this.data.name;
+  }
+
 }
 
-export class DecoratedLocationView extends LocationView {
+export class DecoratedLocationView extends LocationView implements LocationInterface{
   decorator: LocationInterface;
 
   constructor(context: Context, data: Location, decorator: LocationInterface) {
-    super(context, data)
+    super(context, data || NO_LOCATION)
     this.decorator = decorator;
   }
 
   get address1() {
-    if (this.decorator.address1) {
+    if (this.decorator.address1 !== undefined) {
       return this.decorator.address1;
     }
     return this.data.address1;
   }
 
   get address2() {
-    if (this.decorator.address2) {
+    if (this.decorator.address2 !== undefined) {
       return this.decorator.address2;
     }
     return this.data.address2;
   }
 
   get city() {
-    if (this.decorator.city) {
+    if (this.decorator.city !== undefined) {
       return this.decorator.city;
     }
     return this.data.city;
   }
 
   get state() {
-    if (this.decorator.state) {
+    if (this.decorator.state !== undefined) {
       return this.decorator.state;
     }
     return this.data.state;
   }
 
   get country() {
-    if (this.decorator.country) {
+    if (this.decorator.country !== undefined) {
       return this.decorator.country;
     }
     return this.data.country;
   }
 
   get postalCode() {
-    if (this.decorator.postalCode) {
+    if (this.decorator.postalCode !== undefined) {
       return this.decorator.postalCode;
     }
     return this.data.postalCode;
   }
 
   get latitude() {
-    if (this.decorator.latitude) {
+    if (this.decorator.latitude !== undefined) {
       return this.decorator.latitude;
     }
     return this.data.latitude;
   }
 
   get longitude() {
-    if (this.decorator.longitude) {
+    if (this.decorator.longitude !== undefined) {
       return this.decorator.longitude;
     }
     return this.data.longitude;
   }
 
   get placeId() {
-    if (this.decorator.placeId) {
+    if (this.decorator.placeId !== undefined) {
       return this.decorator.placeId;
     }
     return this.data.placeId;
+  }
+
+  get name() {
+    if (this.decorator.name !== undefined) {
+      return this.decorator.name;
+    }
+    return this.data.name;
+  }
+
+  public isEmpty = () => {
+    return isEmpty(this.decorator) && (this.data === NO_LOCATION)
   }
 
 

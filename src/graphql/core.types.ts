@@ -92,7 +92,7 @@ export const coreTypeDefs = gql`
 
 type _CoreTypeDateTuple = [ string, string ] | string;
 
-type _LocationInput = {
+export type CoreTypeLocationInput = {
   placeId?: string;
   latitude?: number;
   longitude?: number;
@@ -174,8 +174,6 @@ function _convertEnumToMomentFormat(format?: DateFormat | TimeFormat) {
 
 
 export type CoreTypeDate = _CoreTypeDateTuple | null;
-
-export type CoreTypeLocationInput = _LocationInput | null;
 
 export enum TimezoneFormat {
   long = 'long',

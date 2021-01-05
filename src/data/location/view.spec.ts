@@ -2,7 +2,7 @@
 import { LocationView, DecoratedLocationView } from './view';
 import { createContext, Context } from '../../server/apollo.context';
 import { Location } from './model';
-import { LocationInterface } from '../core.types';
+import { LocationInterface } from '../../graphql/core.types';
 
 const LOCATION = Object.assign(new Location(), {
   id: "6e506e50-abcd-cdef-1234-567890abcdef",

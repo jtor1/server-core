@@ -1,5 +1,5 @@
 import { createClient, ClientResponse, PlaceDetailsResponse, AddressComponent, GoogleMapsClient } from '@google/maps';
-import { Location } from '../../graphql/location/model';
+import { Location } from './model';
 export interface GooglePlacesConfig {
   placeApiKey: string
 }
@@ -21,7 +21,6 @@ export class GooglePlacesClient {
         },
         (err, response) => {
           if (err) {
-            console.log(err);
             reject(err);
           } else {
             resolve(response);
@@ -36,6 +35,7 @@ export class GooglePlacesClient {
     const placeInfo = (await this.fetchPlaceInfo(placeId)).json;
     location.latitude = placeInfo.result.geometry.location.lat;
     location.longitude = placeInfo.result.geometry.location.lng;
+    location.name = placeInfo.result.name;
     location.placeId = placeId;
     return this._createAddress(location, placeInfo.result.address_components);
   }
@@ -45,6 +45,8 @@ export class GooglePlacesClient {
     location.address2 = undefined;
     location.city = undefined;
     location.state = undefined;
+    location.country = undefined;
+    location.postalCode = undefined;
     addressComponents.map(addressComponent => {
       if (addressComponent.types.includes('street_number')) {
         location.address1 = addressComponent.long_name;
@@ -65,7 +67,7 @@ export class GooglePlacesClient {
 
 }
 
-export function googlePlacesClient(client: GooglePlacesConfig): GooglePlacesClient {
-  return new GooglePlacesClient(client);
+export function googlePlacesClient(config: GooglePlacesConfig): GooglePlacesClient {
+  return new GooglePlacesClient(config);
 }
 

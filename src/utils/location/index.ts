@@ -1,8 +1,7 @@
-import { Location } from 'src/graphql/location/model';
-import { now } from 'lodash';
+import { Location } from 'src/data/location/model';
 import uuidV5 from 'uuid/v5';
 
-import {GooglePlacesConfig, GooglePlacesClient,  googlePlacesClient} from './googlePlacesClient';
+import {GooglePlacesConfig, GooglePlacesClient,  googlePlacesClient} from '../../data/location/googlePlacesClient';
 
 export const FETCH_RETENTION_INTERVAL = 604800000; // 1 week
 
@@ -13,7 +12,7 @@ export function shouldLocationBeFetched(location: Location | null | undefined): 
   if ( !location || !location.fetchedAt) {
     return true;
   }
-  return now() > location.fetchedAt.getTime() + FETCH_RETENTION_INTERVAL;
+  return Date.now() > location.fetchedAt.getTime() + FETCH_RETENTION_INTERVAL;
 }
 
 export function reproducibleLocationId(placeId: string): string {
