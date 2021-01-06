@@ -1,20 +1,23 @@
 import { telemetry, deriveTelemetryContextFromError } from '@withjoy/telemetry';
 
-import { VERSION } from '../utils/const';
+import { commonLogInformation } from '../utils/const';
 import { IServer } from './server';
 
 
 export const initApp = async (app: IServer, port: number): Promise<void> => {
+  const commonLogInfo = commonLogInformation();
   let closeCalled = false;
+
   const gracefulClose = async (reason: string): Promise<void> => {
     telemetry.info('initApp', {
+      ...commonLogInfo,
       action: 'starting',
       reason,
-      serverCoreVersion: VERSION,
     });
 
     if (closeCalled) {
       telemetry.warn('initApp: App is already being shut down!', {
+        ...commonLogInfo,
         action: 'skip',
         reason,
       });
@@ -31,17 +34,17 @@ export const initApp = async (app: IServer, port: number): Promise<void> => {
     return app.close()
       .then(() => {
         telemetry.info('initApp', {
+          ...commonLogInfo,
           action: 'complete',
           reason,
-          serverCoreVersion: VERSION,
         });
       })
       .catch(err => {
         telemetry.error('initApp', {
           ...deriveTelemetryContextFromError(err),
+          ...commonLogInfo,
           action: 'error',
           reason,
-          serverCoreVersion: VERSION,
         });
         throw err;
       });
@@ -53,6 +56,7 @@ export const initApp = async (app: IServer, port: number): Promise<void> => {
       .catch(err => {
         telemetry.error('initApp.gracefulRestart', {
           ...deriveTelemetryContextFromError(err),
+          ...commonLogInfo,
           action: 'error',
           signalName,
         });
@@ -66,6 +70,7 @@ export const initApp = async (app: IServer, port: number): Promise<void> => {
       .catch(err => {
         telemetry.error('initApp.gracefulShutdown', {
           ...deriveTelemetryContextFromError(err),
+          ...commonLogInfo,
           action: 'error',
           signalName,
         });
@@ -91,16 +96,16 @@ export const initApp = async (app: IServer, port: number): Promise<void> => {
   return app.init(port)
     .then(config => {
       telemetry.info('initApp', {
+        ...commonLogInfo,
         action: 'started',
-        serverCoreVersion: VERSION,
         port: config.port,
       });
     })
     .catch(err => {
       telemetry.error('initApp', {
         ...deriveTelemetryContextFromError(err),
+        ...commonLogInfo,
         action: 'error',
-        serverCoreVersion: VERSION,
       });
       process.exit(1);
     });

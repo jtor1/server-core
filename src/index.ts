@@ -58,8 +58,10 @@ import {
   federatedPhotoById,
   federatedVideoById,
 } from './graphql/federated.types'
+import { loadDotEnv } from './utils/dotenv';
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
+import { logTypeORMConfig } from './utils/typeorm';
 import {
   VirtualEventLinkParseResult,
   VirtualEventProvider,
@@ -165,8 +167,12 @@ export {
   federatedVideoById,
   createGraphQLEnumValues,
 
+  loadDotEnv,
+
   EdgeWrapper,
   edgeWrapperType,
+
+  logTypeORMConfig,
 
   VirtualEventLinkParseResult,
   VirtualEventProvider,
