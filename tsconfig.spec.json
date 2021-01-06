@@ -5,8 +5,11 @@
     "allowJs": true,
     "module": "umd",
     "resolveJsonModule": false,
-    // "'rootDir' is expected to contain all source files."
-    "rootDir": "./",
+    // for `yarn test:build`
+    //   "'rootDir' is expected to contain all source files."
+    //   and we don't want to impact `src/*` => `dist/*`
+    "outDir": "./build",
+    "rootDir": ".",
   },
   "include": [
     "src/**/*.spec.ts",

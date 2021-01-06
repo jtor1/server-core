@@ -90,7 +90,8 @@ It's somewhat fragile;
   - and we compile with `jest`s global DSL (`describe`, etc.) because it's identical to `mocha`s
 - we use `tsc` to build / transpile in Node 6
   - we publish the **Node 10 transpiled versions**, which work fine in Node 6
-  - however, the *Test Suite* is written in TypeScript, and it is *not* built as part of `dist/*`
+  - however, the *Test Suite* is written in TypeScript, and it is *not* built as part of `dist/*` --
+    instead, it transpiles into `build/*`, which is *not* "dist"ributed
 - the `npm-shrinkwrap.json` generated from Node 10 depencies cannot be installed in Node 6
   - so it has to be re-built from within the Node 6 engine
 
