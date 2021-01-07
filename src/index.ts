@@ -45,6 +45,7 @@ import {
   coreResolvers,
   coreTypeDefs,
   CoreTypeDate,
+  CoreTypeLocationInput,
   resolveCoreTypeDate,
   parseCoreTypeInputDate,
   formatCoreTypeDateTimestamp,
@@ -107,13 +108,15 @@ import {
 import {
   shouldLocationBeFetched,
   reproducibleLocationId,
-  GooglePlacesConfig,
-  GooglePlacesClient,
-  googlePlacesClient,
 } from './utils/location';
 import {
   Location
 } from './data/location/model';
+import {
+  GooglePlacesConfig,
+  GooglePlacesClient,
+  googlePlacesClient,
+} from './data/location/googlePlacesClient';
 import {
   LocationView,
   DecoratedLocationView,
@@ -167,6 +170,7 @@ export {
   coreResolvers,
   coreTypeDefs,
   CoreTypeDate,
+  CoreTypeLocationInput,
   resolveCoreTypeDate,
   parseCoreTypeInputDate,
   formatCoreTypeDateTimestamp,

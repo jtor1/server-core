@@ -1,7 +1,6 @@
-import { Location } from 'src/data/location/model';
+import { Location } from '../../data/location/model';
 import uuidV5 from 'uuid/v5';
 
-import {GooglePlacesConfig, GooglePlacesClient,  googlePlacesClient} from '../../data/location/googlePlacesClient';
 
 export const FETCH_RETENTION_INTERVAL = 604800000; // 1 week
 
@@ -22,8 +21,3 @@ export function reproducibleLocationId(placeId: string): string {
   return uuidV5(placeId, UUID_ROOT_NAMESPACE);
 }
 
-export {
-  GooglePlacesConfig,
-  GooglePlacesClient,
-  googlePlacesClient
-};
