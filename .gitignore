@@ -12,6 +12,7 @@
 # production
 /dist
 /dist-node6-test
+/build
 
 # misc
 .DS_Store
