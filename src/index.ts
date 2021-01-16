@@ -61,7 +61,13 @@ import {
 import { loadDotEnv } from './utils/dotenv';
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
-import { logTypeORMConfig } from './utils/typeorm';
+import {
+  NULL_STRING,
+  isUUID,
+  executeOperationsInParallel,
+} from './utils/miscellaneous';
+import { hasEntityBeenPersisted } from './utils/typeorm/helpers';
+import { logTypeORMConfig } from './utils/typeorm/logging';
 import {
   VirtualEventLinkParseResult,
   VirtualEventProvider,
@@ -101,8 +107,8 @@ import {
   bisectReorderModels,
 } from './utils/reorder';
 import { SortKeyProvider } from './utils/sortKey/provider';
-import * as sortKeyBase64 from './utils/sortKey/base64';
-import * as sortKeyPaddedNumeric from './utils/sortKey/paddedNumeric';
+import * as sortKeyBase64 from './utils/sortKey/base64';  // namespaced, vs. top-level
+import * as sortKeyPaddedNumeric from './utils/sortKey/paddedNumeric';  // namespaced, vs. top-level
 import {
   applyMixinClasses,
 } from './utils/typescript';
@@ -172,6 +178,16 @@ export {
   EdgeWrapper,
   edgeWrapperType,
 
+  NULL_STRING,
+  isUUID,
+  executeOperationsInParallel,
+
+  // `import * as pg from '@withjoy/server-core/dist/utils/pg'`
+  //   because TypeScript definitions can't be exported in a namespace
+
+  // `import * as typeorm from '@withjoy/server-core/dist/utils/typeorm'`
+  //   because TypeScript definitions can't be exported in a namespace
+  hasEntityBeenPersisted,
   logTypeORMConfig,
 
   VirtualEventLinkParseResult,
@@ -214,8 +230,8 @@ export {
   bisectReorderModels,
 
   SortKeyProvider,
-  sortKeyBase64,
-  sortKeyPaddedNumeric,
+  sortKeyBase64,  // namespaced, vs. top-level
+  sortKeyPaddedNumeric,  // namespaced, vs. top-level
 
   encodeForFirebaseKey,
 

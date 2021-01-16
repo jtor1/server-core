@@ -1,8 +1,8 @@
 import * as TypeMoq from 'typemoq';
 
 import { ModelViewTemplate } from './view.template';
-import { FakeModel } from './fake.model';
 import { Context } from '../server/apollo.context';
+import { FakeModel } from '../../test/helpers/fake.model';
 
 const contextMock: TypeMoq.IMock<Context> = TypeMoq.Mock.ofType(Context);
 
