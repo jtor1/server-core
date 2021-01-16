@@ -1,24 +1,24 @@
 import { ControllerTemplate } from './controller.template';
-import { FakeModelWithIndex } from './fake.model';
+import { FakeModelWithIndex } from '../../test/helpers/fake.model';
 
 const FAKE_MODELS: FakeModelWithIndex[] = [
   Object.assign(new FakeModelWithIndex(), {
     id: '1',
     code: 'ODD',
     index: 0, // back-filled by the fake DataLoader logic
-    fakeData: 'FAKE_1',
+    fakeString: 'FAKE_1',
   }),
   Object.assign(new FakeModelWithIndex(), {
     id: '2',
     code: 'EVEN',
     index: 0,
-    fakeData: 'FAKE_2',
+    fakeString: 'FAKE_2',
   }),
   Object.assign(new FakeModelWithIndex(), {
     id: '3',
     code: 'ODD',
     index: 0,
-    fakeData: 'FAKE_3',
+    fakeString: 'FAKE_3',
   }),
 ];
 const MAYBE_FAKE_MODELS = [
@@ -57,11 +57,11 @@ class FakeController extends ControllerTemplate<FakeModelWithIndex, LoaderKeys> 
         return Object.assign(new FakeModelWithIndex(), {
           id: fakeId, // will NOT collide with 'byId'
           code: fakeId,
-          fakeData: fakeId,
+          fakeString: fakeId,
           index,
         });
       });
-      return this.orderResultsByIds(fakeIds, fakeModels, 'fakeData');
+      return this.orderResultsByIds(fakeIds, fakeModels, 'fakeString');
     });
 
     this.loadersMulti['multiByCode'] = this.wrapQueryInDataLoaderMulti(async (codes: string[]) => {
@@ -82,8 +82,8 @@ class FakeController extends ControllerTemplate<FakeModelWithIndex, LoaderKeys> 
     return this.loaders['byId'].loadMany(ids);
   }
 
-  async getByFakeIds(fakeDatas: string[]) {
-    return this.loaders['byFakeId'].loadMany(fakeDatas);
+  async getByFakeIds(fakeStrings: string[]) {
+    return this.loaders['byFakeId'].loadMany(fakeStrings);
   }
 
   async getByCodes(codes: string[]) {
@@ -158,16 +158,16 @@ describe('ControllerTemplate', () => {
     });
 
     it('should order results by a custom JSON Path', () => {
-      const list1 = controller.orderResultsByIds(['FAKE_1', 'FAKE_2', 'FAKE_3'], FAKE_MODELS, 'fakeData');
+      const list1 = controller.orderResultsByIds(['FAKE_1', 'FAKE_2', 'FAKE_3'], FAKE_MODELS, 'fakeString');
       expect(list1).toEqual(FAKE_MODELS);
-      const list2 = controller.orderResultsByIds(['FAKE_3', 'FAKE_1', 'FAKE_2'], FAKE_MODELS, 'fakeData');
+      const list2 = controller.orderResultsByIds(['FAKE_3', 'FAKE_1', 'FAKE_2'], FAKE_MODELS, 'fakeString');
       expect(list2).toEqual([ FAKE_MODELS[2], FAKE_MODELS[0], FAKE_MODELS[1] ]);
     });
 
     it('is tolerant of unmatched ids', () => {
       const list1 = controller.orderResultsByIds(['1', '2', '3'], MAYBE_FAKE_MODELS);
       expect(list1).toEqual([ undefined, MAYBE_FAKE_MODELS[1], undefined ]);
-      const list2 = controller.orderResultsByIds(['FAKE_3', 'FAKE_1', 'FAKE_2'], MAYBE_FAKE_MODELS, 'fakeData');
+      const list2 = controller.orderResultsByIds(['FAKE_3', 'FAKE_1', 'FAKE_2'], MAYBE_FAKE_MODELS, 'fakeString');
       expect(list2).toEqual([ undefined, undefined, MAYBE_FAKE_MODELS[1] ]);
     });
   });
