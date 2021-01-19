@@ -1,14 +1,14 @@
 import { isEmpty } from 'lodash';
 import { ViewTemplate, ModelViewTemplate } from '../../templates/view.template';
-import { Location } from './model';
+import { LocationModelTemplate } from './model';
 import { Context } from '../../server/apollo.context';
 import { LocationInterface } from '../../graphql/core.types';
 
-export const NO_LOCATION = Object.freeze(new Location());
+export const NO_LOCATION = Object.freeze({}) as LocationModelTemplate;
 
-export class LocationView extends ModelViewTemplate<Location, Context> implements LocationInterface{ //Model View Template?
+export class LocationView extends ModelViewTemplate<LocationModelTemplate, Context> implements LocationInterface { //Model View Template?
 
-  constructor(context: Context, location: Location) {
+  constructor(context: Context, location: LocationModelTemplate) {
     super(context, location || NO_LOCATION);
   }
 
@@ -57,8 +57,8 @@ export class LocationView extends ModelViewTemplate<Location, Context> implement
 export class DecoratedLocationView extends LocationView implements LocationInterface{
   decorator: LocationInterface;
 
-  constructor(context: Context, data: Location, decorator: LocationInterface) {
-    super(context, data || NO_LOCATION)
+  constructor(context: Context, data: LocationModelTemplate, decorator: LocationInterface) {
+    super(context, data)
     this.decorator = decorator;
   }
 

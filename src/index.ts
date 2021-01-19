@@ -112,7 +112,7 @@ import {
   reproducibleLocationId,
 } from './utils/location';
 import {
-  Location
+  LocationModelTemplate
 } from './data/location/model';
 import {
   GooglePlacesConfig,
@@ -245,7 +245,7 @@ export {
   GooglePlacesClient,
   googlePlacesClient,
 
-  Location,
+  LocationModelTemplate,
   LocationView,
   DecoratedLocationView,
 

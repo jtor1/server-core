@@ -3,9 +3,7 @@ import { Entity, Column, Index } from 'typeorm';
 import { LocationInterface } from '../../graphql/core.types';
 import { ModelTemplate } from '../../templates/model.template';
 
-
-@Entity()
-export class Location extends ModelTemplate implements LocationInterface {
+export abstract class LocationModelTemplate extends ModelTemplate implements LocationInterface {
 
   @Column('text', { nullable: true })
   public address1?: string;

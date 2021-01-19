@@ -1,10 +1,10 @@
 
 import { LocationView, DecoratedLocationView } from './view';
 import { createContext, Context } from '../../server/apollo.context';
-import { Location } from './model';
+import { LocationModelTemplate } from './model';
 import { LocationInterface } from '../../graphql/core.types';
 
-const LOCATION = Object.assign(new Location(), {
+const LOCATION = Object.assign({} as LocationModelTemplate, {
   id: "6e506e50-abcd-cdef-1234-567890abcdef",
   address1: "ADDRESS_1",
   address2: "ADDRESS_2",

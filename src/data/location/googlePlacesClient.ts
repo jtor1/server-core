@@ -1,5 +1,5 @@
 import { createClient, ClientResponse, PlaceDetailsResponse, AddressComponent, GoogleMapsClient } from '@google/maps';
-import { Location } from './model';
+import { LocationModelTemplate } from './model';
 export interface GooglePlacesConfig {
   placeApiKey: string
 }
@@ -30,9 +30,9 @@ export class GooglePlacesClient {
     })
   }
 
-  public async fetchLocation(placeId: string): Promise<Location> {
-    const location = new Location();
+  public async fetchLocation(location: LocationModelTemplate, placeId: string): Promise<LocationModelTemplate> {
     const placeInfo = (await this.fetchPlaceInfo(placeId)).json;
+    console.log(placeInfo);
     location.latitude = placeInfo.result.geometry.location.lat;
     location.longitude = placeInfo.result.geometry.location.lng;
     location.name = placeInfo.result.name;
@@ -40,7 +40,7 @@ export class GooglePlacesClient {
     return this._createAddress(location, placeInfo.result.address_components);
   }
 
-  private _createAddress(location: Location, addressComponents: Array<AddressComponent<unknown>>): Location {
+  private _createAddress(location: LocationModelTemplate, addressComponents: Array<AddressComponent<unknown>>): LocationModelTemplate {
     location.address1 = undefined;
     location.address2 = undefined;
     location.city = undefined;

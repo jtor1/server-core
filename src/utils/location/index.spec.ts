@@ -2,7 +2,7 @@ import { now } from 'lodash';
 import { PLACE_ID } from '../../../test/helpers/const';
 
 import { FETCH_RETENTION_INTERVAL, shouldLocationBeFetched, reproducibleLocationId } from './index'
-import { Location } from '../../data/location/model';
+import { LocationModelTemplate } from '../../data/location/model';
 
 describe('#LocationUtilsIndex', () => {
 
@@ -13,7 +13,7 @@ describe('#LocationUtilsIndex', () => {
     });
 
     it('location exists', () => {
-      const location = Object.assign(new Location(), {
+      const location = Object.assign( {} as LocationModelTemplate, {
         placeId: PLACE_ID,
       });
       expect(shouldLocationBeFetched(location)).toBe(true);
@@ -24,7 +24,7 @@ describe('#LocationUtilsIndex', () => {
     });
 
     it('location entry is a week old', () => {
-      const location = Object.assign(new Location(), {
+      const location = Object.assign({} as LocationModelTemplate, {
         placeId: PLACE_ID,
         fetchedAt: new Date(now() - (FETCH_RETENTION_INTERVAL + 1))
       });
@@ -35,16 +35,16 @@ describe('#LocationUtilsIndex', () => {
 
   describe('#createReproducibleId', () => {
     it('creates a reproducible ID from a placeId', () => {
-      const modelA = Object.assign(new Location(), {
+      const modelA = Object.assign( {} as LocationModelTemplate, {
         placeId: PLACE_ID,
       });
-      const modelB = Object.assign(new Location(), {
+      const modelB = Object.assign({} as LocationModelTemplate, {
         placeId: PLACE_ID,
       });
       expect(reproducibleLocationId(modelA.placeId)).toBe(reproducibleLocationId(modelB.placeId));
 
       // different seed data
-      const modelC = Object.assign(new Location(), {
+      const modelC = Object.assign({} as LocationModelTemplate, {
         placeId: "GhIJQWDl0CIeQUARxks3icF8U8A",
       });
       expect(reproducibleLocationId(modelA.placeId)).not.toBe(reproducibleLocationId(modelC.placeId));
@@ -56,7 +56,7 @@ describe('#LocationUtilsIndex', () => {
       }).toThrow(/insufficient data/);
 
       expect(() => {
-        return reproducibleLocationId(Object.assign(new Location(), {
+        return reproducibleLocationId(Object.assign({} as LocationModelTemplate, {
           placeId: PLACE_ID,
         }).placeId)
       }).not.toThrow();

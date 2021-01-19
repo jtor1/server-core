@@ -1,4 +1,4 @@
-import { Location } from '../../data/location/model';
+import { LocationModelTemplate } from '../../data/location/model';
 import uuidV5 from 'uuid/v5';
 
 
@@ -7,7 +7,7 @@ export const FETCH_RETENTION_INTERVAL = 604800000; // 1 week
 export const UUID_ROOT_NAMESPACE = 'dfb295fb-68dc-4bb7-9920-95d4e392b2f9';
 
 
-export function shouldLocationBeFetched(location: Location | null | undefined): boolean {
+export function shouldLocationBeFetched(location: LocationModelTemplate | null | undefined): boolean {
   if ( !location || !location.fetchedAt) {
     return true;
   }
