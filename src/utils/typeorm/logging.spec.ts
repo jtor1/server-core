@@ -6,7 +6,7 @@ import { telemetry, Telemetry } from '@withjoy/telemetry';
 import { commonLogInformation } from '../const';
 import {
   logTypeORMConfig,
-} from './index';
+} from './logging';
 
 
 describe('typeorm/index', () => {
