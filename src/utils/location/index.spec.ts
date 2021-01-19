@@ -1,4 +1,3 @@
-import { now } from 'lodash';
 import { PLACE_ID } from '../../../test/helpers/const';
 
 import { FETCH_RETENTION_INTERVAL, shouldLocationBeFetched, reproducibleLocationId } from './index'
@@ -18,7 +17,7 @@ describe('#LocationUtilsIndex', () => {
       });
       expect(shouldLocationBeFetched(location)).toBe(true);
 
-      location.fetchedAt = new Date(now())
+      location.fetchedAt = new Date(Date.now())
       expect(shouldLocationBeFetched(location)).toBe(false);
 
     });
@@ -26,7 +25,7 @@ describe('#LocationUtilsIndex', () => {
     it('location entry is a week old', () => {
       const location = Object.assign({} as LocationModelTemplate, {
         placeId: PLACE_ID,
-        fetchedAt: new Date(now() - (FETCH_RETENTION_INTERVAL + 1))
+        fetchedAt: new Date(Date.now() - (FETCH_RETENTION_INTERVAL + 1))
       });
 
       expect(shouldLocationBeFetched(location)).toBe(true);
