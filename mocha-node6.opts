@@ -1,4 +1,4 @@
 --recursive
 --reporter spec
-./dist-node6-test/src/middleware/session.spec.js
-./dist-node6-test/src/utils/virtualEvent/*.spec.js
+./build-node6-test/src/middleware/session.spec.js
+./build-node6-test/src/utils/virtualEvent/*.spec.js

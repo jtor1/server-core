@@ -1,6 +1,6 @@
 {
   "name": "@withjoy/server-core",
-  "version": "1.20.0",
+  "version": "1.20.1",
   "description": "Joy Server Base and Utils",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,7 +24,7 @@
     "node6:test:ci": "npm run node6:test:build  &&  npm run node6:test:run",
     "node6:test:run": "NODE_ENV=test  mocha --opts ./mocha-node6.opts",
     "postversion": "git push && git push --tags",
-    "prebuild": "rm -rf ./dist ./dist-node6-test ./build",
+    "prebuild": "rm -rf ./dist ./build ./build-node6-test",
     "prepare": "yarn build",
     "prepublishOnly": "yarn test",
     "test": "NODE_ENV=test jest --detectOpenHandles --no-cache --forceExit --config jest.config.js",
