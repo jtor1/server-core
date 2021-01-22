@@ -52,17 +52,6 @@ const SESSION_ID = 'fa44276cb66d302601f14a14ccde5b8ad21994fd92ec0d7b';
 describe('server/apollo.context', () => {
   let context: Context;
 
-  beforeEach(() => {
-    nock.disableNetConnect();
-  });
-
-  afterEach(() => {
-    nock.isDone();
-    nock.cleanAll();
-    nock.enableNetConnect();
-  });
-
-
   describe('Context', () => {
     describe('given constructor args', () => {
       it('populates an instance', () => {

@@ -1,4 +1,5 @@
 import nock from 'nock';
+import assert from 'assert';
 
 // NOTE:  hard-code it when you need it
 const RECORDING = false;
@@ -33,7 +34,7 @@ afterEach(() => {
 
   // https://github.com/nock/nock#isdone
   //   verify expectations
-  nock.isDone();
+  assert.ok(nock.isDone(), `nock.pendingMocks: ${ JSON.stringify(nock.pendingMocks()) }`);
 
   // https://github.com/nock/nock#enabling-requests
   nock.cleanAll();

@@ -1,10 +1,11 @@
 import {GooglePlacesConfig, GooglePlacesClient,  googlePlacesClient} from './googlePlacesClient';
 import {PLACE_ID} from '../../../test/helpers/const';
 import nock from 'nock';
-import { LocationModelTemplate } from './model';
 
 const GOOGLE_URL = "https://maps.googleapis.com:443"
-const GOOGLE_API_KEY = "AIzaSyDdgAMee8djOY-pPE0xErsRRmGTmzNZOkU"
+
+//Google Places API is specific and it requires all keys start with `AIza` even if its a fake key.
+const GOOGLE_API_KEY = "AIza_BOGUS_KEY"
 
 
 describe('data/location', () => {
@@ -31,7 +32,6 @@ describe('data/location', () => {
         },
         {'Content-Type': 'application/json; charset=UTF-8'}
       )
-
 
       await expect(
         client.fetchPlaceInfo(PLACE_ID)
@@ -174,8 +174,6 @@ describe('data/location', () => {
         {'Content-Type': 'application/json; charset=UTF-8'}
       );
 
-
-
       await expect(
         client.fetchLocation('INVALID_PLACE_ID')
       ).rejects.toBeDefined();
@@ -242,13 +240,9 @@ describe('data/location', () => {
     })
     .replyWithError('Error');
 
-    client.fetchLocation(PLACE_ID)
-    .catch((error) => {
-      expect(error).toBe('Error')
-    })
-
-
-
+    await expect(
+      client.fetchLocation(PLACE_ID)
+    ).rejects.toThrow(/Error/);
 
    })
   })
