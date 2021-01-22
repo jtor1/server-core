@@ -15,15 +15,6 @@ describe('data/location', () => {
 
 
   describe ('fetchPlaceInfo', () => {
-    beforeEach(() => {
-      nock.disableNetConnect();
-    })
-
-    afterEach(() => {
-       nock.isDone();
-       nock.cleanAll();
-       nock.enableNetConnect();
-    })
 
     it ('fetches a location payload based on placeId', async () => {
       nock(GOOGLE_URL, {
@@ -40,6 +31,7 @@ describe('data/location', () => {
         },
         {'Content-Type': 'application/json; charset=UTF-8'}
       )
+
 
       await expect(
         client.fetchPlaceInfo(PLACE_ID)
@@ -98,17 +90,6 @@ describe('data/location', () => {
   });
 
   describe ('fetchLocation', () => {
-
-    beforeEach(() => {
-      nock.disableNetConnect();
-    })
-
-    afterEach(() => {
-       nock.isDone();
-       nock.cleanAll();
-       nock.enableNetConnect();
-    })
-
     it ('returns a location based on placeId', async () => {
 
       nock(GOOGLE_URL, {

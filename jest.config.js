@@ -28,6 +28,9 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   preset: 'ts-jest/presets/js-with-ts',
   rootDir: projectRoot,
+  setupFilesAfterEnv: [
+    '<rootDir>/test/helpers/globalLifecycleNock.ts',
+  ],
   testEnvironment: 'node',
   testMatch: [
     '<rootDir>/src/**/*.spec.{ts,js}',
