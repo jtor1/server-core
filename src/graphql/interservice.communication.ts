@@ -50,7 +50,7 @@ export const callService = <Query, Variables = undefined>(
             query: JSON.stringify(query),
             variables: JSON.stringify(variables),
           });
-          resolve();
+          resolve(null!);
         }
       })
     });
