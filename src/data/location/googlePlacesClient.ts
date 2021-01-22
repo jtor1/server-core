@@ -30,11 +30,12 @@ export class GooglePlacesClient {
     })
   }
 
-  public async fetchLocation(location: LocationModelTemplate, placeId: string): Promise<LocationModelTemplate> {
+  public async fetchLocation(placeId: string): Promise<LocationModelTemplate> {
+    const location = {} as LocationModelTemplate;
     const placeInfo = (await this.fetchPlaceInfo(placeId)).json;
-    console.log(placeInfo);
-    location.latitude = placeInfo.result.geometry.location.lat;
-    location.longitude = placeInfo.result.geometry.location.lng;
+    const geocoordinates = placeInfo?.result?.geometry?.location;
+    location.latitude = geocoordinates?.lat;
+    location.longitude = geocoordinates?.lng;
     location.name = placeInfo.result.name;
     location.placeId = placeId;
     return this._createAddress(location, placeInfo.result.address_components);
@@ -48,17 +49,17 @@ export class GooglePlacesClient {
     location.country = undefined;
     location.postalCode = undefined;
     addressComponents.map(addressComponent => {
-      if (addressComponent.types.includes('street_number')) {
+      if (addressComponent.types?.includes('street_number')) {
         location.address1 = addressComponent.long_name;
-      } else if (addressComponent.types.includes('route')) {
+      } else if (addressComponent.types?.includes('route')) {
         location.address1 = location.address1 + ' ' + addressComponent.long_name;
-      } else if (addressComponent.types.includes('locality')) {
+      } else if (addressComponent.types?.includes('locality')) {
         location.city = addressComponent.long_name;
-      } else if (addressComponent.types.includes('administrative_area_level_1')) {
+      } else if (addressComponent.types?.includes('administrative_area_level_1')) {
         location.state = addressComponent.long_name;
-      } else if (addressComponent.types.includes('country')) {
+      } else if (addressComponent.types?.includes('country')) {
         location.country = addressComponent.long_name;
-      } else if (addressComponent.types.includes('postal_code')) {
+      } else if (addressComponent.types?.includes('postal_code')) {
         location.postalCode = addressComponent.long_name;
       }
     });

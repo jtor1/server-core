@@ -6,23 +6,25 @@ import { LocationModelTemplate } from './model';
 const GOOGLE_URL = "https://maps.googleapis.com:443"
 const GOOGLE_API_KEY = "AIzaSyDdgAMee8djOY-pPE0xErsRRmGTmzNZOkU"
 
+
 describe('data/location', () => {
   const config: GooglePlacesConfig = {
     placeApiKey: GOOGLE_API_KEY
   }
   let client: GooglePlacesClient = googlePlacesClient(config);
 
-  beforeEach(() => {
-    nock.disableNetConnect();
-  })
-
-  afterEach(() => {
-     nock.isDone();
-     nock.cleanAll();
-     nock.enableNetConnect();
-  })
 
   describe ('fetchPlaceInfo', () => {
+    beforeEach(() => {
+      nock.disableNetConnect();
+    })
+
+    afterEach(() => {
+       nock.isDone();
+       nock.cleanAll();
+       nock.enableNetConnect();
+    })
+
     it ('fetches a location payload based on placeId', async () => {
       nock(GOOGLE_URL, {
         encodedQueryParams: true
@@ -41,7 +43,11 @@ describe('data/location', () => {
 
       await expect(
         client.fetchPlaceInfo(PLACE_ID)
-      ).resolves.toBeDefined();
+      ).resolves.toMatchObject({
+        json: {
+          result: "FAKE_RESPONSE"
+        }
+      });
     });
 
     it ('rejects if the placeId is not associated with a location', async () => {
@@ -62,12 +68,47 @@ describe('data/location', () => {
 
       await expect(
         client.fetchPlaceInfo('INVALID_PLACE_ID')
-      ).rejects.toBeDefined();
+      ).rejects.toMatchObject({
+        json: {
+          status: "INVALID_REQUEST"
+        }
+      });
+    });
+
+    it ('returns a location where most of the data is missing', async () => {
+      nock(GOOGLE_URL, {
+        encodedQueryParams: true
+      })
+      .get('/maps/api/place/details/json')
+      .query({
+        placeid: PLACE_ID,
+        key: GOOGLE_API_KEY,
+      })
+      .reply( 200, {
+        result: {
+          address_components: [],
+        }
+      }, {'Content-Type': 'application/json; charset=UTF-8'})
+
+      await expect(
+        client.fetchPlaceInfo(PLACE_ID)
+      ).resolves.toBeDefined();
     });
 
   });
 
   describe ('fetchLocation', () => {
+
+    beforeEach(() => {
+      nock.disableNetConnect();
+    })
+
+    afterEach(() => {
+       nock.isDone();
+       nock.cleanAll();
+       nock.enableNetConnect();
+    })
+
     it ('returns a location based on placeId', async () => {
 
       nock(GOOGLE_URL, {
@@ -121,7 +162,7 @@ describe('data/location', () => {
           }
         }, {'Content-Type': 'application/json; charset=UTF-8'})
 
-      const location = await client.fetchLocation({} as LocationModelTemplate, PLACE_ID)
+      const location = await client.fetchLocation(PLACE_ID)
 
       expect(location).toMatchObject({
         latitude: 34,
@@ -155,9 +196,79 @@ describe('data/location', () => {
 
 
       await expect(
-        client.fetchLocation({} as LocationModelTemplate,'INVALID_PLACE_ID')
+        client.fetchLocation('INVALID_PLACE_ID')
       ).rejects.toBeDefined();
 
+    });
+
+    it ('returns a location where most of the data is missing', async () => {
+      nock(GOOGLE_URL, {
+        encodedQueryParams: true
+      })
+      .get('/maps/api/place/details/json')
+      .query({
+        placeid: PLACE_ID,
+        key: GOOGLE_API_KEY,
+      })
+      .reply( 200, {
+        result: {
+          address_components: [],
+        }
+      }, {'Content-Type': 'application/json; charset=UTF-8'})
+
+    const location = await client.fetchLocation(PLACE_ID);
+    expect(location).toMatchObject({
+      latitude: undefined,
+      longitude: undefined,
+      placeId: PLACE_ID,
+      address1: undefined,
+      address2: undefined,
+      city: undefined,
+      state: undefined,
+      country: undefined,
+      postalCode: undefined,
+    });
+   });
+
+   it ('rejects on a non HTTP 2XX response status', async () => {
+    nock(GOOGLE_URL, {
+      encodedQueryParams: true
     })
+    .get('/maps/api/place/details/json')
+    .query({
+      placeid: PLACE_ID,
+      key: GOOGLE_API_KEY,
+    })
+    .reply( 401, {
+      result: {
+        status: "INVALID"
+      }
+    }, {'Content-Type': 'application/json; charset=UTF-8'})
+
+    await expect(
+      client.fetchLocation(PLACE_ID)
+    ).rejects.toBeDefined();
+   });
+
+   it ('rejects on an HTTP Error', async () => {
+    nock(GOOGLE_URL, {
+      encodedQueryParams: true
+    })
+    .get('/maps/api/place/details/json')
+    .query({
+      placeid: PLACE_ID,
+      key: GOOGLE_API_KEY,
+    })
+    .replyWithError('Error');
+
+    client.fetchLocation(PLACE_ID)
+    .catch((error) => {
+      expect(error).toBe('Error')
+    })
+
+
+
+
+   })
   })
 })

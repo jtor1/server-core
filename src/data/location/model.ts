@@ -35,7 +35,7 @@ export abstract class LocationModelTemplate extends ModelTemplate implements Loc
   // https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder
   @Index({unique: false})
   @Column('text', { nullable: true })
-  public placeId: string;
+  public placeId?: string;
 
   @Column('timestamp', {nullable: true})
   public fetchedAt?: Date;
