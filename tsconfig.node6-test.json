@@ -2,16 +2,18 @@
   "extends": "./tsconfig",
   "compilerOptions": {
     "types": ["node", "jest"],
-    "outDir": "./dist-node6-test",
-    "rootDir": ".",
     "allowJs": true,
     "module": "umd",
-    "resolveJsonModule": false
+    "resolveJsonModule": false,
+    // for `yarn test:build`
+    //   "'rootDir' is expected to contain all source files."
+    //   and we don't want to impact `src/*` => `dist/*`
+    "outDir": "./build-node6-test",
+    "rootDir": ".",
   },
   "include": [
     "src/**/*.spec.ts",
-    "test/**/*.ts",
-    "typings"
+    "test/**/*.ts"
   ],
   "exclude": []
 }
