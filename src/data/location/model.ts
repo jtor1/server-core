@@ -1,7 +1,10 @@
+import { pick } from 'lodash';
 import { Entity, Column, Index } from 'typeorm';
 
 import { LocationInterface } from '../../graphql/core.types';
 import { ModelTemplate } from '../../templates/model.template';
+
+const MERGEABLE_PROPERTIES = ['address1', 'address2', 'city', 'state', 'country', 'postalCode', 'latitude', 'longitude', 'name', 'placeId'];
 
 export abstract class LocationModelTemplate extends ModelTemplate implements LocationInterface {
 
@@ -39,5 +42,12 @@ export abstract class LocationModelTemplate extends ModelTemplate implements Loc
 
   @Column('timestamp', {nullable: true})
   public fetchedAt?: Date;
+
+  mergeWith(data: LocationInterface): this {
+    const mergeable = pick(data, MERGEABLE_PROPERTIES);
+    Object.assign(this, mergeable);
+    return this;
+  }
+
 
 }

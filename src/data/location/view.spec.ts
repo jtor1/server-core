@@ -2,7 +2,6 @@
 import { LocationView, DecoratedLocationView, NO_LOCATION } from './view';
 import { createContext, Context } from '../../server/apollo.context';
 import { LocationModelTemplate } from './model';
-import { LocationInterface } from '../../graphql/core.types';
 
 class TestLocation extends LocationModelTemplate {};
 
@@ -98,20 +97,50 @@ describe('#LocationView', () => {
     });
 
     describe('#isEmpty', () => {
-      it ('detects if the decorator is empty', async () => {
-        const emptyDecorator = {};
-        let view = new DecoratedLocationView(context, LOCATION, EMPTY_DECORATOR)
+      it ('detects if view is empty', async () => {
+        let view = new DecoratedLocationView(context, EMPTY_LOCATION, EMPTY_DECORATOR)
 
         expect(view.isEmpty()).toBe(true);
+
+        // it(has decorator, empty object)
+        const decorator = {
+          address1: 'ADDRESS_1'
+        }
+        view = new DecoratedLocationView(context, EMPTY_LOCATION, decorator);
+
+        expect(view.isEmpty()).toBe(false);
+
+        // it(no decorator, has object)
+        view  = new DecoratedLocationView(context, LOCATION, EMPTY_DECORATOR);
+
+        expect(view.isEmpty()).toBe(false);
+
+      });
+    });
+
+    describe('#hasDecoration', () => {
+      it ('detects if the decorator is empty', async () => {
+        let view = new DecoratedLocationView(context, LOCATION, EMPTY_DECORATOR)
+
+        expect(view.hasDecoration()).toBe(false);
 
         const decorator = {
           address1: 'ADDRESS_1'
         }
         view = new DecoratedLocationView(context, EMPTY_LOCATION, decorator);
 
-        expect(view.isEmpty()).toBe(true);
+        expect(view.hasDecoration()).toBe(true);
 
       });
+
+      it ( 'considers a decorator empty with `undefined` value', async () => {
+        let view = new DecoratedLocationView(context, LOCATION, {name: undefined, address1: undefined})
+        expect(view.hasDecoration()).toBe(false);
+
+        view = new DecoratedLocationView(context, LOCATION, {name: undefined, address1: 'ADDRESS_1'})
+
+        expect(view.hasDecoration()).toBe(true);
+      })
     });
 
     describe('#decorate', () => {

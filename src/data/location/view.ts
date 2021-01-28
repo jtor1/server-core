@@ -3,6 +3,7 @@ import { ViewTemplate, ModelViewTemplate } from '../../templates/view.template';
 import { LocationModelTemplate } from './model';
 import { Context } from '../../server/apollo.context';
 import { LocationInterface } from '../../graphql/core.types';
+import { ObjectFlags } from 'typescript';
 
 export const NO_LOCATION = Object.freeze({}) as LocationModelTemplate;
 
@@ -57,8 +58,8 @@ export class LocationView extends ModelViewTemplate<LocationModelTemplate, Conte
 export class DecoratedLocationView extends LocationView implements LocationInterface{
   decorator: LocationInterface | undefined | null;
 
-  constructor(context: Context, data: LocationModelTemplate, decorator?: LocationInterface) {
-    super(context, data)
+  constructor(context: Context, data: LocationModelTemplate | null | undefined, decorator?: LocationInterface) {
+    super(context, data || NO_LOCATION)
     this.decorator = decorator;
   }
 
@@ -132,8 +133,15 @@ export class DecoratedLocationView extends LocationView implements LocationInter
     return this.data.name;
   }
 
+  public hasDecoration() {
+    if (! this.decorator) {
+      return false;
+    }
+    return Object.values(this.decorator).some(val => val !== null && val !== undefined)
+  }
+
   public isEmpty () {
-    return isEmpty(this.decorator) || isEmpty(this.data)
+    return(! this.hasDecoration()) && isEmpty(this.data)
   }
 
   public decorate(decorator: LocationInterface): this {
