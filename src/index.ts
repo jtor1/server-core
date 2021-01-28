@@ -40,7 +40,11 @@ import {
 
 import { ControllerTemplate, ControllerTemplateWithContext } from './templates/controller.template';
 import { ModelViewTemplate, ViewTemplate } from './templates/view.template';
-import { ModelTemplate, ModelTemplateClass } from './templates/model.template';
+import {
+  MODEL_TEMPLATE_COMMON_PROPERTIES,
+  ModelTemplate,
+  ModelTemplateClass,
+} from './templates/model.template';
 import {
   coreResolvers,
   coreTypeDefs,
@@ -145,6 +149,7 @@ export {
 
   ControllerTemplate,
   ControllerTemplateWithContext,
+  MODEL_TEMPLATE_COMMON_PROPERTIES,
   ModelTemplate,
   ModelTemplateClass,
   ModelViewTemplate,
