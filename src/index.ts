@@ -49,6 +49,8 @@ import {
   coreResolvers,
   coreTypeDefs,
   CoreTypeDate,
+  CoreTypeLocationInput,
+  LocationInterface,
   resolveCoreTypeDate,
   parseCoreTypeInputDate,
   formatCoreTypeDateTimestamp,
@@ -116,6 +118,22 @@ import * as sortKeyPaddedNumeric from './utils/sortKey/paddedNumeric';  // names
 import {
   applyMixinClasses,
 } from './utils/typescript';
+import {
+  shouldLocationBeFetched,
+  reproducibleLocationId,
+} from './utils/location';
+import {
+  LocationModelTemplate
+} from './data/location/model';
+import {
+  GooglePlacesConfig,
+  GooglePlacesClient,
+  googlePlacesClient,
+} from './data/location/googlePlacesClient';
+import {
+  LocationView,
+  DecoratedLocationView,
+} from './data/location/view';
 
 
 export {
@@ -166,6 +184,8 @@ export {
   coreResolvers,
   coreTypeDefs,
   CoreTypeDate,
+  CoreTypeLocationInput,
+  LocationInterface,
   resolveCoreTypeDate,
   parseCoreTypeInputDate,
   formatCoreTypeDateTimestamp,
@@ -241,4 +261,15 @@ export {
   encodeForFirebaseKey,
 
   applyMixinClasses,
+
+  shouldLocationBeFetched,
+  reproducibleLocationId,
+  GooglePlacesConfig,
+  GooglePlacesClient,
+  googlePlacesClient,
+
+  LocationModelTemplate,
+  LocationView,
+  DecoratedLocationView,
+
 };

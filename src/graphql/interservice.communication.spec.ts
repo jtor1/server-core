@@ -60,16 +60,9 @@ describe('graphql/interservice.communication', () => {
     let serviceCaller: ServiceCaller<TestOutput, TestQuery, TestVariables>;
 
     beforeEach(() => {
-      nock.disableNetConnect();
-
       serviceCaller = createServiceCaller<TestOutput, TestQuery, TestVariables>(OPTIONS);
     });
 
-    afterEach(() => {
-      nock.isDone();
-      nock.cleanAll();
-      nock.enableNetConnect();
-    });
 
 
     describe('constructor', () => {

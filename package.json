@@ -48,8 +48,8 @@
     "@types/moment-timezone": "^0.5.12",
     "@types/morgan": "^1.7.37",
     "@types/node-fetch": "2.1.6",
-    "@types/uuid": "^3.3.2",
     "@withjoy/telemetry": "^0.6.0",
+    "@google/maps": "^1.0.2",
     "apollo": "^2.16.2",
     "apollo-engine-reporting": "^2.3.0",
     "apollo-link": "1.2.14",
@@ -87,6 +87,9 @@
     "@types/lolex": "^3.1.1",
     "@types/mocha": "^5.2.7",
     "@types/nock": "^10.0.2",
+    "@types/uuid": "^3.3.2",
+    "@types/google__maps": "^0.5.8",
+    "@types/sinon": "^9.0.9",
     "apollo-server-testing": "^2.7.2",
     "chai": "^4.2.0",
     "jest": "^25.5.1",
@@ -96,6 +99,8 @@
     "node-mocks-http": "^1.7.3",
     "ts-jest": "^25.5.1",
     "ts-node": "^8.10.2",
-    "typemoq": "2.1.0"
+    "typemoq": "2.1.0",
+    "sinon": "^9.2.2"
+
   }
 }
