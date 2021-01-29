@@ -89,7 +89,7 @@ describe('data/location', () => {
 
   });
 
-  describe ('fetchLocation', () => {
+  describe ('fetchLocationData', () => {
     it ('returns a location based on placeId', async () => {
 
       nock(GOOGLE_URL, {
@@ -143,7 +143,7 @@ describe('data/location', () => {
           }
         }, {'Content-Type': 'application/json; charset=UTF-8'})
 
-      const location = await client.fetchLocation(PLACE_ID)
+      const location = await client.fetchLocationData(PLACE_ID)
 
       expect(location).toMatchObject({
         latitude: 34,
@@ -175,7 +175,7 @@ describe('data/location', () => {
       );
 
       await expect(
-        client.fetchLocation('INVALID_PLACE_ID')
+        client.fetchLocationData('INVALID_PLACE_ID')
       ).rejects.toBeDefined();
 
     });
@@ -195,7 +195,7 @@ describe('data/location', () => {
         }
       }, {'Content-Type': 'application/json; charset=UTF-8'})
 
-    const location = await client.fetchLocation(PLACE_ID);
+    const location = await client.fetchLocationData(PLACE_ID);
     expect(location).toMatchObject({
       latitude: undefined,
       longitude: undefined,
@@ -225,7 +225,7 @@ describe('data/location', () => {
     }, {'Content-Type': 'application/json; charset=UTF-8'})
 
     await expect(
-      client.fetchLocation(PLACE_ID)
+      client.fetchLocationData(PLACE_ID)
     ).rejects.toBeDefined();
    });
 
@@ -241,7 +241,7 @@ describe('data/location', () => {
     .replyWithError('Error');
 
     await expect(
-      client.fetchLocation(PLACE_ID)
+      client.fetchLocationData(PLACE_ID)
     ).rejects.toThrow(/Error/);
 
    })

@@ -30,7 +30,7 @@ export class GooglePlacesClient {
     })
   }
 
-  public async fetchLocation(placeId: string): Promise<LocationModelTemplate> {
+  public async fetchLocationData(placeId: string): Promise<LocationModelTemplate> {
     const location = {} as LocationModelTemplate;
     const placeInfo = (await this.fetchPlaceInfo(placeId)).json;
     const geocoordinates = placeInfo?.result?.geometry?.location;
