@@ -32,13 +32,25 @@ function _pgRegexpReplacementValue(value: any): string {
   return `$1${ value.replace(/\$/g, '$$$$') }$2`;
 }
 function _pgEscapeAndQuoteString(value: string) {
+  // "4.1. Lexical Structure"
+  //   https://www.postgresql.org/docs/current/sql-syntax-lexical.html
   const escaped = value
   .replace(/\\/g, '\\\\')
   .replace(/"/g, '\\"')
   .replace(/'/g, `\\'`)
-  .replace(/\$/g, `\\$`); // "Dollar-Quoted String Constants"
+  // "4.1.2.4. Dollar-quoted String Constants"
+  .replace(/\$/g, `\\$`)
+  // https://www.postgresql.org/message-id/4064BFE2.2030609@opencloud.com
+  //   "ERROR: invalid message format"
+  //   "you can't represent a \0 byte in a text/varchar constant"
+  // we don't need to consider all of "Table 4-1. Backslash Escape Sequences",
+  //   since all variants -- '\0' (octal), '\x0' (hex), '\u0' '\U0' (unicode) --
+  //   will have already been interpreted as a JavaScript String via UTF-8.
+  //   we are *literally* stripping out null characters
+  .replace(/\u0000/g, '')
+  ;
 
-  // 'E' prefix => "String Constants with C-Style Escapes"
+  // "4.1.2.2. String Constants with C-style Escapes" => 'E' prefix
   //   https://www.postgresql.org/docs/current/sql-syntax-lexical.html
   return `E'${escaped}'`;
 }
