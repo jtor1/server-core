@@ -31,6 +31,7 @@ describe('middleware/defaults', () => {
 
       const NAMES = [
         'corsMiddleware',
+        'sessionMiddleware',
         'logger',
       ];
       expect(Array.from(preludesMap.keys())).toEqual(NAMES);
@@ -56,7 +57,6 @@ describe('middleware/defaults', () => {
       const { apolloMap, apollo } = getDefaultMiddleware();
 
       const NAMES = [
-        'sessionMiddleware',
         'bodyParserGraphql',
       ];
       expect(Array.from(apolloMap.keys())).toEqual(NAMES);

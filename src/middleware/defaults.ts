@@ -121,6 +121,7 @@ export function getDefaultMiddleware(): DefaultMiddlewareResult {
       // required for Cookie support
       credentials: true,
     }),
+    sessionMiddleware(),
     MORGAN_LOGGER,
   ].map(_tupleByMiddlewareName));
 
@@ -131,7 +132,6 @@ export function getDefaultMiddleware(): DefaultMiddlewareResult {
   ].map(_tupleByMiddlewareName));
 
   const apolloMap = new Map<string, RequestHandler>([
-    sessionMiddleware(),
     bodyParserGraphql({ limit: '100Kb' }),
   ].map(_tupleByMiddlewareName));
 
