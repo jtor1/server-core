@@ -23,6 +23,9 @@ export async function testSetupApollo(options?: ITestSetupApollo) {
   const schema: GraphQLSchema = await makeExecutableSchema({
     typeDefs: getProperty(options, 'typeDefs') || [],
     resolvers: getProperty(options, 'resolvers') || [],
+    resolverValidationOptions: {
+      requireResolversForResolveType: false,
+    },
   });
   const args: IApolloServerArgs = {
     schema,

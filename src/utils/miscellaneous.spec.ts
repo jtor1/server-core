@@ -25,7 +25,8 @@ describe('utils/miscellaneous', () => {
 
   describe('executeOperationsInParallel', () => {
     // a bunch of arbitrary items
-    const ITEMS = (new Array( 20 )).fill(0).map((_, index) => index);
+    const ITEM_COUNT = 20;
+    const ITEMS = (new Array<number>( ITEM_COUNT )).fill(0).map((_, index) => index);
 
     it('executes Model in parallel', async () => {
       const visitedItems: number[] = [];
@@ -46,9 +47,13 @@ describe('utils/miscellaneous', () => {
       const INTERVAL = 100; // ms; enough to be "precise"
       const nowAtStart = Date.now();
       const stamps: number[] = [];
+      const iteratorIndexes: number[] = [];
+      let iteratorItems: Array<number> = [];
 
-      await executeOperationsInParallel(ITEMS, async (model) => {
+      await executeOperationsInParallel(ITEMS, async (item, index, items) => {
         stamps.push(Date.now() - nowAtStart);
+        iteratorIndexes.push(index);
+        iteratorItems = items;
 
         // a time lag, to differentiate the batches;
         //   batch N Promises will all resolve "at the same time"
@@ -65,6 +70,13 @@ describe('utils/miscellaneous', () => {
         2, 2, 2, 2, 2, 2,
         3, 3,
       ]);
+
+      // it('provides iterator arguments')
+      expect(iteratorIndexes).toEqual([
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+      ]);
+      expect(iteratorItems).toBe(ITEMS);
     });
   });
 });

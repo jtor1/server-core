@@ -21,7 +21,7 @@ const EXECUTE_MODEL_OPERATIONS_IN_PARALLEL_DEFAULTS: Required<IExecuteOperations
 
 export async function executeOperationsInParallel<T = any, U = any>(
   items: T[],
-  operation: (item: T) => Promise<U>,
+  operation: (item: T, index: number, array: T[]) => Promise<U>,
   options?: IExecuteOperationsInParallelOptions
 ): Promise<U[]> {
   const batchSize = options?.batchSize || EXECUTE_MODEL_OPERATIONS_IN_PARALLEL_DEFAULTS.batchSize;
@@ -29,7 +29,12 @@ export async function executeOperationsInParallel<T = any, U = any>(
   let results: U[] = [];
 
   for (let batch of batches) {
-    const result = await Promise.all(batch.map(operation));
+    const priorCount = results.length;
+    const result = await Promise.all(batch.map((item, index) => {
+      // iteration arguments relative to the entire set of items
+      //   vs. this particular batch
+      return operation(item, (priorCount + index), items);
+    }));
     results = results.concat(result);
   }
 
