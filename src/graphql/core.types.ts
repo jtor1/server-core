@@ -238,25 +238,26 @@ export function formatCoreTypeDateTimestamp(date: string | number | Date, timezo
 }
 
 export function parseCoreTypeInputDateAndTimezone(date: string | null | undefined, timezone: string | null | undefined): Date | undefined {
-  // checking if date is formatted correctly
-  if (timezone) {
-    const parsedTimezone = parseCoreTypeInputTimezone(timezone);
-    if (! date) {
-      throw new TypeError(`parseCoreTypeInputDateAndTimezone: date is required with a timezone`);
-    }
-
-    //Regex to match if the date is truncated
-    if (REGEX_FORMAT.test(date)) {
-      const parsed = moment.tz(date, parsedTimezone);
-      if (! parsed.isValid()) {
-        throw new TypeError(`parseCoreTypeInputDateAndTimezone: invalid date format: "${date}"`);
-      }
-      return parseCoreTypeInputDate(parsed.format(FORMAT_TIMESTAMP));
-    }
-    return parseCoreTypeInputDate(date);
-  } else {
+  if (! timezone) {
     return parseCoreTypeInputDate(date);
   }
+
+  // checking if date is formatted correctly
+  const parsedTimezone = parseCoreTypeInputTimezone(timezone);
+  if (! date) {
+    throw new TypeError(`parseCoreTypeInputDateAndTimezone: date is required with a timezone`);
+  }
+
+  //Regex to match if the date is truncated
+  if (! REGEX_FORMAT.test(date)) {
+    return parseCoreTypeInputDate(date);
+  }
+
+  const parsed = moment.tz(date, parsedTimezone);
+  if (! parsed.isValid()) {
+    throw new TypeError(`parseCoreTypeInputDateAndTimezone: invalid date format: "${date}"`);
+  }
+  return parseCoreTypeInputDate(parsed.format(FORMAT_TIMESTAMP));
 }
 
 
