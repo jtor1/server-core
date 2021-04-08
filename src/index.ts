@@ -14,7 +14,7 @@ import {
 } from './server/apollo.config'
 import { IApolloServerArgs, createApolloServer } from './server/apollo.server'
 import { IServer, Server } from './server/server'
-import { initApp } from './server/server.init';
+import { initApp, shutdownCurrentApp } from './server/server.init';
 import { bodyParserGraphql } from './middleware/body.parser';
 import { getDefaultMiddleware } from './middleware/defaults';
 import {
@@ -156,6 +156,7 @@ export {
   IServer,
   Server,
   initApp,
+  shutdownCurrentApp,
 
   bodyParserGraphql,
   getDefaultMiddleware,

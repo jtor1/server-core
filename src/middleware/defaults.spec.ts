@@ -1,6 +1,6 @@
 import { Socket } from 'net';
 import { noop, omit } from 'lodash';
-import { Request, Response } from 'express'
+import { Request, Response, NextFunction, RequestHandler, ErrorRequestHandler } from 'express'
 import { createRequest, createResponse } from 'node-mocks-http';
 import morgan from 'morgan';
 import {
@@ -13,6 +13,7 @@ import {
 
 import { Context, injectContextIntoRequestMiddleware } from '../server/apollo.context';
 import { NO_USER, NO_TOKEN } from '../authentication/token.check';
+import { RequestHandlerVariant } from '../middleware/types';
 import { SESSION_REQUEST_PROPERTY } from '../middleware/session';
 import {
   getDefaultMiddleware,
@@ -21,48 +22,75 @@ import {
   _morganFormatter,
 } from './defaults';
 
+
+// just to prove that `RequestHandlerVariant` does its job
+const _requestHandler: RequestHandler = function(req: Request, res: Response, next: NextFunction) {
+  next();
+}
+const _errorRequestHandler: ErrorRequestHandler = function(err: Error, req: Request, res: Response, next: NextFunction) {
+  next(err);
+}
+
 const SESSION_ID = 'SESSION_ID';
 
 
 describe('middleware/defaults', () => {
   describe('getDefaultMiddleware', () => {
+    const PRELUDE_KEYS = [
+      'corsMiddleware',
+      'sessionMiddleware',
+      'logger',
+    ];
+    const BODY_PARSER_KEYS = [
+      'jsonParser',
+      'urlencodedParser',
+    ];
+    const APOLLO_KEYS = [
+      'bodyParserGraphql',
+    ];
+
     it('returns "prelude" middleware', () => {
       const { preludesMap, preludes } = getDefaultMiddleware();
 
-      const NAMES = [
-        'corsMiddleware',
-        'sessionMiddleware',
-        'logger',
-      ];
-      expect(Array.from(preludesMap.keys())).toEqual(NAMES);
+      expect(Array.from(preludesMap.keys())).toEqual(PRELUDE_KEYS);
 
       // it('preserves the order of the mapping')
-      expect( preludes.map((handler) => handler.name) ).toEqual(NAMES);
+      expect( preludes.map((handler) => handler.name) ).toEqual(PRELUDE_KEYS);
     });
 
     it('returns `body-parser` middleware', () => {
       const { bodyParsersMap, bodyParsers } = getDefaultMiddleware();
 
-      const NAMES = [
-        'jsonParser',
-        'urlencodedParser',
-      ];
-      expect(Array.from(bodyParsersMap.keys())).toEqual(NAMES);
+      expect(Array.from(bodyParsersMap.keys())).toEqual(BODY_PARSER_KEYS);
 
       // it('preserves the order of the mapping')
-      expect( bodyParsers.map((handler) => handler.name) ).toEqual(NAMES);
+      expect( bodyParsers.map((handler) => handler.name) ).toEqual(BODY_PARSER_KEYS);
     });
 
     it('returns Apollo-specific middleware', () => {
       const { apolloMap, apollo } = getDefaultMiddleware();
 
-      const NAMES = [
-        'bodyParserGraphql',
-      ];
-      expect(Array.from(apolloMap.keys())).toEqual(NAMES);
+      expect(Array.from(apolloMap.keys())).toEqual(APOLLO_KEYS);
 
       // it('preserves the order of the mapping')
-      expect( apollo.map((handler) => handler.name) ).toEqual(NAMES);
+      expect( apollo.map((handler) => handler.name) ).toEqual(APOLLO_KEYS);
+    });
+
+    it('supports RequestHandler variants', () => {
+      const middleware = getDefaultMiddleware();
+      const { preludesMap, bodyParsersMap, apolloMap } = middleware;
+
+      preludesMap.set('req', _requestHandler);
+      preludesMap.set('err', _errorRequestHandler);
+      expect(Array.from(preludesMap.keys())).toEqual([ ...PRELUDE_KEYS, 'req', 'err' ]);
+
+      bodyParsersMap.set('req', _requestHandler);
+      bodyParsersMap.set('err', _errorRequestHandler);
+      expect(Array.from(bodyParsersMap.keys())).toEqual([ ...BODY_PARSER_KEYS, 'req', 'err' ]);
+
+      apolloMap.set('req', _requestHandler);
+      apolloMap.set('err', _errorRequestHandler);
+      expect(Array.from(apolloMap.keys())).toEqual([ ...APOLLO_KEYS, 'req', 'err' ]);
     });
   });
 

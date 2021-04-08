@@ -110,3 +110,23 @@ export const initApp = async (app: IServer, port: number): Promise<void> => {
       process.exit(1);
     });
 }
+
+/**
+  * This triggers the 'graceful shutdown' mechanism of `initApp` (above).
+  *
+  * It makes sure that we stop accepting new connections
+  * and wait for current requests to finish before stopping the process.
+  */
+export function shutdownCurrentApp() {
+  const commonLogInfo = commonLogInformation();
+
+  // 'SIGINT' and 'SIGTERM' are both handled by `initApp` to do graceful shutdowns;
+  //   however, 'SIGTERM' seems most appropriate
+  //   per [signal best practices](https://www.gnu.org/software/libc/manual/html_node/Termination-Signals.html)
+  process.kill(process.pid, 'SIGTERM');
+
+  telemetry.info('shutdownCurrentApp', {
+    ...commonLogInfo,
+    action: 'shutdown',
+  });
+}

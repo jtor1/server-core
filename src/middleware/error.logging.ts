@@ -6,12 +6,7 @@ import {
   pick,
   pickBy,
 } from 'lodash';
-import {
-  Request,
-  Response,
-  NextFunction,
-  ErrorRequestHandler,
-} from 'express'
+import { Request, Response, NextFunction, ErrorRequestHandler } from 'express'
 import { ApolloServerPlugin, GraphQLRequestListener } from 'apollo-server-plugin-base';
 import {
   Telemetry,
