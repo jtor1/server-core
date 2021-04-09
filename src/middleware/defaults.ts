@@ -1,8 +1,7 @@
 import { get as getProperty, isString, last } from 'lodash';
-import { Request, Response, RequestHandler } from 'express';
+import { Request, Response } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import { TokenIndexer } from 'morgan';
 import bodyParser from 'body-parser';
 import forwarded from 'forwarded';
 import {
@@ -10,20 +9,21 @@ import {
   TelemetryLevel
 } from '@withjoy/telemetry';
 
+import { RequestHandlerVariant } from './types';
 import { bodyParserGraphql } from './body.parser';
 import { sessionMiddleware, SESSION_REQUEST_PROPERTY } from './session';
 
 interface DefaultMiddlewareResult {
-  preludesMap: Map<string, RequestHandler>;
-  preludes: RequestHandler[];
-  bodyParsersMap: Map<string, RequestHandler>;
-  bodyParsers: RequestHandler[];
-  apolloMap: Map<string, RequestHandler>;
-  apollo: RequestHandler[];
+  preludesMap: Map<string, RequestHandlerVariant>;
+  preludes: RequestHandlerVariant[];
+  bodyParsersMap: Map<string, RequestHandlerVariant>;
+  bodyParsers: RequestHandlerVariant[];
+  apolloMap: Map<string, RequestHandlerVariant>;
+  apollo: RequestHandlerVariant[];
 };
 
 
-function _tupleByMiddlewareName(handler: RequestHandler): [ string, RequestHandler ] {
+function _tupleByMiddlewareName(handler: RequestHandlerVariant): [ string, RequestHandlerVariant ] {
   // keyed by the names Express would give them
   return [ handler.name, handler ];
 }
@@ -97,7 +97,7 @@ const MORGAN_LOGGER = morgan(_morganFormatter, {
 const WITHJOY_DOMAIN_REGEX = /\.withjoy\.com$/;
 
 export function getDefaultMiddleware(): DefaultMiddlewareResult {
-  const preludesMap = new Map<string, RequestHandler>([
+  const preludesMap = new Map<string, RequestHandlerVariant>([
     cors({
       origin: function(originProvided, callback) {
         // // FIXME:  the right thing to do
@@ -125,13 +125,13 @@ export function getDefaultMiddleware(): DefaultMiddlewareResult {
     MORGAN_LOGGER,
   ].map(_tupleByMiddlewareName));
 
-  const bodyParsersMap = new Map<string, RequestHandler>([
+  const bodyParsersMap = new Map<string, RequestHandlerVariant>([
     // calling out the default(s) -- @see https://github.com/expressjs/body-parser#bodyparserjsonoptions
     bodyParser.json({ limit: '100Kb' }),
     bodyParser.urlencoded({ extended: false }),
   ].map(_tupleByMiddlewareName));
 
-  const apolloMap = new Map<string, RequestHandler>([
+  const apolloMap = new Map<string, RequestHandlerVariant>([
     bodyParserGraphql({ limit: '100Kb' }),
   ].map(_tupleByMiddlewareName));
 

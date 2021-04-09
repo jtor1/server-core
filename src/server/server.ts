@@ -1,7 +1,8 @@
 import http from 'http';
-import express, { Request, Response, RequestHandler, ErrorRequestHandler, Router } from 'express';
+import express, { Router } from 'express';
 import { telemetry, deriveTelemetryContextFromError } from '@withjoy/telemetry';
 
+import { RequestHandlerVariant } from '../middleware/types';
 import { getDefaultMiddleware } from '../middleware/defaults';
 import { errorLoggingExpress } from '../middleware/error.logging';
 import { ApolloServer } from 'apollo-server-express';
@@ -14,9 +15,9 @@ export interface IServer {
 
 interface ServerConstructor {
   useDefaultMiddleware: boolean;
-  middleware?: Array<RequestHandler>;
+  middleware?: RequestHandlerVariant[];
   apollo?: ApolloServer;
-  apolloMiddleware?: Array<RequestHandler>;
+  apolloMiddleware?: RequestHandlerVariant[];
   routes?: Array<{ path: string, router: Router }>;
   path?: string;
 }
@@ -26,8 +27,8 @@ export class Server implements IServer {
   public app: express.Application
 
   constructor(args?: ServerConstructor) {
-    let middlewareArray: Array<RequestHandler> = [];
-    let apolloMiddlewareArray: Array<RequestHandler> = [];
+    let middlewareArray: RequestHandlerVariant[] = [];
+    let apolloMiddlewareArray: RequestHandlerVariant[] = [];
 
     this.app = express();
 
@@ -91,7 +92,7 @@ export class Server implements IServer {
   }
 
   private unbootHttpServer = () => {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       const { httpServer } = this;
       if (! httpServer) {
         resolve();
@@ -108,7 +109,7 @@ export class Server implements IServer {
     });
   }
 
-  private middleware(middleware: Array<RequestHandler | ErrorRequestHandler>) {
+  private middleware(middleware: RequestHandlerVariant[]) {
     middleware.forEach(middleware => {
       this.app.use(middleware);
     });
@@ -121,7 +122,7 @@ export class Server implements IServer {
     });
   }
 
-  private bootApollo = (apollo: ApolloServer, apolloMiddleware?: Array<RequestHandler>, path?: string) => {
+  private bootApollo = (apollo: ApolloServer, apolloMiddleware?: RequestHandlerVariant[], path?: string) => {
     if (apolloMiddleware) {
       this.app.use(path || '/graphql', ...apolloMiddleware);
     }

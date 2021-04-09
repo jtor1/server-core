@@ -3,11 +3,12 @@ import { ifError } from 'assert';
 import { RequestHandler } from 'express'
 import { createRequest, createResponse } from 'node-mocks-http';
 import {
-    SESSION_COOKIE_NAME,
-    SESSION_HEADER_NAME,
-    SESSION_REQUEST_PROPERTY,
-    generateSessionIdSetCookieHeaderValue,
-    sessionMiddleware,
+  RequestWithSessionID,
+  SESSION_COOKIE_NAME,
+  SESSION_HEADER_NAME,
+  SESSION_REQUEST_PROPERTY,
+  generateSessionIdSetCookieHeaderValue,
+  sessionMiddleware,
 } from './session';
 
 const DUMMY_SESSION_ID: string = '335957c0a7b1fe8c97f5e35d372ef3a522b2688c7c98684b';
@@ -19,7 +20,7 @@ describe('middleware/session', () => {
     const passiveMiddleware: RequestHandler = sessionMiddleware({ passive: true });
 
     it('picks up session id from cookie', () => {
-      const req = createRequest({
+      const req = createRequest<RequestWithSessionID>({
         headers: {
           'cookie': `${SESSION_COOKIE_NAME}=${DUMMY_SESSION_ID}`,
         },
@@ -37,6 +38,7 @@ describe('middleware/session', () => {
 
           // session is is set as request property
           chaiExpects(req[SESSION_REQUEST_PROPERTY]).to.equal(DUMMY_SESSION_ID);
+          chaiExpects(req.sessionId).to.equal(DUMMY_SESSION_ID);
 
           // an existing cookie is not put in req.headers where there is no custom header
           chaiExpects(req.headers[SESSION_HEADER_NAME]).to.equal(undefined);
@@ -45,7 +47,7 @@ describe('middleware/session', () => {
     });
 
     it('picks up session id from session header', () => {
-      const req = createRequest({
+      const req = createRequest<RequestWithSessionID>({
         headers: {
           [SESSION_HEADER_NAME]: DUMMY_SESSION_ID,
         },
@@ -63,6 +65,7 @@ describe('middleware/session', () => {
 
           // session is is set as request property
           chaiExpects(req[SESSION_REQUEST_PROPERTY]).to.equal(DUMMY_SESSION_ID);
+          chaiExpects(req.sessionId).to.equal(DUMMY_SESSION_ID);
 
           // an existing custom session header remains in req.headers
           chaiExpects(req.headers[SESSION_HEADER_NAME]).to.equal(DUMMY_SESSION_ID);
@@ -70,8 +73,37 @@ describe('middleware/session', () => {
       );
     });
 
+    it('picks up session id from a session header Array', () => {
+      // i'm not proud of this <any>.  but it does the job
+      const VALUES = <any>[ DUMMY_SESSION_ID, 'IGNORED' ];
+      const req = createRequest<RequestWithSessionID>({
+        headers: {
+          [SESSION_HEADER_NAME]: VALUES,
+        },
+      });
+      const resp = createResponse();
+
+      middleware(
+        req,
+        resp,
+        (err: any) => {
+          ifError(err);
+
+          // check there is no set-cookie header
+          chaiExpects(resp.header('set-cookie')).to.equal(undefined);
+
+          // session is is set as request property
+          chaiExpects(req[SESSION_REQUEST_PROPERTY]).to.equal(DUMMY_SESSION_ID);
+          chaiExpects(req.sessionId).to.equal(DUMMY_SESSION_ID);
+
+          // an existing custom session header remains in req.headers
+          chaiExpects(req.headers[SESSION_HEADER_NAME]).to.equal(VALUES);
+        }
+      );
+    });
+
     it('session id in custom header is picked in preference to a cookie', () => {
-      const req = createRequest({
+      const req = createRequest<RequestWithSessionID>({
         headers: {
           'cookie': `${SESSION_COOKIE_NAME}=${DUMMY_SESSION_ID}`,
           [SESSION_HEADER_NAME]: DUMMY_SESSION_ID2,
@@ -86,12 +118,13 @@ describe('middleware/session', () => {
           ifError(err);
 
           chaiExpects(req[SESSION_REQUEST_PROPERTY]).to.equal(DUMMY_SESSION_ID2);
+          chaiExpects(req.sessionId).to.equal(DUMMY_SESSION_ID2);
         }
       );
     });
 
     it('creates a new valid session id when there is none', () => {
-      const req = createRequest();
+      const req = createRequest<RequestWithSessionID>();
       const resp = createResponse();
 
       middleware(
@@ -101,6 +134,7 @@ describe('middleware/session', () => {
           ifError(err);
 
           const newSessionId = req[SESSION_REQUEST_PROPERTY];
+          chaiExpects(req.sessionId).to.equal(newSessionId);
 
           chaiExpects(typeof(newSessionId)).to.equal('string');
           chaiExpects(newSessionId).not.to.equal(DUMMY_SESSION_ID);
@@ -122,7 +156,7 @@ describe('middleware/session', () => {
     });
 
     it('does not create a new session id in passive mode when there is none', () => {
-      const req = createRequest();
+      const req = createRequest<RequestWithSessionID>();
       const resp = createResponse();
 
       passiveMiddleware(
@@ -132,6 +166,7 @@ describe('middleware/session', () => {
           ifError(err);
 
           chaiExpects(req[SESSION_REQUEST_PROPERTY]).to.equal(undefined);
+          chaiExpects(req.sessionId).to.equal(undefined);
           chaiExpects(req.headers[SESSION_HEADER_NAME]).to.equal(undefined);
         }
       );
