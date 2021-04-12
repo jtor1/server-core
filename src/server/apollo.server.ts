@@ -1,6 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
 import { Config } from 'apollo-server';
-import { errorLoggingApolloPlugin } from '../middleware/error.logging';
+import { _errorLoggingApolloPlugin } from './apollo.errorHandling';
 
 export interface IApolloServerArgs extends Config {
   contextFunc?: (ctx: any) => any;
@@ -15,7 +15,7 @@ export const createApolloServer = (args: IApolloServerArgs) => {
     plugins: [
       ...plugins,
 
-      errorLoggingApolloPlugin,
+      _errorLoggingApolloPlugin,
     ],
 
     context: (ctx: any) => {
