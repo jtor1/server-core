@@ -1,13 +1,16 @@
 import { ApolloServer } from 'apollo-server-express';
 import { Config } from 'apollo-server';
-import { errorLoggingApolloPlugin } from '../middleware/error.logging';
+import { ErrorRequestHandler } from 'express';
+import { ApolloErrorPipeline } from './apollo.errorPipeline';
 
 export interface IApolloServerArgs extends Config {
   contextFunc?: (ctx: any) => any;
+  errorRequestHandlers?: ErrorRequestHandler[];
 }
 
 export const createApolloServer = (args: IApolloServerArgs) => {
   const plugins = args.plugins || [];
+  const errorPipeline = new ApolloErrorPipeline(args);
 
   const server = new ApolloServer({
     ...args,
@@ -15,7 +18,7 @@ export const createApolloServer = (args: IApolloServerArgs) => {
     plugins: [
       ...plugins,
 
-      errorLoggingApolloPlugin,
+      errorPipeline.plugin,
     ],
 
     context: (ctx: any) => {
