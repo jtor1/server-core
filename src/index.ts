@@ -15,9 +15,11 @@ import {
 import { IApolloServerArgs, createApolloServer } from './server/apollo.server'
 import { IServer, Server } from './server/server'
 import { initApp, shutdownCurrentApp } from './server/server.init';
+import { RequestHandlerVariant } from './middleware/types';
 import { bodyParserGraphql } from './middleware/body.parser';
-import { getDefaultMiddleware } from './middleware/defaults';
+import { DefaultMiddlewareResult, getDefaultMiddleware } from './middleware/defaults';
 import {
+  RequestWithSessionID,
   sessionMiddleware,
   SESSION_COOKIE_NAME,
   SESSION_HEADER_NAME,
@@ -158,9 +160,12 @@ export {
   initApp,
   shutdownCurrentApp,
 
+  RequestHandlerVariant,
+  DefaultMiddlewareResult,
   bodyParserGraphql,
   getDefaultMiddleware,
 
+  RequestWithSessionID,
   sessionMiddleware,
   SESSION_COOKIE_NAME,
   SESSION_HEADER_NAME,
