@@ -69,6 +69,17 @@ export class ApolloErrorPipeline {
       const req = context.req;
       const res = req?.res;
 
+      // "why are we using an express ErrorRequestHandler here?"
+      //   because; it's a well-established pattern,
+      //   it has a method signature that accepts all the useful information,
+      //   and anything built for REST-focused express Apps will work here as well
+      //   ... assuming it follows the caveats below
+      // your middleware *must* call its NextFunction
+      //   otherwise, the loop below will never complete
+      // your middleware should *not* try to send a Response,
+      //   modify its headers, or its status code, etc.;
+      //   doing so will conflict with Apollo's own Reponse handling
+
       for (let handler of errorRequestHandlers) {
         // await the invocation of each NextFunction before proceeding;
         //   its resolved value is the next Error in the chain to be processed

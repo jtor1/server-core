@@ -35,7 +35,8 @@ import {
   AuthorizationError,
   BadRequestError,
   GenericError,
-  NotFoundError
+  NotFoundError,
+  TooManyRequestsError,
 } from './server/errors';
 
 import { ControllerTemplate, ControllerTemplateWithContext } from './templates/controller.template';
@@ -231,6 +232,7 @@ export {
   BadRequestError,
   GenericError,
   NotFoundError,
+  TooManyRequestsError,
 
   ModelDeltaType,
   IModelDelta,
