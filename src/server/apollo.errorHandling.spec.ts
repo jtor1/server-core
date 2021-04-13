@@ -1,20 +1,57 @@
 import * as TypeMoq from 'typemoq';
+import { createRequest, createResponse } from 'node-mocks-http';
 import { noop, omit } from 'lodash';
+import {
+  GraphQLRequestContext,
+  GraphQLRequestListener,
+} from 'apollo-server-plugin-base';
+import { Request, Response, ErrorRequestHandler } from 'express';
 import { Telemetry } from '@withjoy/telemetry';
 
 import { Context } from '../server/apollo.context';
 import {
-  _logApolloEnrichedError,
-  _errorLoggingApolloListener,
-  _errorLoggingApolloPlugin,
+  ApolloErrorPipeline,
 } from './apollo.errorHandling';
 
 
+// i can't tell you how hard it is to do basic shit with TypeMoq
+type CalledErrorRequestHandler = ErrorRequestHandler & {
+  callCount: number;
+};
+function _errorRequestHandler(fake: ErrorRequestHandler): CalledErrorRequestHandler {
+  const handler: CalledErrorRequestHandler = async (...args) => {
+    handler.callCount += 1;
+    await fake(...args);
+  };
+  handler.callCount = 0;
+  return handler;
+}
+
+const BOOM = Object.assign(new Error('BOOM'), {
+  code: 'INTERNAL_SERVER_ERROR',
+  stack: 'STACK', // for reproducibility
+});
+const KRAK = Object.assign(new Error('KRAK'), {
+  code: 'I_AM_A_TEAPOT',
+  stack: 'STACK',
+});
+const EMPTY_OBJECT = Object.freeze({});
+
+
 describe('middleware/error.logging', () => {
+  let pipeline: ApolloErrorPipeline;
+  let req: Request;
+  let res: Response;
+  let context: Context;
   let telemetryMock: TypeMoq.IMock<Telemetry>;
   let telemetryError: Function;
 
   beforeEach(() => {
+    pipeline = new ApolloErrorPipeline(EMPTY_OBJECT);
+    res = createResponse<Response>();
+    req = createRequest<Request>({ res });
+    context = new Context({ req });
+
     telemetryMock = TypeMoq.Mock.ofType(Telemetry);
 
     // guess what framework doesn't support stubbing of a shared singleton?
@@ -32,7 +69,7 @@ describe('middleware/error.logging', () => {
   });
 
 
-  describe('_logApolloEnrichedError', () => {
+  describe('#logEnrichedError', () => {
     let enrichedError: any;
 
     it('logs an enriched Error', () => {
@@ -71,14 +108,12 @@ describe('middleware/error.logging', () => {
       }))
       .verifiable(TypeMoq.Times.exactly(1));
 
-      const returned = _logApolloEnrichedError(enrichedError, telemetryMock.object);
+      const returned = pipeline.logEnrichedError(enrichedError, context);
       expect(returned).toBe(enrichedError);
     });
 
     it('logs a plain old Error', () => {
-      enrichedError = new Error('BOOM');
-      (enrichedError as any).code = 'INTERNAL_SERVER_ERROR';
-      enrichedError.stack = 'STACK'; // for reproducibility
+      enrichedError = BOOM;
 
       telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', {
         source: 'apollo',
@@ -92,7 +127,7 @@ describe('middleware/error.logging', () => {
       }))
       .verifiable(TypeMoq.Times.exactly(1));
 
-      const returned = _logApolloEnrichedError(enrichedError, telemetryMock.object);
+      const returned = pipeline.logEnrichedError(enrichedError, context);
       expect(returned).toBe(enrichedError);
     });
 
@@ -111,7 +146,7 @@ describe('middleware/error.logging', () => {
       }))
       .verifiable(TypeMoq.Times.exactly(1));
 
-      const returned = _logApolloEnrichedError(enrichedError, telemetryMock.object);
+      const returned = pipeline.logEnrichedError(enrichedError, context);
       expect(returned).toBe(enrichedError);
     });
 
@@ -119,54 +154,117 @@ describe('middleware/error.logging', () => {
       telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({})))
       .verifiable(TypeMoq.Times.never());
 
-      const returned = _logApolloEnrichedError(null, telemetryMock.object);
+      const returned = pipeline.logEnrichedError(null, context);
       expect(returned).toBe(null);
     });
   });
 
 
-  describe('_errorLoggingApolloListener', () => {
+  describe('#process', () => {
+    beforeEach(() => {
+      // it('will always log the Error')
+      // it('will only log it once')
+      telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({
+        source: 'apollo',
+        action: 'error',
+        error: {
+          message: 'BOOM',
+          name: 'Error',
+          code: 'INTERNAL_SERVER_ERROR',
+          stack: 'STACK',
+        },
+      })))
+      .verifiable(TypeMoq.Times.exactly(1));
+    });
+
+    it('invokes an ErrorRequestHandler', async () => {
+      const handler = _errorRequestHandler(async (err, _req, _res, next) => {
+        expect(err).toBe(BOOM);
+        expect(_req).toBe(req);
+        expect(_res).toBe(res);
+
+        next(err);
+      });
+
+      pipeline = new ApolloErrorPipeline({
+        errorRequestHandlers: [ handler ],
+      });
+
+      const error = await pipeline.process(BOOM, context);
+      expect(error).toBe(BOOM);
+
+      expect(handler.callCount).toBe(1);
+    });
+
+    it('invokes a chain of ErrorRequestHandlers', async () => {
+      const handlers = [
+        // it('invokes them sequentially, propagating the resolved NextFunction value')
+        _errorRequestHandler(async (err, _req, _res, next) => {
+          next(KRAK);
+        }),
+        _errorRequestHandler(async (err, _req, _res, next) => {
+          next(err);
+        }),
+      ];
+
+      pipeline = new ApolloErrorPipeline({
+        errorRequestHandlers: handlers,
+      });
+
+      const error = await pipeline.process(BOOM, context);
+      expect(error).toBe(KRAK);
+
+      expect(handlers.every((handler) => Boolean(handler.callCount))).toBe(true);
+    });
+
+    it('awaits the invocation of each NextFunction before proceeding', async () => {
+      const DELAY = 500;
+      const timeAtStart = Date.now();
+      const handler = _errorRequestHandler(async (err, _req, _res, next) => {
+        await new Promise((resolve) => setTimeout(resolve, DELAY));
+
+        next(); // <= undefined; treated as `null`
+      });
+
+      pipeline = new ApolloErrorPipeline({
+        errorRequestHandlers: [ handler ],
+      });
+
+      const error = await pipeline.process(BOOM, context);
+      expect(error).toBeNull();
+
+      expect(handler.callCount).toBe(1);
+      expect(Date.now() - timeAtStart).toBeGreaterThanOrEqual(DELAY);
+    });
+
+    it('invokes no ErrorRequestHandlers', async () => {
+      expect(pipeline.options.errorRequestHandlers).toBeUndefined();
+
+      const error = await pipeline.process(BOOM, context);
+      expect(error).toBe(BOOM);
+    });
+  });
+
+
+  describe('#listener', () => {
     describe('#didEncounterErrors', () => {
-      const didEncounterErrors = _errorLoggingApolloListener.didEncounterErrors!;
-      let contextTelemetryMock: TypeMoq.IMock<Telemetry>;
-      let context: Context;
+      let didEncounterErrors: Function;
 
       beforeEach(() => {
-        context = new Context();
-
-        // a distinct Telemetry discoverable from the Context
-        //   with the assumption that it benefits from custom Telemetry context
-        //   derived from Request headers
-        contextTelemetryMock = TypeMoq.Mock.ofInstance(context.telemetry);
-        Reflect.set(context, 'telemetry', contextTelemetryMock.object);
+        didEncounterErrors = pipeline.listener.didEncounterErrors!;
       });
 
-      afterEach(() => {
-        contextTelemetryMock.verifyAll();
-      });
-
-
-      it('expects Errors', () => {
+      it('will do nothing without at least one Error', async () => {
         telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({})))
         .verifiable(TypeMoq.Times.never());
 
-        contextTelemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({})))
-        .verifiable(TypeMoq.Times.never());
-
-        didEncounterErrors(<any>{
+        await didEncounterErrors(<unknown>{
           context,
-        });
+        } as GraphQLRequestContext);
       });
 
-      it('logs Errors with the global Telemetry singleton', () => {
-        // the global Telemetry singleton can also log enriched Errors
-
-        const ERRORS = [
-          Object.assign(new Error('BOOM'), {
-            code: 'INTERNAL_SERVER_ERROR',
-            stack: 'STACK',
-          }),
-        ];
+      it('logs Errors', async () => {
+        const ERRORS = [ BOOM ];
 
         telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({
           source: 'apollo',
@@ -180,16 +278,13 @@ describe('middleware/error.logging', () => {
         })))
         .verifiable(TypeMoq.Times.exactly(1));
 
-        contextTelemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({})))
-        .verifiable(TypeMoq.Times.never());
-
-        didEncounterErrors(<any>{
-          context: omit(context, 'telemetry'),
+        await didEncounterErrors(<unknown>{
+          context,
           errors: ERRORS,
-        });
+        } as GraphQLRequestContext);
       });
 
-      it('logs enriched Errors with Context#telemetry', () => {
+      it('logs enriched Errors', async () => {
         // Context#telemetry can also log plain old Errors
 
         const ENRICHED_ERRORS = [
@@ -208,10 +303,7 @@ describe('middleware/error.logging', () => {
           },
         ];
 
-        telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({})))
-        .verifiable(TypeMoq.Times.never());
-
-        contextTelemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({
+        telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({
           source: 'apollo',
           action: 'error',
           error: {
@@ -223,16 +315,74 @@ describe('middleware/error.logging', () => {
         })))
         .verifiable(TypeMoq.Times.exactly(1));
 
-        didEncounterErrors(<any>{
+        await didEncounterErrors(<unknown>{
           context,
           errors: ENRICHED_ERRORS,
+        } as GraphQLRequestContext);
+      });
+
+      it('invokes #process on each Error', async () => {
+        const ERRORS = [ BOOM, KRAK ];
+
+        // it('will always log the Error')
+        telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({
+          source: 'apollo',
+          action: 'error',
+          error: {
+            message: 'BOOM',
+            name: 'Error',
+            code: 'INTERNAL_SERVER_ERROR',
+            stack: 'STACK',
+          },
+        })))
+        .verifiable(TypeMoq.Times.exactly(1));
+
+        // ... in this case, both of them
+        telemetryMock.setup((mocked) => mocked.error('logApolloEnrichedError', TypeMoq.It.isObjectWith({
+          source: 'apollo',
+          action: 'error',
+          error: {
+            message: 'KRAK',
+            name: 'Error',
+            code: 'I_AM_A_TEAPOT',
+            stack: 'STACK',
+          },
+        })))
+        .verifiable(TypeMoq.Times.exactly(1));
+
+        // a Pipeline with at least one ErrorRequestHandler
+        const handler = _errorRequestHandler(async (err, _req, _res, next) => {
+          next(err);
         });
+
+        pipeline = new ApolloErrorPipeline({
+          errorRequestHandlers: [ handler ],
+        });
+        didEncounterErrors = pipeline.listener.didEncounterErrors!;
+
+        await didEncounterErrors(<unknown>{
+          context,
+          errors: ERRORS,
+        } as GraphQLRequestContext);
+
+        // it('calls the ErrorRequestHandler with each Error')
+        expect(handler.callCount).toBe(2);
       });
     });
   });
 
 
-  describe('_errorLoggingApolloPlugin', () => {
-    it('is a simple helper for the Apollo request pipeline', noop);
+  describe('#plugin', () => {
+    describe('#requestDidStart', () => {
+      it('exposes a #listener', () => {
+        const plugin = pipeline.plugin;
+        const listener = plugin.requestDidStart!(<unknown>{
+          context,
+        } as GraphQLRequestContext);
+
+        expect(listener).toBeDefined();
+        expect((listener as GraphQLRequestListener).didEncounterErrors).toBeInstanceOf(Function);
+      });
+    });
   });
 });
