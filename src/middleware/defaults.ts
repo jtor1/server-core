@@ -13,7 +13,7 @@ import { RequestHandlerVariant } from './types';
 import { bodyParserGraphql } from './body.parser';
 import { sessionMiddleware, SESSION_REQUEST_PROPERTY } from './session';
 
-interface DefaultMiddlewareResult {
+export interface DefaultMiddlewareResult {
   preludesMap: Map<string, RequestHandlerVariant>;
   preludes: RequestHandlerVariant[];
   bodyParsersMap: Map<string, RequestHandlerVariant>;
