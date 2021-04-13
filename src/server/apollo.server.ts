@@ -1,7 +1,7 @@
 import { ApolloServer } from 'apollo-server-express';
 import { Config } from 'apollo-server';
 import { ErrorRequestHandler } from 'express';
-import { ApolloErrorPipeline } from './apollo.errorHandling';
+import { ApolloErrorPipeline } from './apollo.errorPipeline';
 
 export interface IApolloServerArgs extends Config {
   contextFunc?: (ctx: any) => any;

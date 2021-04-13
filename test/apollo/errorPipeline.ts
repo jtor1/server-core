@@ -13,7 +13,7 @@ describe('the GraphQL Color TypeDefs', () => {
   beforeEach(() => {
     telemetryMock = TypeMoq.Mock.ofType(Telemetry);
 
-    // @see similar technique in 'src/server/apollo.errorHandling.spec.ts'
+    // @see similar technique in 'src/server/apollo.errorPipeline.spec.ts'
     telemetryError = Telemetry.prototype.error;
     Telemetry.prototype.error = telemetryMock.object.error.bind(telemetryMock.object);
   });
@@ -21,7 +21,7 @@ describe('the GraphQL Color TypeDefs', () => {
   afterEach(() => {
     telemetryMock.verifyAll();
 
-    // @see similar technique in 'src/server/apollo.errorHandling.spec.ts'
+    // @see similar technique in 'src/server/apollo.errorPipeline.spec.ts'
     Reflect.set(Telemetry.prototype, 'error', telemetryError);
   });
 

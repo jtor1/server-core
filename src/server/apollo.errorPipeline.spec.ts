@@ -8,10 +8,10 @@ import {
 import { Request, Response, ErrorRequestHandler } from 'express';
 import { Telemetry } from '@withjoy/telemetry';
 
-import { Context } from '../server/apollo.context';
+import { Context } from './apollo.context';
 import {
   ApolloErrorPipeline,
-} from './apollo.errorHandling';
+} from './apollo.errorPipeline';
 
 
 // i can't tell you how hard it is to do basic shit with TypeMoq
