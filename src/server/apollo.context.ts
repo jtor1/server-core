@@ -80,7 +80,7 @@ export function logContextRequest(context: Context): void {
     return;
   }
 
-  const { telemetry, sessionId } = context;
+  const { telemetry, sessionId, remoteAddress } = context;
   const { hostname: host, method, body } = req;
   const path = (req.baseUrl || req.path); // GraphQL middleware does a rewrite
   if (path.startsWith('/healthy')) {
@@ -130,8 +130,6 @@ export function logContextRequest(context: Context): void {
     sessionId,
   };
 
-  // "the last index is the furthest address, typically the end-user"
-  const remoteAddress = (req.connection && last(forwarded(req)));
   if (remoteAddress) {
     logged.remoteAddress = remoteAddress;
   }
@@ -177,7 +175,9 @@ export interface IContext {
   identityUrl: string | undefined;
   identityCache: Cache | null;
   identityCacheTtl: number;
+  // computed
   currentUser: UserFragment | undefined;
+  remoteAddress: string | undefined;
   me: () => void;
 }
 
@@ -200,6 +200,7 @@ export class Context
   public readonly identityCache: Cache | null;
   public readonly identityCacheTtl: number;
   public readonly locale: string;
+  public readonly remoteAddress: string | undefined;
 
   private _userId: string;
   private _token: string;
@@ -272,6 +273,12 @@ export class Context
         return decoded && pick(decoded, SAFE_JWT_PROPERTIES);
       },
     };
+
+    // and some final wrap-up
+
+    // "the last index is the furthest address, typically the end-user"
+    const req = this.req;
+    this.remoteAddress = (req?.connection && last(forwarded(req))) || undefined;
   }
 
 

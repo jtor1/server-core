@@ -37,6 +37,11 @@ jobs:
           key: yarn-dependencies-{{ checksum "yarn.lock" }}
 
       - run:
+          name: Fail if '.only's are detected in the Test Suite
+          command: >
+            (! test -n "$(git grep '\.only' | cat | grep -v 'circleci/config.yml')")
+
+      - run:
           name: Build
           command: "yarn build"
 
@@ -86,6 +91,11 @@ jobs:
           paths:
             - node_modules
           key: yarn-dependencies-{{ checksum "npm-shrinkwrap.json" }}
+
+      - run:
+          name: Fail if '.only's are detected in the Test Suite
+          command: >
+            (! test -n "$(git grep '\.only' | cat | grep -v 'circleci/config.yml')")
 
       - run:
           name: Build
