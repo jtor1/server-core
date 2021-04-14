@@ -40,6 +40,7 @@ const TOKEN = jwt.sign(JWT_PAYLOAD, '__secret__', { // IRL, it's a parseable tok
 const CACHE_KEY = `server-core/identity/${ TOKEN }`;
 const USER_ID = 'USER_ID';
 const LOCALE = 'LOCALE';
+const REMOTE_ADDRESS = 'REMOTE_ADDRESS';
 const ME_FRAGMENT = Object.freeze({
   id: 'ME_ID',
 });
@@ -79,6 +80,7 @@ describe('server/apollo.context', () => {
 
         expect(context.telemetry).toBeDefined();
         expect(context.currentUser).toBeUndefined();
+        expect(context.remoteAddress).toBeUndefined();
       });
 
       it('inherits missing args from the request', () => {
@@ -125,60 +127,6 @@ describe('server/apollo.context', () => {
         expect(context.identityCacheTtl).toBe(300);
         expect(context.identityCacheEnabled).toBe(false);
       });
-
-      it('assumes a Telemetry context when the request does not provide headers', () => {
-        context = new Context({});
-
-        expect(context.telemetry.context()).toEqual({
-          hostname: expect.any(String),
-          requestId: expect.any(String),
-          req: {
-            token: NO_TOKEN,
-            userId: NO_USER,
-            jwt: null,
-          },
-        });
-      });
-
-      it('derives a Telemetry context from the request headers', () => {
-        context = new Context({
-          req: createRequest({
-            headers: {
-              [ TELEMETRY_HEADER_HOSTNAME ]: 'HOSTNAME',
-              [ TELEMETRY_HEADER_PERSON_ID ]: 'PERSON_ID',
-              [ TELEMETRY_HEADER_REQUEST_ID ]: 'REQUEST_ID',
-            },
-            [ SESSION_REQUEST_PROPERTY ]: SESSION_ID, // pre-derived (vs. Cookie / header)
-          }),
-          token: TOKEN,
-          userId: USER_ID,
-          identityUrl: IDENTITY_URL,
-          locale: LOCALE,
-        });
-
-        const telemetryContext = context.telemetry.context();
-        expect(telemetryContext).toEqual({
-          hostname: expect.any(String),
-          personId: 'PERSON_ID',
-          requestId: 'REQUEST_ID',
-          req: {
-            sessionId: SESSION_ID,
-            token: TOKEN,
-            userId: USER_ID,
-
-            // it('decodes a well-formed JWT token payload')
-            jwt: {
-              exp: expect.any(Number),
-              iat: expect.any(Number),
-              sub: AUTH0_ID,
-
-              // and nothing from JWT_PAYLOAD ... for now
-            },
-          },
-        });
-
-        expect(telemetryContext.hostname).not.toBe('HOSTNAME'); // Server-generated vs. derived
-      });
     });
 
     describe('without any constructor args', () => {
@@ -200,6 +148,7 @@ describe('server/apollo.context', () => {
 
         expect(context.telemetry).toBeDefined();
         expect(context.currentUser).toBeUndefined();
+        expect(context.remoteAddress).toBeUndefined();
       });
 
       it('assumes a Telemetry context', () => {
@@ -257,6 +206,7 @@ describe('server/apollo.context', () => {
 
       // it('does not copy over everything')
       expect(context.currentUser).toBeUndefined();
+      expect(context.remoteAddress).toBeUndefined();
     });
   });
 
@@ -286,6 +236,110 @@ describe('server/apollo.context', () => {
 
       expect(context.telemetry).toBeDefined();
       expect(context.currentUser).toBeUndefined();
+      expect(context.remoteAddress).toBeUndefined();
+    });
+  });
+
+
+  describe('#telemetry', () => {
+    it('assumes a Telemetry context when the request does not provide headers', () => {
+      context = new Context({});
+
+      expect(context.telemetry.context()).toEqual({
+        hostname: expect.any(String),
+        requestId: expect.any(String),
+        req: {
+          token: NO_TOKEN,
+          userId: NO_USER,
+          jwt: null,
+        },
+      });
+    });
+
+    it('derives a Telemetry context from the request headers', () => {
+      context = new Context({
+        req: createRequest({
+          headers: {
+            [ TELEMETRY_HEADER_HOSTNAME ]: 'HOSTNAME',
+            [ TELEMETRY_HEADER_PERSON_ID ]: 'PERSON_ID',
+            [ TELEMETRY_HEADER_REQUEST_ID ]: 'REQUEST_ID',
+          },
+          [ SESSION_REQUEST_PROPERTY ]: SESSION_ID, // pre-derived (vs. Cookie / header)
+        }),
+        token: TOKEN,
+        userId: USER_ID,
+        identityUrl: IDENTITY_URL,
+        locale: LOCALE,
+      });
+
+      const telemetryContext = context.telemetry.context();
+      expect(telemetryContext).toEqual({
+        hostname: expect.any(String),
+        personId: 'PERSON_ID',
+        requestId: 'REQUEST_ID',
+        req: {
+          sessionId: SESSION_ID,
+          token: TOKEN,
+          userId: USER_ID,
+
+          // it('decodes a well-formed JWT token payload')
+          jwt: {
+            exp: expect.any(Number),
+            iat: expect.any(Number),
+            sub: AUTH0_ID,
+
+            // and nothing from JWT_PAYLOAD ... for now
+          },
+        },
+      });
+
+      expect(telemetryContext.hostname).not.toBe('HOSTNAME'); // Server-generated vs. derived
+    });
+  });
+
+
+  describe('#remoteAddress', () => {
+    it('derives the upstream IP Address', () => {
+      context = new Context({
+        req: createRequest({
+          connection: ({ remoteAddress: REMOTE_ADDRESS } as Socket),
+        }),
+      });
+
+      expect(context.remoteAddress).toBe(REMOTE_ADDRESS);
+    });
+
+    it('honors the usual header', () => {
+      // which is mostly a Test Suite concern;
+      //   a true Request should have a Connection
+      context = new Context({
+        req: createRequest({
+          headers: {
+            'x-forwarded-for': REMOTE_ADDRESS,
+          },
+          connection: ({} as Socket), // un-parseable
+        }),
+      });
+
+      expect(context.remoteAddress).toBe(REMOTE_ADDRESS);
+    });
+
+    it('requires a valid Connection to be parsed', () => {
+      context = new Context({
+        req: createRequest({
+          headers: {
+            'x-forwarded-for': REMOTE_ADDRESS,
+          },
+        }),
+      });
+
+      expect(context.remoteAddress).toBeUndefined();
+    });
+
+    it('requires a Request to be parsed', () => {
+      context = new Context({});
+
+      expect(context.remoteAddress).toBeUndefined();
     });
   });
 
@@ -680,18 +734,17 @@ describe('server/apollo.context', () => {
           [SESSION_REQUEST_PROPERTY]: SESSION_ID, // pre-derived (vs. Cookie / header)
 
           baseUrl: '/GRAPHQL', // GraphQL middleware does a rewrite
-
-          connection: ({ remoteAddress: 'REMOTE_ADDRESS' } as Socket), // logged if parseable
         }),
         token: TOKEN,
         userId: USER_ID,
       });
       Reflect.set(context, 'telemetry', telemetryMock.object);
+      Reflect.set(context, 'remoteAddress', REMOTE_ADDRESS);
 
       telemetryMock.setup((mocked) => mocked.info('logContextRequest', {
         source: 'apollo',
         action: 'request',
-        remoteAddress: 'REMOTE_ADDRESS',
+        remoteAddress: REMOTE_ADDRESS,
         host: 'HOSTNAME',
         method: 'POST',
         path: '/GRAPHQL',
@@ -729,8 +782,6 @@ describe('server/apollo.context', () => {
           path: '/PATH',
           query: { param: true },
           [SESSION_REQUEST_PROPERTY]: SESSION_ID,
-
-          connection: ({} as Socket), // un-parseable
         }),
         token: TOKEN,
         userId: USER_ID,
