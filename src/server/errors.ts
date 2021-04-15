@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 import { ApolloError } from 'apollo-server';
 
 // HTTP 400 Bad Request

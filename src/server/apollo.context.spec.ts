@@ -299,41 +299,27 @@ describe('server/apollo.context', () => {
 
 
   describe('#remoteAddress', () => {
-    it('derives the upstream IP Address', () => {
+    it('does not derive the Connection remote IP Address', () => {
       context = new Context({
         req: createRequest({
           connection: ({ remoteAddress: REMOTE_ADDRESS } as Socket),
         }),
       });
 
-      expect(context.remoteAddress).toBe(REMOTE_ADDRESS);
-    });
-
-    it('honors the usual header', () => {
-      // which is mostly a Test Suite concern;
-      //   a true Request should have a Connection
-      context = new Context({
-        req: createRequest({
-          headers: {
-            'x-forwarded-for': REMOTE_ADDRESS,
-          },
-          connection: ({} as Socket), // un-parseable
-        }),
-      });
-
-      expect(context.remoteAddress).toBe(REMOTE_ADDRESS);
-    });
-
-    it('requires a valid Connection to be parsed', () => {
-      context = new Context({
-        req: createRequest({
-          headers: {
-            'x-forwarded-for': REMOTE_ADDRESS,
-          },
-        }),
-      });
-
       expect(context.remoteAddress).toBeUndefined();
+    });
+
+    it('derives the "x-forwarded-for" header', () => {
+      context = new Context({
+        req: createRequest({
+          headers: {
+            'x-forwarded-for': REMOTE_ADDRESS,
+          },
+          connection: ({} as Socket), // un-parseable ... and ignored anyway
+        }),
+      });
+
+      expect(context.remoteAddress).toBe(REMOTE_ADDRESS);
     });
 
     it('requires a Request to be parsed', () => {

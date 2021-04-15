@@ -140,15 +140,13 @@ describe('middleware/defaults', () => {
         url: '/url',
         headers: {
           'host': 'HOST',
-          'x-forwarded-for': 'ADDRESS_FORWARDED',
+          'x-forwarded-for': 'IGNORED',
 
           // => Telemetry `{ requestId }`
           [ TELEMETRY_HEADER_REQUEST_ID ]: 'REQUEST_ID',
         },
 
         [ SESSION_REQUEST_PROPERTY ]: SESSION_ID, // pre-derived (vs. Cookie / header)
-
-        connection: ({ remoteAddress: 'ADDRESS_IP' } as Socket), // overridden by 'X-Fowarded-For'
       });
 
       // internal `morgan` trickery
@@ -163,7 +161,9 @@ describe('middleware/defaults', () => {
       // build a Request <=> Context relationship
       const middleware = injectContextIntoRequestMiddleware((args) => new Context(args));
       middleware(req, res, noop);
-      expect((<any>req).context.telemetry).toBeDefined();
+      const context = (<any>req).context;
+      expect(context.telemetry).toBeDefined();
+      Reflect.set(context, 'remoteAddress', 'ADDRESS_FORWARDED');
 
       const formatted = _morganFormatter(<any>morgan, req, res);
       const parsed = JSON.parse(formatted!); // from a formatted String
@@ -179,7 +179,7 @@ describe('middleware/defaults', () => {
         // it('logs the Session ID')
         sessionId: SESSION_ID,
 
-        // it('derives the forwarded IP address')
+        // it('derives the remote address from the Context')
         remoteAddress: 'ADDRESS_FORWARDED',
 
         source: 'express',
@@ -197,7 +197,7 @@ describe('middleware/defaults', () => {
       req = createRequest({
         [ SESSION_REQUEST_PROPERTY ]: SESSION_ID, // pre-derived (vs. Cookie / header)
 
-        connection: ({ remoteAddress: 'ADDRESS_IP' } as Socket), // logged if parseable
+        connection: ({ remoteAddress: 'ADDRESS_IP' } as Socket), // ignored
       });
 
       res = createResponse();
@@ -221,10 +221,11 @@ describe('middleware/defaults', () => {
 
         // it('disregards the Request ID in absence of a request header')
 
+        // it('only derives `remoteAddress` from an "x-forwarded-for" header')
+
         source: 'express',
         action: 'request',
         requestId: expect.any(String),
-        remoteAddress: 'ADDRESS_IP',
         method: 'GET',
         path: '',
         statusCode: '200',
@@ -241,8 +242,6 @@ describe('middleware/defaults', () => {
         },
 
         [ SESSION_REQUEST_PROPERTY ]: SESSION_ID, // pre-derived (vs. Cookie / header)
-
-        connection: ({ remoteAddress: 'ADDRESS_IP' } as Socket), // overridden by 'X-Fowarded-For'
       });
 
       res = createResponse();
@@ -275,9 +274,7 @@ describe('middleware/defaults', () => {
     });
 
     it('logs minimal data without a context', () => {
-      req = createRequest({
-        connection: ({} as Socket), // un-parseable
-      });
+      req = createRequest();
       res = createResponse(); // un-sent
 
       expect((<any>req).context).toBeUndefined();

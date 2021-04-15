@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 import { VERSION } from './utils/const';
 import {
   Context,
