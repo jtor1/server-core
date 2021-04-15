@@ -1,6 +1,7 @@
 //
 // @see README.md + "Node 6 Support"
 //
+/* istanbul ignore file */
 
 import { VERSION } from './utils/const';
 import {

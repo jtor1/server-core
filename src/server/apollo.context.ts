@@ -2,7 +2,6 @@ import { get as getProperty, last, pick } from 'lodash';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import forwarded from 'forwarded';
 import { default as CacheManager, Cache } from 'cache-manager';
 import {
   Telemetry,
@@ -22,6 +21,7 @@ import { decodeUnverifiedToken } from '../authentication/verify.token';
 import { callService, IServiceCallerOverrides } from '../graphql/interservice.communication';
 import { GetMe, UserFragment } from '../graphql/generated.typings';
 import { SESSION_REQUEST_PROPERTY } from '../middleware/session';
+import { deriveRemoteAddress } from '../utils/remoteAddress';
 
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -275,10 +275,7 @@ export class Context
     };
 
     // and some final wrap-up
-
-    // "the last index is the furthest address, typically the end-user"
-    const req = this.req;
-    this.remoteAddress = (req?.connection && last(forwarded(req))) || undefined;
+    this.remoteAddress = deriveRemoteAddress(this.req);
   }
 
 

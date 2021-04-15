@@ -1056,13 +1056,6 @@
     "@types/express-serve-static-core" "*"
     "@types/serve-static" "*"
 
-"@types/forwarded@~0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@types/forwarded/-/forwarded-0.1.0.tgz#8191cf6f7c9934f3f6f75036d6f027a3dfcf1d94"
-  integrity sha512-bMAatSgDFLgJ9m+uqmGvRIeZojIZYJmFKkPT+TKFOORgMNgJrjaAnYfr464GDn2q98VKn7VhkxX2tsbO6Fvtig==
-  dependencies:
-    "@types/node" "*"
-
 "@types/fs-extra@^5.0.2":
   version "5.0.4"
   resolved "https://registry.yarnpkg.com/@types/fs-extra/-/fs-extra-5.0.4.tgz#b971134d162cc0497d221adde3dbb67502225599"

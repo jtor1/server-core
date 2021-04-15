@@ -3,7 +3,6 @@ import { Request, Response } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
-import forwarded from 'forwarded';
 import {
   telemetry as telemetryGlobal,
   TelemetryLevel
@@ -12,6 +11,7 @@ import {
 import { RequestHandlerVariant } from './types';
 import { bodyParserGraphql } from './body.parser';
 import { sessionMiddleware, SESSION_REQUEST_PROPERTY } from './session';
+import { deriveRemoteAddress } from '../utils/remoteAddress';
 
 export interface DefaultMiddlewareResult {
   preludesMap: Map<string, RequestHandlerVariant>;
@@ -63,9 +63,10 @@ export function _morganFormatter(tokens: any, req: Request, res: Response): stri
     ? context.sessionId
     : getProperty(req, SESSION_REQUEST_PROPERTY)
   );
-
-  // "the last index is the furthest address, typically the end-user"
-  const remoteAddress = (req.connection && last(forwarded(req)));
+  const remoteAddress = (context
+    ? context.remoteAddress
+    : deriveRemoteAddress(req)
+  );
 
   const loggedData = {
     source: 'express',
