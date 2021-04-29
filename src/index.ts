@@ -20,6 +20,7 @@ import { initApp, shutdownCurrentApp } from './server/server.init';
 import { RequestHandlerVariant } from './middleware/types';
 import { bodyParserGraphql } from './middleware/body.parser';
 import { DefaultMiddlewareResult, getDefaultMiddleware } from './middleware/defaults';
+import { errorLoggingExpress } from './middleware/error.logging';
 import {
   RequestWithSessionID,
   sessionMiddleware,
@@ -167,6 +168,7 @@ export {
   DefaultMiddlewareResult,
   bodyParserGraphql,
   getDefaultMiddleware,
+  errorLoggingExpress,
 
   RequestWithSessionID,
   sessionMiddleware,

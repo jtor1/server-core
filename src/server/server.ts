@@ -1,11 +1,16 @@
 import http from 'http';
-import express, { Router } from 'express';
+import express, { RequestHandler, Router } from 'express';
 import { telemetry, deriveTelemetryContextFromError } from '@withjoy/telemetry';
 
 import { RequestHandlerVariant } from '../middleware/types';
 import { getDefaultMiddleware } from '../middleware/defaults';
 import { errorLoggingExpress } from '../middleware/error.logging';
 import { ApolloServer } from 'apollo-server-express';
+
+
+const _200_OK: RequestHandler = (_, res) => {
+  res.sendStatus(200);
+}
 
 
 export interface IServer {
@@ -16,8 +21,12 @@ export interface IServer {
 interface ServerConstructor {
   useDefaultMiddleware: boolean;
   middleware?: RequestHandlerVariant[];
+  healthyHandler?: RequestHandler,
+  aliveHandler?: RequestHandler,
+
   apollo?: ApolloServer;
   apolloMiddleware?: RequestHandlerVariant[];
+
   routes?: Array<{ path: string, router: Router }>;
   path?: string;
 }
@@ -52,7 +61,7 @@ export class Server implements IServer {
         args.path
       );
     }
-    this.expressRoutes(args && args.routes ? [...args.routes] : []);
+    this.expressRoutes(args);
     this.middleware([ errorLoggingExpress ]);
   }
 
@@ -115,8 +124,11 @@ export class Server implements IServer {
     });
   }
 
-  private expressRoutes = (routes: Array<{ path: string, router: Router }>) => {
-    this.app.use('/healthy', (_, res) => res.sendStatus(200));
+  private expressRoutes = (args?: ServerConstructor) => {
+    this.app.use('/healthy', (args?.healthyHandler || _200_OK));
+    this.app.use('/alive', (args?.aliveHandler || _200_OK));
+
+    const routes = (args && args.routes ? [...args.routes] : []);
     routes.forEach(route => {
       this.app.use(route.path, route.router)
     });
