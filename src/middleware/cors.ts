@@ -3,7 +3,7 @@ import { isString } from 'lodash';
 import cors from 'cors';
 
 
-const MAX_AGE = 86400; // 1 hour
+const MAX_AGE = 86400; // 1 day
 
 const CORS = cors({
   origin: function(originProvided, callback) {
