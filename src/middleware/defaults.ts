@@ -1,6 +1,5 @@
-import { get as getProperty, isString, last } from 'lodash';
+import { get as getProperty } from 'lodash';
 import { Request, Response } from 'express';
-import cors from 'cors';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
 import {
@@ -9,6 +8,7 @@ import {
 } from '@withjoy/telemetry';
 
 import { RequestHandlerVariant } from './types';
+import { corsMiddleware } from './cors';
 import { bodyParserGraphql } from './body.parser';
 import { sessionMiddleware, SESSION_REQUEST_PROPERTY } from './session';
 import { deriveRemoteAddress } from '../utils/remoteAddress';
@@ -99,29 +99,7 @@ const WITHJOY_DOMAIN_REGEX = /\.withjoy\.com$/;
 
 export function getDefaultMiddleware(): DefaultMiddlewareResult {
   const preludesMap = new Map<string, RequestHandlerVariant>([
-    cors({
-      origin: function(originProvided, callback) {
-        // // FIXME:  the right thing to do
-        // //   however ... all Dev would need to be done from '*.withjoy.com' via /etc/hosts
-        // //   let's not bite that off just yet
-        // try {
-        //   const { hostname } = urlParse(originProvided);
-        //   const matches = (hostname && WITHJOY_DOMAIN_REGEX.test(hostname)) || false;
-        //   callback(null, matches);
-        // }
-        // catch (err) {
-        //   callback(null, false);
-        // }
-
-        // https://github.com/expressjs/cors#configuration-options
-        //   a String is an acceptable callback value, TypeScript be damned
-        const originAllowed: any = (isString(originProvided) ? originProvided : '*');
-        callback(null, originAllowed);
-      },
-
-      // required for Cookie support
-      credentials: true,
-    }),
+    corsMiddleware,
     sessionMiddleware(),
     MORGAN_LOGGER,
   ].map(_tupleByMiddlewareName));

@@ -13,7 +13,6 @@ import {
 
 import { Context, injectContextIntoRequestMiddleware } from '../server/apollo.context';
 import { NO_USER, NO_TOKEN } from '../authentication/token.check';
-import { RequestHandlerVariant } from '../middleware/types';
 import { SESSION_REQUEST_PROPERTY } from '../middleware/session';
 import {
   getDefaultMiddleware,
