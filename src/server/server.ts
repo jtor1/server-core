@@ -21,8 +21,10 @@ export interface IServer {
 interface ServerConstructor {
   useDefaultMiddleware: boolean;
   middleware?: RequestHandlerVariant[];
-  healthyHandler?: RequestHandler,
-  aliveHandler?: RequestHandler,
+
+  // https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  readyHandler?: RequestHandler, // "i am a Pod that is 'ready'; i can accept traffic"
+  healthyHandler?: RequestHandler, // "i am a Pod that is 'live'; please don't kill me"
 
   apollo?: ApolloServer;
   apolloMiddleware?: RequestHandlerVariant[];
@@ -125,8 +127,8 @@ export class Server implements IServer {
   }
 
   private expressRoutes = (args?: ServerConstructor) => {
+    this.app.use('/ready', (args?.readyHandler || _200_OK));
     this.app.use('/healthy', (args?.healthyHandler || _200_OK));
-    this.app.use('/alive', (args?.aliveHandler || _200_OK));
 
     const routes = (args && args.routes ? [...args.routes] : []);
     routes.forEach(route => {
