@@ -71,6 +71,7 @@ describe('corsMiddleware', () => {
           'access-control-allow-credentials': 'true',
           'access-control-allow-origin': 'DERP.com',
         });
+        expect(res.headers['access-control-max-age']).toBeUndefined();
         expect(res.headers['cache-control']).toBeUndefined();
       });
     });
@@ -100,8 +101,8 @@ describe('corsMiddleware', () => {
           'access-control-allow-credentials': 'true',
           'access-control-allow-methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
           'access-control-allow-origin': '*',
-          'access-control-max-age': '86400',
-          'cache-control': 's-maxage=86400',
+          // 'access-control-max-age': '86400',
+          // 'cache-control': 's-maxage=86400',
         });
       });
     });
@@ -115,8 +116,8 @@ describe('corsMiddleware', () => {
           'access-control-allow-credentials': 'true',
           'access-control-allow-methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
           'access-control-allow-origin': '*',
-          'access-control-max-age': '86400',
-          'cache-control': 's-maxage=86400',
+          // 'access-control-max-age': '86400',
+          // 'cache-control': 's-maxage=86400',
         });
       });
     });
@@ -130,8 +131,8 @@ describe('corsMiddleware', () => {
           'access-control-allow-credentials': 'true',
           'access-control-allow-methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
           'access-control-allow-origin': 'DERP.com',
-          'access-control-max-age': '86400',
-          'cache-control': 's-maxage=86400',
+          // 'access-control-max-age': '86400',
+          // 'cache-control': 's-maxage=86400',
         });
       });
     });
@@ -143,15 +144,16 @@ describe('corsMiddleware', () => {
       .set('access-control-allow-credentials', 'include')
       .expect(204)
       .expect((res) => {
-console.log(JSON.stringify(res.headers))
         expect(res.headers).toMatchObject({
           'access-control-allow-credentials': 'true',
           'access-control-allow-headers': 'Content-Type, X-DERP',
           'access-control-allow-methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
           'access-control-allow-origin': 'DERP.com',
-          'access-control-max-age': '86400',
-          'cache-control': 's-maxage=86400',
+          // 'access-control-max-age': '86400',
+          // 'cache-control': 's-maxage=86400',
         });
+        expect(res.headers['access-control-max-age']).toBeUndefined();
+        expect(res.headers['cache-control']).toBeUndefined();
       });
     });
   });
