@@ -11,7 +11,11 @@ import {
   contextualizeGlobalTelemetry,
 } from '@withjoy/telemetry';
 
-import { Context, injectContextIntoRequestMiddleware } from '../server/apollo.context';
+import {
+  Context,
+  injectContextIntoRequestMiddleware,
+  deriveContextFromRequest,
+} from '../server/apollo.context';
 import { NO_USER, NO_TOKEN } from '../authentication/token.check';
 import { SESSION_REQUEST_PROPERTY } from '../middleware/session';
 import {
@@ -160,7 +164,8 @@ describe('middleware/defaults', () => {
       // build a Request <=> Context relationship
       const middleware = injectContextIntoRequestMiddleware((args) => new Context(args));
       middleware(req, res, noop);
-      const context = (<any>req).context;
+
+      const context = deriveContextFromRequest(req)!;
       expect(context.telemetry).toBeDefined();
       Reflect.set(context, 'remoteAddress', 'ADDRESS_FORWARDED');
 
@@ -181,6 +186,7 @@ describe('middleware/defaults', () => {
         // it('derives the remote address from the Context')
         remoteAddress: 'ADDRESS_FORWARDED',
 
+        msg: 'morgan',
         source: 'express',
         action: 'request',
         host: 'HOST',
@@ -205,7 +211,7 @@ describe('middleware/defaults', () => {
       // build a Request <=> Context relationship
       const middleware = injectContextIntoRequestMiddleware((args) => new Context(args));
       middleware(req, res, noop);
-      expect((<any>req).context.telemetry).toBeDefined();
+      expect( deriveContextFromRequest(req)?.telemetry ).toBeDefined();
 
       const formatted = _morganFormatter(<any>morgan, req, res);
       const parsed = JSON.parse(formatted!); // from a formatted String
@@ -222,6 +228,7 @@ describe('middleware/defaults', () => {
 
         // it('only derives `remoteAddress` from an "x-forwarded-for" header')
 
+        msg: 'morgan',
         source: 'express',
         action: 'request',
         requestId: expect.any(String),
@@ -246,7 +253,7 @@ describe('middleware/defaults', () => {
       res = createResponse();
       res.send(200);
 
-      expect((<any>req).context).toBeUndefined();
+      expect( deriveContextFromRequest(req) ).toBeUndefined();
 
       const formatted = _morganFormatter(<any>morgan, req, res);
       const parsed = JSON.parse(formatted!); // from a formatted String
@@ -262,6 +269,7 @@ describe('middleware/defaults', () => {
         // it('logs the default Request ID via Telemetry in absence of a request header')
         requestId: '                                ',
 
+        msg: 'morgan',
         source: 'express',
         action: 'request',
         remoteAddress: 'ADDRESS_FORWARDED',
@@ -276,7 +284,7 @@ describe('middleware/defaults', () => {
       req = createRequest();
       res = createResponse(); // un-sent
 
-      expect((<any>req).context).toBeUndefined();
+      expect( deriveContextFromRequest(req) ).toBeUndefined();
 
       const formatted = _morganFormatter(<any>morgan, req, res);
       const parsed = JSON.parse(formatted!); // from a formatted String
@@ -289,6 +297,7 @@ describe('middleware/defaults', () => {
         // it('logs the default Request ID via Telemetry in absence of a request header')
         requestId: '                                ',
 
+        msg: 'morgan',
         source: 'express',
         action: 'request',
         method: 'GET',
@@ -301,7 +310,7 @@ describe('middleware/defaults', () => {
         method: 'GET',
         url: '/healthy',
       });
-      expect(Reflect.get(req, 'context')).toBeUndefined();
+      expect( deriveContextFromRequest(req) ).toBeUndefined();
 
       res = createResponse();
       res.send(200);
@@ -317,7 +326,7 @@ describe('middleware/defaults', () => {
       expect(telemetry.isLogSilent()).toBe(true);
 
       req = createRequest(); // no Request <=> Context relationship
-      expect((<any>req).context).toBeUndefined();
+      expect( deriveContextFromRequest(req) ).toBeUndefined();
 
       res = createResponse();
       res.send(200);

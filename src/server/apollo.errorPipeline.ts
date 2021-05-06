@@ -52,6 +52,8 @@ export class ApolloErrorPipeline {
         // we have the Context *and* its Errors
         //   which are not both available to `ApolloServer#formatError`
         //   so here's where we do our logging
+        // `requestContext` is not a *Request*,
+        //   thus `deriveContextFromRequest` does not apply here
         const context = (requestContext.context as Context);
         for (let error of errors) {
           await this.process(error, context);
