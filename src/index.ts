@@ -8,6 +8,7 @@ import {
   createContext,
   logContextRequest,
   injectContextIntoRequestMiddleware,
+  deriveContextFromRequest,
 } from './server/apollo.context'
 import {
   ApolloEnvironmentConfig,
@@ -151,6 +152,7 @@ export {
   createContext,
   logContextRequest,
   injectContextIntoRequestMiddleware,
+  deriveContextFromRequest,
 
   ApolloEnvironmentConfig,
   ApolloEnvironmentVariant,

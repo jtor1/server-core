@@ -143,9 +143,9 @@ export function logContextRequest(context: Context): void {
   telemetry.info('logContextRequest', logged);
 }
 
-export type InjectContextIntoRequestFactory = (constructorArgs: ContextConstructorArgs) => Context;
+export type InjectContextIntoRequestFactory<T extends Context = Context> = (constructorArgs: ContextConstructorArgs) => T;
 
-export function injectContextIntoRequestMiddleware(contextFactory: InjectContextIntoRequestFactory): RequestHandler {
+export function injectContextIntoRequestMiddleware<T extends Context = Context>(contextFactory: InjectContextIntoRequestFactory<T>): RequestHandler {
   // an Express middleware to associate Request <=> Context
   //   for use in both Apollo GraphQL and REST endpoints.
   // having this association is important to other core methods,
@@ -164,6 +164,12 @@ export function injectContextIntoRequestMiddleware(contextFactory: InjectContext
 
     next();
   }
+}
+
+export function deriveContextFromRequest<T extends Context = Context>(req: Request): T | undefined {
+  // to formalize some of the annoying boilerplate
+  const context = (<any>req).context;
+  return (context ? (context as T) : undefined);
 }
 
 

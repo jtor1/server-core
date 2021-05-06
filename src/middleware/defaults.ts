@@ -11,6 +11,7 @@ import { RequestHandlerVariant } from './types';
 import { corsMiddleware } from './cors';
 import { bodyParserGraphql } from './body.parser';
 import { sessionMiddleware, SESSION_REQUEST_PROPERTY } from './session';
+import { deriveContextFromRequest } from '../server/apollo.context';
 import { deriveRemoteAddress } from '../utils/remoteAddress';
 
 export interface DefaultMiddlewareResult {
@@ -35,22 +36,20 @@ function _tupleByMiddlewareName(handler: RequestHandlerVariant): [ string, Reque
 //   Node 10:  "Argument of type 'IncomingMessage' is not assignable to parameter of type 'Request'."
 //
 export function _morganFormatter(tokens: any, req: Request, res: Response): string | null {
-  const reqAsAny: any = req;
-
   const path = tokens.url(req, res);
   if (path && path.startsWith('/healthy')) {
     // health checks should not spam the logs
     return null;
   }
 
-  // @see `injectContextIntoRequestMiddleware`
-  const context = reqAsAny.context;
+  const context = deriveContextFromRequest(req);
 
   // align `morgan` + Telemetry logging
   // there's a Telemetry instance tied to every Context
   //   (1) Context => `req.context` is associated by Apollo during their Server's `context` callback
   //   (2) a `Context#telemetry` instance is setup by the Context Constructor
   // ... assuming that the Request has been associated with a Context
+  //   (@see `injectContextIntoRequestMiddleware`)
   //   which cannot be guaranteed,
   //   so fall back to the Telemetry singleton if need be
   const contextTelemetry = getProperty(context, 'telemetry') || telemetryGlobal;
@@ -86,7 +85,7 @@ export function _morganFormatter(tokens: any, req: Request, res: Response): stri
   };
 
   // with Telemetry, at 'info' level
-  const telemetryData = contextTelemetry.getLoggedData(TelemetryLevel.info, loggedData);
+  const telemetryData = contextTelemetry.getLoggedData(TelemetryLevel.info, 'morgan', loggedData);
   return JSON.stringify(telemetryData);
 }
 const MORGAN_LOGGER = morgan(_morganFormatter, {

@@ -25,7 +25,9 @@ import {
 
   logContextRequest,
   injectContextIntoRequestMiddleware,
+  deriveContextFromRequest,
 } from './apollo.context';
+
 
 const AUTH0_ID = 'AUTH0_ID';
 const IDENTITY_URL = 'http://IDENTITY_URL';
@@ -49,6 +51,7 @@ const CACHE = (<unknown>Object.freeze({}) as Cache);
 const OTHER_TOKEN = 'OTHER_TOKEN';
 const OTHER_CACHE_KEY = `server-core/identity/${ OTHER_TOKEN }`;
 const SESSION_ID = 'fa44276cb66d302601f14a14ccde5b8ad21994fd92ec0d7b';
+
 
 describe('server/apollo.context', () => {
   let context: Context;
@@ -849,7 +852,7 @@ describe('server/apollo.context', () => {
 
   describe('injectContextIntoRequestMiddleware', () => {
     it('injects a Context instance into a Request', () => {
-      const middleware = injectContextIntoRequestMiddleware((args: ContextConstructorArgs) => {
+      const middleware = injectContextIntoRequestMiddleware<Context>((args: ContextConstructorArgs) => {
         return new Context({
           locale: 'fr-CA',
           ...args,
@@ -863,12 +866,12 @@ describe('server/apollo.context', () => {
         // it('makes no use of ...')
         locale: 'LOCALE',
       });
-      expect(req.context).toBeUndefined();
+      expect( deriveContextFromRequest(req) ).toBeUndefined();
 
       middleware(req, (<unknown>null as Response), noop); // it('does not care about the Response')
 
       // it('builds and injects a Context into the Request')
-      const { context } = req;
+      const context = deriveContextFromRequest<Context>(req)!;
       expect(context).toMatchObject({
         token: 'TOKEN',
         userId: 'USER_ID',
@@ -877,6 +880,28 @@ describe('server/apollo.context', () => {
 
       // it('creates a bi-directional association')
       expect(context.req).toBe(req);
+    });
+  });
+
+
+  describe('deriveContextFromRequest', () => {
+    it('derives a Context instance from a Request', () => {
+      const req = createRequest();
+      const context = new Context({ req });
+
+      // uni-directional only, so far
+      expect(context.req).toBe(req);
+      expect( deriveContextFromRequest<Context>(req) ).toBeUndefined();
+
+      // standard injection technique
+      const middleware = injectContextIntoRequestMiddleware((args: ContextConstructorArgs) => {
+        return context;
+      });
+      middleware(req, (<unknown>null as Response), noop); // it('does not care about the Response')
+
+      // *now* it is bi-directional
+      expect(context.req).toBe(req);
+      expect( deriveContextFromRequest<Context>(req) ).toBe(context);
     });
   });
 });
