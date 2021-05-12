@@ -305,7 +305,21 @@ describe('middleware/defaults', () => {
       });
     });
 
-    it('does not log a health check', () => {
+    it('does not log a readyness check', () => {
+      req = createRequest({
+        method: 'GET',
+        url: '/ready',
+      });
+      expect( deriveContextFromRequest(req) ).toBeUndefined();
+
+      res = createResponse();
+      res.send(200);
+
+      const formatted = _morganFormatter(<any>morgan, req, res);
+      expect(formatted).toBeNull();
+    });
+
+    it('does not log a health / "liveness" check', () => {
       req = createRequest({
         method: 'GET',
         url: '/healthy',
