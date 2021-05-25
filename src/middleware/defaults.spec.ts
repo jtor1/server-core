@@ -202,7 +202,8 @@ describe('middleware/defaults', () => {
       req = createRequest({
         [ SESSION_REQUEST_PROPERTY ]: SESSION_ID, // pre-derived (vs. Cookie / header)
 
-        connection: ({ remoteAddress: 'ADDRESS_IP' } as Socket), // ignored
+        // it('does not derive the Socket#remoteAddress')
+        connection: ({ remoteAddress: 'ADDRESS_IP' } as Socket),
       });
 
       res = createResponse();

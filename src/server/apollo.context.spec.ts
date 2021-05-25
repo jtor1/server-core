@@ -302,7 +302,7 @@ describe('server/apollo.context', () => {
 
 
   describe('#remoteAddress', () => {
-    it('does not derive the Connection remote IP Address', () => {
+    it('does not derive the Socket#remoteAddress', () => {
       context = new Context({
         req: createRequest({
           connection: ({ remoteAddress: REMOTE_ADDRESS } as Socket),
