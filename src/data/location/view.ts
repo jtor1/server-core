@@ -1,9 +1,17 @@
-import { isEmpty, isEqual } from 'lodash';
-import { ViewTemplate, ModelViewTemplate } from '../../templates/view.template';
+import { isEmpty } from 'lodash';
+import { ModelViewTemplate } from '../../templates/view.template';
 import { LocationModelTemplate } from './model';
 import { Context } from '../../server/apollo.context';
 import { LocationInterface } from '../../graphql/core.types';
-import { ObjectFlags } from 'typescript';
+
+
+function _isValueProvided<T>(value: T | null | undefined): boolean {
+  return ! ((value === null) || (value === undefined));
+}
+function _decoratedOrDataValue<T>(decoratedValue: T | null | undefined, dataValue: T): T {
+  return (_isValueProvided(decoratedValue) ? decoratedValue! : dataValue);
+}
+
 
 export const NO_LOCATION = Object.freeze({}) as LocationModelTemplate;
 
@@ -63,91 +71,61 @@ export class DecoratedLocationView extends LocationView implements LocationInter
     this.decorator = decorator;
   }
 
-  get address1() {
-    if (this.decorator?.address1 !== undefined) {
-      return this.decorator.address1;
-    }
-    return this.data.address1;
+  get address1(): string | undefined {
+    return _decoratedOrDataValue(this.decorator?.address1, this.data.address1);
   }
 
-  get address2() {
-    if (this.decorator?.address2 !== undefined) {
-      return this.decorator.address2;
-    }
-    return this.data.address2;
+  get address2(): string | undefined {
+    return _decoratedOrDataValue(this.decorator?.address2, this.data.address2);
   }
 
-  get city() {
-    if (this.decorator?.city !== undefined) {
-      return this.decorator.city;
-    }
-    return this.data.city;
+  get city(): string | undefined {
+    return _decoratedOrDataValue(this.decorator?.city, this.data.city);
   }
 
-  get state() {
-    if (this.decorator?.state !== undefined) {
-      return this.decorator.state;
-    }
-    return this.data.state;
+  get state(): string | undefined {
+    return _decoratedOrDataValue(this.decorator?.state, this.data.state);
   }
 
-  get country() {
-    if (this.decorator?.country !== undefined) {
-      return this.decorator.country;
-    }
-    return this.data.country;
+  get country(): string | undefined {
+    return _decoratedOrDataValue(this.decorator?.country, this.data.country);
   }
 
-  get postalCode() {
-    if (this.decorator?.postalCode !== undefined) {
-      return this.decorator.postalCode;
-    }
-    return this.data.postalCode;
+  get postalCode(): string | undefined {
+    return _decoratedOrDataValue(this.decorator?.postalCode, this.data.postalCode);
   }
 
-  get latitude() {
-    if (this.decorator?.latitude !== undefined) {
-      return this.decorator.latitude;
-    }
-    return this.data.latitude;
+  get latitude(): number | undefined {
+    return _decoratedOrDataValue(this.decorator?.latitude, this.data.latitude);
   }
 
-  get longitude() {
-    if (this.decorator?.longitude !== undefined) {
-      return this.decorator.longitude;
-    }
-    return this.data.longitude;
+  get longitude(): number | undefined {
+    return _decoratedOrDataValue(this.decorator?.longitude, this.data.longitude);
   }
 
-  get placeId() {
-    if (this.decorator?.placeId !== undefined) {
-      return this.decorator.placeId;
-    }
-    return this.data.placeId;
+  get placeId(): string | undefined {
+    return _decoratedOrDataValue(this.decorator?.placeId, this.data.placeId);
   }
 
-  get name() {
-    if (this.decorator?.name !== undefined) {
-      return this.decorator.name;
-    }
-    return this.data.name;
+  get name(): string | undefined {
+    return _decoratedOrDataValue(this.decorator?.name, this.data.name);
   }
+
 
   public hasDecoration() {
     if (! this.decorator) {
       return false;
     }
-    return Object.values(this.decorator).some(val => val !== null && val !== undefined)
+    return Object.values(this.decorator).some(_isValueProvided);
   }
 
   public isEmpty () {
-    return(! this.hasDecoration()) && isEmpty(this.data)
+    return (! this.hasDecoration()) && isEmpty(this.data)
   }
 
   public decorate(decorator: LocationInterface): this {
     this.decorator = decorator;
     return this;
   }
-
 
 }

@@ -1,5 +1,5 @@
 import { pick } from 'lodash';
-import { Entity, Column, Index } from 'typeorm';
+import { Column, Index } from 'typeorm';
 
 import { LocationInterface } from '../../graphql/core.types';
 import { ModelTemplate } from '../../templates/model.template';
