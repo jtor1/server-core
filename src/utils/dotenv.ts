@@ -50,3 +50,47 @@ export function loadDotEnv(): LoadDotEnvResult {
     isTest: ((env.NODE_ENV === 'test') || (env.NODE_ENV === 'ci')),
   };
 }
+
+export function configStringToBoolean(string: string | null | undefined): boolean | undefined {
+  if (! string) {
+    return undefined;
+  }
+  switch (string.toLowerCase()) {
+    case '0':
+    case 'false':
+    case 'off':
+      return false;
+    case '1':
+    case 'true':
+    case 'on':
+      return true;
+  }
+  return undefined;
+}
+
+const FEATURE_FLAG_REGEXP = /^FEATURE_FLAG_.*/;
+type ConfigFeatureFlags = Record<string, boolean | string>;
+
+export function deriveConfigFeatureFlags(env: Record<string, string>): ConfigFeatureFlags {
+  const derived: ConfigFeatureFlags = {}
+  Object.keys(env).forEach((key) => {
+    if (! FEATURE_FLAG_REGEXP.test(key)) {
+      return;
+    }
+
+    const value = env[key];
+    if (value === '') {
+      return;
+    }
+
+    const booleanValue = configStringToBoolean(value);
+    if (booleanValue !== undefined) {
+      derived[key] = booleanValue;
+    }
+    else {
+      derived[key] = value;
+    }
+  });
+
+  return derived;
+}
