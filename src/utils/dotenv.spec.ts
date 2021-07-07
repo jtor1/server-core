@@ -2,6 +2,8 @@ import mockFs from 'mock-fs';
 
 import {
   loadDotEnv,
+  configStringToBoolean,
+  deriveConfigFeatureFlags,
 } from './dotenv';
 
 
@@ -17,7 +19,7 @@ const OVERRIDING_CONFIG = Object.freeze({
 });
 
 
-describe('typeorm/index', () => {
+describe('utils/dotenv', () => {
   const { env } = process;
   let envSnapshot: Record<string, string>;
 
@@ -171,6 +173,49 @@ FILEPATH=specified
           isProduction: false,
           isTest: false,
         });
+      });
+    });
+  });
+
+
+  describe('configStringToBoolean', () => {
+    it('knows what is true', () => {
+      expect(configStringToBoolean('1')).toBe(true);
+      expect(configStringToBoolean('TRUE')).toBe(true);
+      expect(configStringToBoolean('On')).toBe(true);
+    });
+
+    it('knows what is false', () => {
+      expect(configStringToBoolean('0')).toBe(false);
+      expect(configStringToBoolean('FALSE')).toBe(false);
+      expect(configStringToBoolean('Off')).toBe(false);
+    });
+
+    it('will not claim otherwise', () => {
+      expect(configStringToBoolean('')).toBeUndefined();
+      expect(configStringToBoolean(null)).toBeUndefined();
+      expect(configStringToBoolean(undefined)).toBeUndefined();
+
+      expect(configStringToBoolean('Unknown')).toBeUndefined();
+      expect(configStringToBoolean('YES')).toBeUndefined();
+      expect(configStringToBoolean('no')).toBeUndefined();
+    });
+  });
+
+
+  describe('deriveConfigFeatureFlags', () => {
+    it('derives flags', () => {
+      expect(deriveConfigFeatureFlags({})).toEqual({});
+
+      expect(deriveConfigFeatureFlags({
+        PROPERTY: 'true',
+        FEATURE_FLAG_STRING: 'string',
+        FEATURE_FLAG_OFF: 'off',
+        FEATURE_FLAG_1: '1',
+      })).toEqual({
+        FEATURE_FLAG_STRING: 'string',
+        FEATURE_FLAG_OFF: false,
+        FEATURE_FLAG_1: true,
       });
     });
   });

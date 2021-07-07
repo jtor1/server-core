@@ -71,7 +71,7 @@ import {
   federatedPhotoById,
   federatedVideoById,
 } from './graphql/federated.types'
-import { loadDotEnv } from './utils/dotenv';
+import { loadDotEnv, configStringToBoolean, deriveConfigFeatureFlags } from './utils/dotenv';
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import {
@@ -212,6 +212,8 @@ export {
   createGraphQLEnumValues,
 
   loadDotEnv,
+  configStringToBoolean,
+  deriveConfigFeatureFlags,
 
   EdgeWrapper,
   edgeWrapperType,
