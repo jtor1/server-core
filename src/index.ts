@@ -1,5 +1,16 @@
 /* istanbul ignore file */
 
+/*
+  the following toolkits are path-referenced
+    'utils/healthCheck'
+    'utils/pg'
+    'utils/typeorm'
+  please use
+  ```
+  import { ... } from '@withjoy/server-core/dist/<PATH>';
+  ```
+*/
+
 import { VERSION } from './utils/const';
 import {
   Context,
