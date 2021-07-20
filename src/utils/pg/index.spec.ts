@@ -8,18 +8,18 @@ describe('utils/pg', () => {
   //   so ...
 
   describe('pgInlineParametersIntoQuery', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('pgDeriveQueryBuilderStatements', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('pgCombineStatements', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('pgQueryBuilderBatchStatement', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 });

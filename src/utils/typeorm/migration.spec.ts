@@ -7,10 +7,10 @@ describe('utils/typeorm/migration', () => {
   //   so ...
 
   describe('migrateWithPostgresSettings', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('migrateWithoutTransaction', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 });

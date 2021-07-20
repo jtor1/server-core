@@ -7,10 +7,10 @@ describe('utils/typeorm/batch.support', () => {
   //   so ...
 
   describe('TypeORMPostgresBatch', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('createTypeORMPostgresBatch', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 });

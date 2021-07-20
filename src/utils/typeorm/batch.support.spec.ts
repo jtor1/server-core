@@ -7,38 +7,38 @@ describe('utils/typeorm/batch.support', () => {
   //   so ...
 
   describe('applyDefaultEntityValues', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('queryBuilderToInsertModels', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('queryBuildersToForceKeysOfModels', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('injectSequenceKeysIntoModels', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('queryBuilderToDeleteModelById', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('queryBuilderToDeleteModelsBySelectedIds', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('queryBuilderToDeleteModelsByParentId', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('queryBuildersToInsertManyToManyJunctions', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 
   describe('queryBuildersToDeleteManyToManyJunctionsByParentId', () => {
-    it('is covered in @withjoy/server-test-core, with a backing database', noop);
+    it('is covered in @withjoy/server-core-test, with a backing database', noop);
   });
 });

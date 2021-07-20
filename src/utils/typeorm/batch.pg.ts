@@ -1,5 +1,5 @@
 /* istanbul ignore file */
-//   it('is covered in @withjoy/server-test-core, with a backing database', noop);
+//   it('is covered in @withjoy/server-core-test, with a backing database', noop);
 
 import { chunk, compact } from 'lodash';
 import uuidV4 from 'uuid/v4';
