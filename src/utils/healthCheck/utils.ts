@@ -38,7 +38,7 @@ export class HealthCheckState
   // assumed healthy
   private _value: boolean = true;
   constructor() {
-    // easily detachable
+    // pre-bound, to support the simple syntax `{ checkers: { baz: stateOfBaz.healthChecker } }`
     this.healthChecker = this.healthChecker.bind(this);
   }
 

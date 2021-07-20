@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 //   it('is covered in @withjoy/server-core-test, with a backing database', noop);
 
+import assert from 'assert';
 import { difference } from 'lodash';
 import { getConnection } from 'typeorm';
 import { Migration } from 'typeorm/migration/Migration';
@@ -14,11 +15,16 @@ export async function healthCheckerTypeormMigrations(context: Context): Promise<
   const { telemetry } = context;
 
   try {
+    // officially part of `typeorm`
     const connection = getConnection();
     const allMigrationNames = connection.migrations.map((migrationScript) => migrationScript.constructor.name);
 
+    // unofficial -- make sure it's supported when called
+    assert.ok(MigrationExecutor?.prototype['loadExecutedMigrations'], 'expected MigrationExecutor#loadExecutedMigrations');
     const migrationExecutor: MigrationExecutor = new MigrationExecutor(connection);
-    const executedMigrations: Migration[] = await (<any>migrationExecutor).loadExecutedMigrations(); // de-protected method
+    // "Property 'loadExecutedMigrations' is protected and only accessible within class 'MigrationExecutor' and its subclasses.ts(2445)"
+    const migrationExecutorAsAny = (migrationExecutor as any);
+    const executedMigrations: Migration[] = await migrationExecutorAsAny.loadExecutedMigrations();
     const executedMigrationNames = executedMigrations.map((migration) => migration.name);
 
     const unexecuted = difference(allMigrationNames, executedMigrationNames);
