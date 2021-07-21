@@ -43,8 +43,8 @@ export function createHealthCheckRequestHandler<T extends Context = Context>(
     const aggregate = Object.keys(resultsByKey).every((key) =>
       (nonCritical.has(key) || resultsByKey[key] || false)
     );
-    const payload = JSON.stringify(resultsByKey);
-    res.status(aggregate ? successStatusCode : failureStatusCode).send(payload);
+    const status = (aggregate ? successStatusCode : failureStatusCode);
+    res.status(status).json(resultsByKey);
   }
 
   return requestHandler;

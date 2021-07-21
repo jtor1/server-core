@@ -70,6 +70,9 @@ describe('utils/healthCheck', () => {
       await requestHandler(req, res, next);
 
       expect(res._getStatusCode()).toBe(200);
+      expect(res._getHeaders()).toMatchObject({
+        'content-type': 'application/json',
+      })
       expect(res._getData()).toBe(JSON.stringify({
         success: true,
       }));
@@ -87,6 +90,9 @@ describe('utils/healthCheck', () => {
       await requestHandler(req, res, next);
 
       expect(res._getStatusCode()).toBe(500);
+      expect(res._getHeaders()).toMatchObject({
+        'content-type': 'application/json',
+      })
       expect(res._getData()).toBe(JSON.stringify({
         success: true,
         good: true,
@@ -116,6 +122,9 @@ describe('utils/healthCheck', () => {
       await requestHandler(req, res, next);
 
       expect(res._getStatusCode()).toBe(500);
+      expect(res._getHeaders()).toMatchObject({
+        'content-type': 'application/json',
+      })
       expect(res._getData()).toBe(JSON.stringify({
         // it('still performs all the checks')
         success: true,
@@ -139,6 +148,9 @@ describe('utils/healthCheck', () => {
       await requestHandler(req, res, next);
 
       expect(res._getStatusCode()).toBe(200);
+      expect(res._getHeaders()).toMatchObject({
+        'content-type': 'application/json',
+      })
       expect(res._getData()).toBe('{}');
     });
 
@@ -151,6 +163,9 @@ describe('utils/healthCheck', () => {
       await requestHandler(req, res, next);
 
       expect(res._getStatusCode()).toBe(302);
+      expect(res._getHeaders()).toMatchObject({
+        'content-type': 'application/json',
+      })
       expect(res._getData()).toBe('{}');
     });
 
@@ -165,6 +180,9 @@ describe('utils/healthCheck', () => {
       await requestHandler(req, res, next);
 
       expect(res._getStatusCode()).toBe(418);
+      expect(res._getHeaders()).toMatchObject({
+        'content-type': 'application/json',
+      })
       expect(res._getData()).toBe(JSON.stringify({
         bad: false,
       }));
@@ -187,6 +205,9 @@ describe('utils/healthCheck', () => {
 
       // it('sure seems happy')
       expect(res._getStatusCode()).toBe(200);
+      expect(res._getHeaders()).toMatchObject({
+        'content-type': 'application/json',
+      })
       // it('is, in fact, quite unhappy')
       expect(res._getData()).toBe(JSON.stringify({
         success: true,
