@@ -1,5 +1,5 @@
 import { Socket } from 'net';
-import { noop, omit } from 'lodash';
+import _, { noop, omit } from 'lodash';
 import { Request, Response, NextFunction, RequestHandler, ErrorRequestHandler } from 'express'
 import { createRequest, createResponse } from 'node-mocks-http';
 import morgan from 'morgan';
@@ -320,18 +320,23 @@ describe('middleware/defaults', () => {
       expect(formatted).toBeNull();
     });
 
-    it('does not log a health / "liveness" check', () => {
-      req = createRequest({
-        method: 'GET',
-        url: '/healthy',
+    [
+      '/healthy',
+      '/ready',
+    ].forEach((path) => {
+      it(`does not log a 'GET ${ path }' check`, () => {
+        req = createRequest({
+          method: 'GET',
+          url: path,
+        });
+        expect( deriveContextFromRequest(req) ).toBeUndefined();
+
+        res = createResponse();
+        res.send(200);
+
+        const formatted = _morganFormatter(<any>morgan, req, res);
+        expect(formatted).toBeNull();
       });
-      expect( deriveContextFromRequest(req) ).toBeUndefined();
-
-      res = createResponse();
-      res.send(200);
-
-      const formatted = _morganFormatter(<any>morgan, req, res);
-      expect(formatted).toBeNull();
     });
 
     it('does not log when Telemetry has been silenced', () => {

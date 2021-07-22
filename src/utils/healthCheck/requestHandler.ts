@@ -5,6 +5,9 @@ import { Context, deriveContextFromRequest } from '../../server/apollo.context';
 import { HealthCheckRequestHandlerOptions } from './types';
 
 
+// Configure Liveness, Readiness and Startup Probes
+//   https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+
 export function createHealthCheckRequestHandler<T extends Context = Context>(
   options: HealthCheckRequestHandlerOptions<T>
 ): RequestHandler {

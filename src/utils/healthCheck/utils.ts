@@ -7,6 +7,13 @@ import {
 } from './types';
 
 
+// health checks should not spam the logs
+//   @see 'src/server/server.ts' + 'src/utils/healthCheck'
+export function isHealthCheckRoute(route: string): boolean {
+  return ((route === '/healthy') || (route ==='/ready'));
+}
+
+
 export function healthCheckForPredicate(healthPredicate: HealthPredicate): HealthChecker {
   return async (context) => {
     const { telemetry } = context;

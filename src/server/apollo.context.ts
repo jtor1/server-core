@@ -22,6 +22,7 @@ import { callService, IServiceCallerOverrides } from '../graphql/interservice.co
 import { GetMe, UserFragment } from '../graphql/generated.typings';
 import { SESSION_REQUEST_PROPERTY } from '../middleware/session';
 import { deriveRemoteAddress } from '../utils/remoteAddress';
+import { isHealthCheckRoute } from '../utils/healthCheck';
 
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -83,7 +84,7 @@ export function logContextRequest(context: Context): void {
   const { telemetry, sessionId, remoteAddress } = context;
   const { hostname: host, method, body } = req;
   const path = (req.baseUrl || req.path); // GraphQL middleware does a rewrite
-  if (path.startsWith('/healthy')) {
+  if (isHealthCheckRoute(path)) {
     // health checks should not spam the logs
     return;
   }
