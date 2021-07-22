@@ -830,22 +830,27 @@ describe('server/apollo.context', () => {
       logContextRequest(context);
     });
 
-    it('does not log a health check', () => {
-      context = new Context({
-        req: createRequest({
-          hostname: 'HOSTNAME',
-          method: 'GET',
-          path: '/healthy',
-        }),
-        token: TOKEN,
-        userId: USER_ID,
+    [
+      '/healthy',
+      '/ready',
+    ].forEach((path) => {
+      it(`does not log a 'GET ${ path }' check`, () => {
+        context = new Context({
+          req: createRequest({
+            hostname: 'HOSTNAME',
+            method: 'GET',
+            path,
+          }),
+          token: TOKEN,
+          userId: USER_ID,
+        });
+        Reflect.set(context, 'telemetry', telemetryMock.object);
+
+        telemetryMock.setup((mocked) => mocked.info('logContextRequest', TypeMoq.It.isObjectWith({})))
+        .verifiable(TypeMoq.Times.never());
+
+        logContextRequest(context);
       });
-      Reflect.set(context, 'telemetry', telemetryMock.object);
-
-      telemetryMock.setup((mocked) => mocked.info('logContextRequest', TypeMoq.It.isObjectWith({})))
-      .verifiable(TypeMoq.Times.never());
-
-      logContextRequest(context);
     });
   });
 

@@ -22,7 +22,7 @@ interface ServerConstructor {
   useDefaultMiddleware: boolean;
   middleware?: RequestHandlerVariant[];
 
-  // https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  // @see 'src/utils/healthCheck'
   readyHandler?: RequestHandler, // "i am a Pod that is 'ready'; i can accept traffic"
   healthyHandler?: RequestHandler, // "i am a Pod that is 'live'; please don't kill me"
 

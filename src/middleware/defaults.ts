@@ -13,6 +13,7 @@ import { bodyParserGraphql } from './body.parser';
 import { sessionMiddleware, SESSION_REQUEST_PROPERTY } from './session';
 import { deriveContextFromRequest } from '../server/apollo.context';
 import { deriveRemoteAddress } from '../utils/remoteAddress';
+import { isHealthCheckRoute } from '../utils/healthCheck';
 
 export interface DefaultMiddlewareResult {
   preludesMap: Map<string, RequestHandlerVariant>;
@@ -30,10 +31,6 @@ function _tupleByMiddlewareName(handler: RequestHandlerVariant): [ string, Reque
 }
 
 
-// health checks should not spam the logs
-//   @see 'src/server/server.ts'
-const UNLOGGED_PATHS = new Set<string>([ '/ready', '/healthy' ]);
-
 // @protected -- exported only for Test Suite, not '/index.ts'
 //
 // NOTE: `tokens: any` because `morgan.TokenIndexer` is incompatible across Node 6 + 10
@@ -42,7 +39,8 @@ const UNLOGGED_PATHS = new Set<string>([ '/ready', '/healthy' ]);
 //
 export function _morganFormatter(tokens: any, req: Request, res: Response): string | null {
   const path = tokens.url(req, res);
-  if (UNLOGGED_PATHS.has(path)) {
+  if (isHealthCheckRoute(path)) {
+    // health checks should not spam the logs
     return null;
   }
 

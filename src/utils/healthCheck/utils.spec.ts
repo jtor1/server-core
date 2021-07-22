@@ -7,6 +7,7 @@ import {
 import { Context } from '../../server/apollo.context';
 import {
   HealthCheckState,
+  isHealthCheckRoute,
   healthCheckForPredicate,
 } from './utils';
 
@@ -40,6 +41,18 @@ describe('utils/healthCheck', () => {
 
       expect(state.value).toBe(false);
       expect(await state.healthChecker()).toBe(false);
+    });
+  });
+
+
+  describe('isHealthCheckRoute', () => {
+    it('recognizes a health check route', () => {
+      expect(isHealthCheckRoute('/healthy')).toBe(true);
+      expect(isHealthCheckRoute('/ready')).toBe(true);
+
+      expect(isHealthCheckRoute('/')).toBe(false);
+      expect(isHealthCheckRoute('/healthy/path')).toBe(false);
+      expect(isHealthCheckRoute('/ready?param')).toBe(false);
     });
   });
 
