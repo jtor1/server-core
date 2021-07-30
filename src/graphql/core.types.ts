@@ -15,7 +15,7 @@ const REGEX_FORMAT = /^\d{4}-\d{2}-\d{2}$/
 //   @see `scalar Timestamp`
 const FORMAT_TIMESTAMP = 'YYYY-MM-DD[T]HH:mm:ss.SSSZ';
 
-export const coreTypeDefs = gql`
+const coreTypeDefsString = /* GraphQL */ `
 
   scalar JSONObject
 
@@ -89,6 +89,7 @@ export const coreTypeDefs = gql`
 
 `;
 
+export const coreTypeDefs = gql(coreTypeDefsString);
 
 type _CoreTypeDateTuple = [ string, string ] | string;
 
