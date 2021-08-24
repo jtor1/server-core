@@ -78,5 +78,30 @@ describe('utils/miscellaneous', () => {
       ]);
       expect(iteratorItems).toBe(ITEMS);
     });
+
+    it('Executes efficiently', async () => {
+      const timeoutPromise = (sideEffect: (ms: number) => void) => (ms: number) =>
+        new Promise((res) => setTimeout(res, ms, ms))
+          .then(((ms: number) => sideEffect(ms)) as any)
+      const evidence: number[] = [];
+      const times = [1, 1000, 2, 3];
+      await executeOperationsInParallel(
+        times,
+        timeoutPromise((ms) => evidence.push(ms))
+      );
+      // it("counts to 1000")
+      expect(evidence).toMatchObject([1,2,3,1000]);
+    });
+
+    it('Safely skips and returns null for errors', async () => {
+      const results = await executeOperationsInParallel(ITEMS, async (item) => {
+        if(item === 4 || item === 13) {
+          throw Error("Unlucky number detected!");
+        }
+        return item;
+      })
+      expect(results[4]).toBe(null);
+      expect(results[13]).toBe(null);
+    });
   });
 });
