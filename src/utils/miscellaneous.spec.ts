@@ -98,5 +98,21 @@ describe('utils/miscellaneous', () => {
       ]);
       expect(iteratorItems).toBe(ITEMS);
     });
+
+    it('Executes efficiently', async () => {
+      const timeoutPromise = (sideEffect: (ms: number) => void) => (ms: number) =>
+        new Promise((res) => setTimeout(res, ms, ms))
+          .then(((ms: number) => sideEffect(ms)) as any)
+      const evidence: number[] = [];
+      const times = [1, 1000, 2, 3];
+      await executeOperationsInParallel(
+        times,
+        timeoutPromise((ms) => evidence.push(ms)),
+        { batchSize: 2 }
+      );
+      // it("counts to 1000")
+      expect(evidence).toMatchObject([1,2,3,1000]);
+    });
+
   });
 });
