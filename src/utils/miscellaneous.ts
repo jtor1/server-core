@@ -1,4 +1,4 @@
-import { chunk } from 'lodash';
+import { sortBy, identity } from 'lodash';
 
 
 // to save us from TypeScript side-effects of nullable properties that aren't `| null`
@@ -50,7 +50,7 @@ export async function executeOperationsInParallel<T = any, U = any>(
   // * increment the index
   let workQueue = items.slice(batchSize);
   let currentIndex = batchSize;
-  let results: { [key: string] : U } = {};
+  let results: Map<number, U> = new Map();
 
   // A recursion in two parts,
   // each function will call the other after each promise
@@ -65,14 +65,13 @@ export async function executeOperationsInParallel<T = any, U = any>(
   // * if we're out of work end the chain by returning null
   // * otherwise recurse on work()
   const storeAndTryNext = (result: U, index: number): Promise<U | null> | null => {
-    results[index] = result;
+    results.set(index, result);
     if(workQueue.length === 0) { return null; }
     return work(workQueue.shift()!, currentIndex++);
   }
   // start the promise wall and wait for it to finish
   let promiseGroup = initialBatch.map((item, index) => work(item, index));
   await Promise.all(promiseGroup);
-  return Object.keys(results)
-    .sort((a,b) => parseInt(a, 10) - parseInt(b, 10))
-    .map(key => results[key]);
+  return sortBy(Array.from(results.keys()), identity)
+    .map((key:number) => results.get(key) as U);
 }
