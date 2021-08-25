@@ -20,6 +20,8 @@ const EXECUTE_MODEL_OPERATIONS_IN_PARALLEL_DEFAULTS: Required<IExecuteOperations
 };
 
 /*
+  Caution: this function does not eat errors,
+  it puts the onus on the user. The whole process will fail on ONE error
   We want each promise to either
     * spawn a new promise or
     * terminate.
@@ -48,7 +50,7 @@ export async function executeOperationsInParallel<T = any, U = any>(
   // * increment the index
   let workQueue = items.slice(batchSize);
   let currentIndex = batchSize;
-  let results: any = {};
+  let results: { [key: string] : U } = {};
 
   // A recursion in two parts,
   // each function will call the other after each promise
@@ -62,7 +64,7 @@ export async function executeOperationsInParallel<T = any, U = any>(
   // * store the indexed result
   // * if we're out of work end the chain by returning null
   // * otherwise recurse on work()
-  const storeAndTryNext = (result: U | null, index: number): Promise<U | null> | null => {
+  const storeAndTryNext = (result: U, index: number): Promise<U | null> | null => {
     results[index] = result;
     if(workQueue.length === 0) { return null; }
     return work(workQueue.shift()!, currentIndex++);
