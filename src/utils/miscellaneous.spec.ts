@@ -94,15 +94,5 @@ describe('utils/miscellaneous', () => {
       expect(evidence).toMatchObject([1,2,3,1000]);
     });
 
-    it('Safely skips and returns null for errors', async () => {
-      const results = await executeOperationsInParallel(ITEMS, async (item) => {
-        if(item === 4 || item === 13) {
-          throw Error("Unlucky number detected!");
-        }
-        return item;
-      })
-      expect(results[4]).toBe(null);
-      expect(results[13]).toBe(null);
-    });
   });
 });

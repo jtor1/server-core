@@ -58,7 +58,6 @@ export async function executeOperationsInParallel<T = any, U = any>(
   // * whether we succeed or not, try to pull again from the queue
   const work = (item: T, index: number) => operation(item, index, items)
         .then(nextResult => storeAndTryNext(nextResult, index))
-        .catch((_e:any) => storeAndTryNext(null, index))
 
   // * store the indexed result
   // * if we're out of work end the chain by returning null
