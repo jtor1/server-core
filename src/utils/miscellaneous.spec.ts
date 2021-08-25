@@ -43,6 +43,26 @@ describe('utils/miscellaneous', () => {
       expect(visitedItems).toEqual(ITEMS);
     });
 
+    it('fails if an item in the first batch fails', async () => {
+      await expect(
+        executeOperationsInParallel(ITEMS, async (item) => {
+          if (item === 2) {
+            throw new Error('BOOM');
+          }
+        }, { batchSize: 3 })
+      ).rejects.toThrow('BOOM');
+    });
+
+    it('fails if an item in a secondary batch fails', async () => {
+      await expect(
+        executeOperationsInParallel(ITEMS, async (item) => {
+          if (item === 4) {
+            throw new Error('BOOM');
+          }
+        }, { batchSize: 3 })
+      ).rejects.toThrow('BOOM');
+    });
+
     it('allows a parallelization batch size to be specified', async () => {
       const INTERVAL = 100; // ms; enough to be "precise"
       const nowAtStart = Date.now();
