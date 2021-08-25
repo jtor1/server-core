@@ -55,8 +55,7 @@ export async function executeOperationsInParallel<T = any, U = any>(
   // each function will call the other after each promise
   // until `storeAndTryNext` terminates the process by returning `null`
 
-  // * do the operation
-  // * whether we succeed or not, try to pull again from the queue
+  // represents a unit of work
   const work = (item: T, index: number) => operation(item, index, items)
         .then(nextResult => storeAndTryNext(nextResult, index))
 
