@@ -25,7 +25,6 @@ const EXECUTE_MODEL_OPERATIONS_IN_PARALLEL_DEFAULTS: Required<IExecuteOperations
   We want each promise to either
     * spawn a new promise or
     * terminate.
-  We want this to happen even if there is an error during execution.
   Eg for batchSize = 4 we will do something like:
     () => () => null
     () => () => () => null
