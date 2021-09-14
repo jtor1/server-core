@@ -4,6 +4,11 @@ import { EngineReportingOptions } from 'apollo-engine-reporting';
 import { ServiceConfigFormat } from 'apollo-language-server';
 import { telemetry } from '@withjoy/telemetry';
 
+/*
+  Apollo Tooling for Gateway Services
+    https://withjoy.atlassian.net/wiki/spaces/KNOW/pages/729415844/Apollo+Tooling+for+Gateway+Services
+*/
+
 
 const SERVER_OPTIONS_DEFAULT = Object.freeze({
   // https://www.apollographql.com/docs/apollo-server/api/apollo-server/

@@ -27,6 +27,10 @@ export async function healthCheckerTypeormMigrations(context: Context): Promise<
     const executedMigrations: Migration[] = await migrationExecutorAsAny.loadExecutedMigrations();
     const executedMigrationNames = executedMigrations.map((migration) => migration.name);
 
+    if ((allMigrationNames.length === 0) && (executedMigrationNames.length !== 0)) {
+      throw new Error(`found 0 TypeORM Migrations files; check your TypeORM { migrations } config`);
+    }
+
     const unexecuted = difference(allMigrationNames, executedMigrationNames);
     if (unexecuted.length !== 0) {
       throw new Error(`unexecuted TypeORM Migrations: ${ JSON.stringify(unexecuted) }`);
