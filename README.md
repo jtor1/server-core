@@ -76,7 +76,7 @@ And once it's all passing,
 - push your changes
 - version + publish from within Node 10
 
-### Support Tooling
+### Build Tooling
 
 It's somewhat fragile;
 
