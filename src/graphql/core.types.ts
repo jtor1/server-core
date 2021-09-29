@@ -1,6 +1,7 @@
 import { gql, IResolvers } from 'apollo-server';
 import moment, { Moment } from 'moment-timezone';
 import chroma, { Color } from 'chroma-js';
+import { GraphQLScalarType } from 'graphql';
 import { GraphQLJSONObject } from 'graphql-type-json';
 
 import { Context } from 'src/server/apollo.context';
@@ -18,6 +19,7 @@ const FORMAT_TIMESTAMP = 'YYYY-MM-DD[T]HH:mm:ss.SSSZ';
 const coreTypeDefsString = /* GraphQL */ `
 
   scalar JSONObject
+  scalar Void
 
   type Color {
     hex: String!
@@ -90,6 +92,15 @@ const coreTypeDefsString = /* GraphQL */ `
 `;
 
 export const coreTypeDefs = gql(coreTypeDefsString);
+
+const resolveNull = () => null;
+const Void: GraphQLScalarType = new GraphQLScalarType({
+  name: 'Void',
+  description: 'The `Void` scalar type always resolves null.',
+  serialize: resolveNull,
+  parseValue: resolveNull,
+  parseLiteral: resolveNull,
+});
 
 type _CoreTypeDateTuple = [ string, string ] | string;
 
@@ -264,6 +275,7 @@ export function parseCoreTypeInputDateAndTimezone(date: string | null | undefine
 
 export const coreResolvers: IResolvers = {
   JSONObject: GraphQLJSONObject,
+  Void,
 
   Date: {
     timestamp: (date: _CoreTypeDateTuple): string => {

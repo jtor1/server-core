@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { isEqual } from 'lodash';
 
-import { coreTypeDefs } from '../../src/graphql/core.types';
+import { coreTypeDefs, coreResolvers } from '../../src/graphql/core.types';
 import { testSetupApollo } from '../helpers/apollo';
 
 
@@ -31,6 +31,7 @@ describe('the GraphQL JSONObject TypeDefs', () => {
           QUERY_TYPEDEFS,
         ],
         resolvers: {
+          ...coreResolvers,
           Query: {
             jsonQuery: () => resolved,
           },
@@ -53,7 +54,7 @@ describe('the GraphQL JSONObject TypeDefs', () => {
       });
     });
 
-    it('resolves a non-Object payload, regardless of its scalar Type name', async () => {
+    it('cannot serialize a non-Object payload', async () => {
       const { query } = client;
       resolved = STRING;
 
@@ -61,9 +62,15 @@ describe('the GraphQL JSONObject TypeDefs', () => {
         query: QUERY,
       });
 
-      const { data } = res;
-      expect(data).toMatchObject({
-        jsonQuery: resolved,
+      expect(res).toMatchObject({
+        errors: [
+          {
+            message: /cannot represent non-object value/,
+          }
+        ],
+        data: {
+          jsonQuery: null,
+        },
       });
     });
 
@@ -114,6 +121,7 @@ describe('the GraphQL JSONObject TypeDefs', () => {
           `,
         ],
         resolvers: {
+          ...coreResolvers,
           Mutation: {
             jsonMutation: (_self: any, args: { actual: any }, _context: any) => {
               return isEqual(args.actual, expected);
@@ -142,7 +150,7 @@ describe('the GraphQL JSONObject TypeDefs', () => {
       });
     });
 
-    it('takes a non-Object payload, regardless of its scalar Type name', async () => {
+    it('cannot parse a non-Object payload', async () => {
       const { mutate } = client;
       expected = STRING;
 
@@ -154,9 +162,13 @@ describe('the GraphQL JSONObject TypeDefs', () => {
         `,
       });
 
-      const { data } = res;
-      expect(data).toMatchObject({
-        jsonMutation: true,
+      expect(res).toMatchObject({
+        errors: [
+          {
+            message: /cannot represent non-object value/,
+          }
+        ],
+        data: undefined,
       });
     });
 
