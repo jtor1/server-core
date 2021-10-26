@@ -1,4 +1,4 @@
-import { get as getProperty, last, pick } from 'lodash';
+import { get as getProperty, pick } from 'lodash';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
@@ -196,6 +196,7 @@ export interface ContextConstructorArgs {
   identityUrl?: string;
   identityCache?: Cache | null; // `null` to disable
   identityCacheTtl?: number;
+  trustSecret?: string;
 }
 
 export class Context
@@ -212,6 +213,8 @@ export class Context
   private _userId: string;
   private _token: string;
   private _currentUser?: UserFragment;
+  private _trustSecret?: string;
+
 
   constructor(args?: ContextConstructorArgs) {
     this.telemetry = telemetrySingleton.clone();
@@ -233,6 +236,7 @@ export class Context
         identityCache,
         identityCacheTtl,
         locale,
+        trustSecret,
       } = args;
       const reqAsAny = (<any>req);
 
@@ -259,6 +263,7 @@ export class Context
       //   (3) defaults
       this._token = token || (reqAsAny && reqAsAny.token) || deriveTokenHeaderValue(req) || this._token;
       this._userId = userId || (reqAsAny && reqAsAny.userId) || this._userId;
+      this._trustSecret = trustSecret;
 
       // enrich Telemetry from request headers
       Object.assign(telemetryContext, deriveTelemetryContextFromRequest(req));
@@ -321,6 +326,16 @@ export class Context
 
   get isSuperAdmin() {
     return getProperty(this._currentUser, 'superAdmin') || false;
+  }
+
+  get isTrustedRequest(): boolean {
+    const { req, _trustSecret } = this;
+
+    if (!req || !_trustSecret) {
+      return false;
+    }
+
+    return (req.header("X-Joy-APISecret") === this._trustSecret);
   }
 
   get sessionId(): string | undefined {
