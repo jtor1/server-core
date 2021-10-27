@@ -27,7 +27,6 @@ import {
   injectContextIntoRequestMiddleware,
   deriveContextFromRequest,
 } from './apollo.context';
-import {createSandbox} from "sinon";
 
 
 const AUTH0_ID = 'AUTH0_ID';
@@ -53,16 +52,9 @@ const OTHER_TOKEN = 'OTHER_TOKEN';
 const OTHER_CACHE_KEY = `server-core/identity/${ OTHER_TOKEN }`;
 const SESSION_ID = 'fa44276cb66d302601f14a14ccde5b8ad21994fd92ec0d7b';
 
-const TRUST_SECRET = '__FAKE_JOY_CONFIG_GATEWAY_TRUST_SECRET__';
-
 
 describe('server/apollo.context', () => {
-  const sandbox = createSandbox();
   let context: Context;
-
-  afterEach(() => {
-    sandbox.verifyAndRestore();
-  });
 
   describe('Context', () => {
     describe('given constructor args', () => {
@@ -416,33 +408,6 @@ describe('server/apollo.context', () => {
     });
   });
 
-  describe('#isTrustedRequest', () => {
-    it('returns false when req or trustSecret is missing', () => {
-      const req = createRequest();
-
-      context = new Context();
-      expect(context.isTrustedRequest).toBe(false);
-
-      context = new Context({ req });
-      expect(context.isTrustedRequest).toBe(false);
-    });
-
-    it('returns false when trustSecret does not match', () => {
-      const req = createRequest();
-      sandbox.replace(req, 'header' as string, () => "NOPE");
-
-      context = new Context({trustSecret: TRUST_SECRET, req });
-      expect(context.isTrustedRequest).toBe(false);
-    });
-
-    it('returns true when the current Request is trusted', () => {
-      const req = createRequest();
-      sandbox.replace(req, 'header' as string, () => TRUST_SECRET);
-
-      context = new Context({ trustSecret: TRUST_SECRET, req });
-      expect(context.isTrustedRequest).toBe(true);
-    });
-  });
 
   describe('#me', () => {
     beforeEach(async () => {
