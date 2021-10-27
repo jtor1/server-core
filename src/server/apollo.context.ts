@@ -335,7 +335,7 @@ export class Context
       return false;
     }
 
-    return (req.header("X-Joy-APISecret") === this._trustSecret);
+    return (req.header("X-Joy-APISecret") === _trustSecret);
   }
 
   get sessionId(): string | undefined {
