@@ -60,6 +60,8 @@ const IDENTITY_ME = gql`
   }
 `;
 
+export const TRUSTED_REQUEST_HEADER_NAME = "X-Joy-APISecret";
+
 // singleton Cache, across all Context instances
 //   UserFragments are not expected to change very often
 //   so we can assume a long-lived cache
@@ -335,7 +337,7 @@ export class Context
       return false;
     }
 
-    return (req.header("X-Joy-APISecret") === _trustSecret);
+    return (req.header(TRUSTED_REQUEST_HEADER_NAME) === _trustSecret);
   }
 
   get sessionId(): string | undefined {
