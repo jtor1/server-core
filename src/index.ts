@@ -20,6 +20,7 @@ import {
   logContextRequest,
   injectContextIntoRequestMiddleware,
   deriveContextFromRequest,
+  TRUSTED_REQUEST_HEADER_NAME
 } from './server/apollo.context'
 import {
   ApolloEnvironmentConfig,
@@ -164,6 +165,7 @@ export {
   logContextRequest,
   injectContextIntoRequestMiddleware,
   deriveContextFromRequest,
+  TRUSTED_REQUEST_HEADER_NAME,
 
   ApolloEnvironmentConfig,
   ApolloEnvironmentVariant,
