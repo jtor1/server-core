@@ -26,6 +26,7 @@ import {
   logContextRequest,
   injectContextIntoRequestMiddleware,
   deriveContextFromRequest,
+  TRUSTED_REQUEST_HEADER_NAME,
 } from './apollo.context';
 
 
@@ -51,6 +52,8 @@ const CACHE = (<unknown>Object.freeze({}) as Cache);
 const OTHER_TOKEN = 'OTHER_TOKEN';
 const OTHER_CACHE_KEY = `server-core/identity/${ OTHER_TOKEN }`;
 const SESSION_ID = 'fa44276cb66d302601f14a14ccde5b8ad21994fd92ec0d7b';
+
+const TRUST_SECRET = '__FAKE_JOY_CONFIG_GATEWAY_TRUST_SECRET__';
 
 
 describe('server/apollo.context', () => {
@@ -408,6 +411,39 @@ describe('server/apollo.context', () => {
     });
   });
 
+  describe('#isTrustedRequest', () => {
+    it('returns false when req or trustSecret is missing', () => {
+      const req = createRequest();
+
+      context = new Context();
+      expect(context.isTrustedRequest).toBe(false);
+
+      context = new Context({ req });
+      expect(context.isTrustedRequest).toBe(false);
+    });
+
+    it('returns false when trustSecret does not match', () => {
+      const req = createRequest({
+        headers: {
+          [ TRUSTED_REQUEST_HEADER_NAME ]: "NOPE",
+        }
+      });
+
+      context = new Context({trustSecret: TRUST_SECRET, req });
+      expect(context.isTrustedRequest).toBe(false);
+    });
+
+    it('returns true when the current Request is trusted', () => {
+      const req = createRequest({
+        headers: {
+          [ TRUSTED_REQUEST_HEADER_NAME ]: TRUST_SECRET,
+        }
+      });
+
+      context = new Context({ trustSecret: TRUST_SECRET, req });
+      expect(context.isTrustedRequest).toBe(true);
+    });
+  });
 
   describe('#me', () => {
     beforeEach(async () => {
