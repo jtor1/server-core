@@ -1,19 +1,34 @@
+/**
+ * Unlike `ParallelOperation`, this Iterator will not receive (..., index, array)
+ *   since the batch of `items` being executed cannot be positionally reconciled
+ *   against some "total Array of processed items"
+ */
 export type BatchPipelineOperation<T> = (items: T[]) => Promise<void>;
 
-export type BatchPipelineExecutorOptionsStrict<T> = {
-  batchSize: number;
-  // when provided, it is notified upon every Error as it occurs;
-  //   if omitted, all Errors are queued up
-  //   and will be sequentially rejected during #flush
-  onError?(error: Error, items: T[]): void;
+export type BatchPipelineExecutorOptions<T> = {
+  batchSize?: number;
+  /**
+   * When `onError` is provided,
+   *   the callback Function is notified upon every Error as it occurs.
+   *
+   * When `onError` is omitted,
+   *   all Errors are queued up
+   *   and will be sequentially doled out as rejections during `#flush`.
+   */
+  onError?: (error: Error, items: T[]) => void;
 };
 const DEFAULT_OPTIONS: BatchPipelineExecutorOptionsStrict<any> = {
   batchSize: 8,
-  onError: undefined, // for a simpler Test Suite
+  onError: undefined!, // for a simpler Test Suite
 };
-export type BatchPipelineExecutorOptions<T> = Partial<BatchPipelineExecutorOptionsStrict<T>>
+type BatchPipelineExecutorOptionsStrict<T> = Required<BatchPipelineExecutorOptions<T>>
 
 
+/**
+ * A Class allowing for fine-grained control of batch pipeline execution.
+ *
+ * @class
+ */
 export class BatchPipelineExecutor<T> {
   public isCordoned: boolean = false;
 
@@ -29,15 +44,20 @@ export class BatchPipelineExecutor<T> {
     this._options = { ...DEFAULT_OPTIONS, ...options };
   }
 
+  /**
+   * @see #pushAll
+   */
   push(item: T): this {
-    if (this._enforceCordoning([ item ])) {
-      return this;
-    }
-    this._items.push(item);
-    this._executeOnPressure();
-    return this;
+    return this.pushAll([ item ]);
   }
 
+  /**
+   * Enqueues the `items` for batch execution.
+   *
+   * If the push introduces sufficient items into the queue to warrant a new batch,
+   *   the batch is automatically executed in a backgrounded Promise chain (eg. the "pipeline").
+   *   You can ensure that all items in the pipeline have been processed by awaiting `#flush`.
+   */
   pushAll(items: T[]): this {
     if (this._enforceCordoning(items)) {
       return this;
@@ -48,6 +68,9 @@ export class BatchPipelineExecutor<T> {
   }
 
 
+  /**
+   * @protected
+   */
   _handleError(error: Error, items: T[]): void {
     const { onError } = this._options;
     if (onError) {
@@ -61,6 +84,9 @@ export class BatchPipelineExecutor<T> {
     }
   }
 
+  /**
+   * @protected
+   */
   _enforceCordoning(items: T[]): boolean {
     if (! this.isCordoned) {
       return false;
@@ -73,12 +99,25 @@ export class BatchPipelineExecutor<T> {
     return true;
   }
 
+  /**
+   * Inform the Executor that it should not accept any more items.
+   *
+   * The free-form nature of the execution pipeline --
+   *   eg. add new items and they get processed auto-magically! --
+   *   opens up the possibility for problematic scenarios,
+   *   such as new items getting enqueued when the Executor's owner believes that all work is "done".
+   * When an Executor is 'cordoned off', any newly-arriving items are rejected;
+   *   this Error is treated like any other Error during execution.
+   */
   cordon(state: boolean): this {
     this.isCordoned = state;
     return this;
   }
 
 
+  /**
+   * @protected
+   */
   _executeOnPressure(): boolean {
     const { _items, _options } = this;
     if (_items.length < _options.batchSize) {
@@ -89,6 +128,9 @@ export class BatchPipelineExecutor<T> {
     return true;
   }
 
+  /**
+   * @protected
+   */
   _executeNextBatch(): void {
     const { operation, _options, _items, _activePromise } = this;
     const { batchSize, onError } = _options;
@@ -130,6 +172,9 @@ export class BatchPipelineExecutor<T> {
   }
 
 
+  /**
+   * @returns {Boolean} true once all items have been processed and all Errors have been reported.
+   */
   get isFlushed(): boolean {
     return (
       (this._items.length === 0) &&
@@ -138,6 +183,10 @@ export class BatchPipelineExecutor<T> {
     );
   }
 
+  /**
+   * Executes all pending batches, and reports all accumulated Errors
+   *   which have not been routed to an `onError` callback.
+   */
   async flush(): Promise<void> {
     const { _unreportedErrors } = this;
 

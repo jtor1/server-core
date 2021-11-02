@@ -6,7 +6,7 @@ import {
   BatchPipelineExecutor,
   BatchPipelineExecutorOptions,
   executeOperationsInBatches,
-} from './execute';
+} from './batch';
 
 
 const sandbox = createSandbox();
@@ -54,7 +54,7 @@ async function _teardownPipelineSink<T>(executor: BatchPipelineExecutor<T>) {
 }
 
 
-describe("Paginator", () => {
+describe('utils/execution/batch', () => {
   afterEach(() => {
     sandbox.verifyAndRestore();
   });

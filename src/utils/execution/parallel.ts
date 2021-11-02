@@ -1,21 +1,12 @@
 import { sortBy, identity } from 'lodash';
 
 
-// to save us from TypeScript side-effects of nullable properties that aren't `| null`
-export const NULL_STRING = (<unknown>null as string);
+export type ParallelOperation<T, U> = (item: T, index: number, array: T[]) => Promise<U>;
 
-
-const UUID_REGEXP: RegExp = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-
-export function isUUID(id: string): boolean {
-  return ((!! id) && UUID_REGEXP.test(id));
-}
-
-
-export interface IExecuteOperationsInParallelOptions {
+export type ParallelExecutorOptions = {
   batchSize?: number;
 }
-const EXECUTE_MODEL_OPERATIONS_IN_PARALLEL_DEFAULTS: Required<IExecuteOperationsInParallelOptions> = {
+const EXECUTE_MODEL_OPERATIONS_IN_PARALLEL_DEFAULTS: Required<ParallelExecutorOptions> = {
   batchSize: 8,
 };
 
@@ -36,8 +27,8 @@ const EXECUTE_MODEL_OPERATIONS_IN_PARALLEL_DEFAULTS: Required<IExecuteOperations
 */
 export async function executeOperationsInParallel<T = any, U = any>(
   items: T[],
-  operation: (item: T, index: number, array: T[]) => Promise<U>,
-  options?: IExecuteOperationsInParallelOptions
+  operation: ParallelOperation<T, U>,
+  options?: ParallelExecutorOptions
 ): Promise<U[]> {
   // begin with a wall of `batchSize` promises
   const batchSize = options?.batchSize || EXECUTE_MODEL_OPERATIONS_IN_PARALLEL_DEFAULTS.batchSize;
