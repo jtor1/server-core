@@ -190,7 +190,7 @@ describe('server/apollo.context', () => {
       });
 
       // not directly mutable
-      Reflect.set(args, '_currentUser', USER);
+      Reflect.set(args, 'currentUser', USER);
       expect(args.currentUser).toBe(USER);
 
       context = new Context(args);
@@ -387,7 +387,9 @@ describe('server/apollo.context', () => {
       // and with a bit of hackery,
 
       context = new Context({ });
-      Reflect.set(context, '_currentUser', ME_FRAGMENT);
+
+      // @ts-ignore
+      context._updateUser(ME_FRAGMENT.id, ME_FRAGMENT);
       expect(context.isIdentifed).toBe(true);
     });
   });
@@ -403,10 +405,13 @@ describe('server/apollo.context', () => {
       // and with a bit of hackery,
 
       context = new Context({ });
-      Reflect.set(context, '_currentUser', {
+
+      // @ts-ignore
+      context._updateUser(ME_FRAGMENT.id, {
         ...ME_FRAGMENT,
         superAdmin: true,
       });
+
       expect(context.isIdentifed).toBe(true);
     });
   });

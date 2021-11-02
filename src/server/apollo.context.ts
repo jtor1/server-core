@@ -211,12 +211,27 @@ export class Context
   public readonly identityCacheTtl: number;
   public readonly locale: string;
   public readonly remoteAddress: string | undefined;
+  public readonly isTrustedRequest: boolean;
 
-  private _userId: string;
-  private _token: string;
-  private _currentUser?: UserFragment;
+  //   "why readonly?  why not a getter?"
+  //   https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-core/src/runHttpQuery.ts#L254
+  //   "// TODO: We currently shallow clone the context for every request,"
+  //   and their `cloneObject` doesn't seem to consider getters.
+  //   from experience, it doesn't even seem to deal with `Reflect.setProperty` correctly :( .
+  //   since callers shouldn't modify these Context properties, a getter seemed natural,
+  //   but direct value assignment is the *only* Test Suite mocking method that works.
+  //   since `readonly` works on an honor system, we can enforce that via TypeScript,
+  //   while still mocking it as needed within a Test Suite (eg. SinonSandbox#replace).
+  public readonly token: string;
+  public readonly currentAuth0Id:  string | undefined;
+  public readonly currentUser: UserFragment | undefined;
+  public readonly userId: string;
+  public readonly sessionId:  string | undefined;
+  public readonly isSuperAdmin:  boolean;
+  public readonly isAuthenticated:  boolean;
+  public readonly isIdentifed:  boolean;
+
   private _trustSecret?: string;
-
 
   constructor(args?: ContextConstructorArgs) {
     this.telemetry = telemetrySingleton.clone();
@@ -226,8 +241,8 @@ export class Context
     this.identityCache = IDENTITY_CACHE;
     this.identityCacheTtl = IDENTITY_CACHE_TTL;
     this.locale = 'en_US';
-    this._token = NO_TOKEN;
-    this._userId = NO_USER;
+    this.token = NO_TOKEN;
+    this.userId = NO_USER;
 
     if (args) {
       const {
@@ -263,8 +278,8 @@ export class Context
       //   (1) what we were given
       //   (2) what we can inherit or derive with minimum effort
       //   (3) defaults
-      this._token = token || (reqAsAny && reqAsAny.token) || deriveTokenHeaderValue(req) || this._token;
-      this._userId = userId || (reqAsAny && reqAsAny.userId) || this._userId;
+      this.token = token || (reqAsAny && reqAsAny.token) || deriveTokenHeaderValue(req) || this.token;
+      this.userId = userId || (reqAsAny && reqAsAny.userId) || this.userId;
       this._trustSecret = trustSecret;
 
       // enrich Telemetry from request headers
@@ -280,57 +295,46 @@ export class Context
     const context = this;
     telemetryContext.req = {
       get sessionId() { return context.sessionId },
-      get token() { return context._token },
-      get userId() { return context._userId },
+      get token() { return context.token },
+      get userId() { return context.userId },
       get jwt() {
-        const decoded = decodeUnverifiedToken(context._token);
+        const decoded = decodeUnverifiedToken(context.token);
         return decoded && pick(decoded, SAFE_JWT_PROPERTIES);
       },
     };
 
     // and some final wrap-up
     this.remoteAddress = deriveRemoteAddress(this.req);
+
+    // Apollo shallow clones context which breaks getters so move assignment here
+    this._updateUser(this.userId, undefined);
+    this.currentAuth0Id = this._currentAuth0Id();
+    this.isTrustedRequest = this._isTrustedRequest();
+    this.sessionId = getProperty(this.req, SESSION_REQUEST_PROPERTY);
   }
 
 
-  get token() {
-    return this._token;
+  private _updateUser(userId: string, userFragment: UserFragment | undefined): void {
+    // We want these to by typed readonly to the outside world,
+    // but we still need to update them dynamically inside this class
+    (this.userId as string) = userId;
+    (this.currentUser as UserFragment | undefined) = userFragment;
+
+    (this.isSuperAdmin as boolean) = getProperty(this.currentUser, 'superAdmin') || false;
+    (this.isAuthenticated as boolean) = (this.userId && (this.userId !== NO_USER)) || false;
+    (this.isIdentifed as boolean) = (!! this.currentUser);
   }
 
-  get currentAuth0Id(): string | undefined {
-    const { _token } = this;
-    if ((! _token) || (_token === NO_TOKEN)) {
+  private _currentAuth0Id(): string | undefined {
+    const { token } = this;
+    if ((! token) || (token === NO_TOKEN)) {
       return undefined;
     }
-    const decoded = decodeUnverifiedToken(this._token);
+    const decoded = decodeUnverifiedToken(token);
     return getProperty(decoded, 'sub'); // it's Subject
   }
 
-  get userId() {
-    return this._userId;
-  }
-
-  get isAuthenticated() {
-    return (this.userId && (this.userId !== NO_USER)) || false;
-  }
-
-  get identityCacheEnabled(): Boolean {
-    return (this.identityCache !== null);
-  }
-
-  get currentUser(): UserFragment | undefined {
-    return this._currentUser;
-  }
-
-  get isIdentifed() {
-    return (!! this._currentUser);
-  }
-
-  get isSuperAdmin() {
-    return getProperty(this._currentUser, 'superAdmin') || false;
-  }
-
-  get isTrustedRequest(): boolean {
+  private _isTrustedRequest(): boolean {
     const { req, _trustSecret } = this;
 
     if (!req || !_trustSecret) {
@@ -340,8 +344,9 @@ export class Context
     return (req.header(TRUSTED_REQUEST_HEADER_NAME) === _trustSecret);
   }
 
-  get sessionId(): string | undefined {
-    return getProperty(this.req, SESSION_REQUEST_PROPERTY);
+
+  get identityCacheEnabled(): Boolean {
+    return (this.identityCache !== null);
   }
 
   public me = async (overrides?: IServiceCallerOverrides): Promise<void> => {
@@ -373,8 +378,7 @@ export class Context
     }
 
     // establish our state
-    this._currentUser = userFragment;
-    this._userId = userFragment.id;
+    this._updateUser(userFragment.id, userFragment);
   }
 
   public fetchIdentityUser = async (overrides?: IServiceCallerOverrides): Promise<UserFragment | undefined> => {
