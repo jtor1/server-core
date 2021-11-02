@@ -1,7 +1,7 @@
 # server-core
 
 
-## Publishing
+## Publishing the Module
 
 To publish a new version of this module,
 
@@ -21,9 +21,55 @@ As a follow-up,
 - it's ready once the 'versions' in `yarn info @withjoy/server-core` have been updated
 
 
-## Integrating Before You Publish
+## Integrating / Upgrading the Module
 
+### Before You Publish
+
+When you're doing trial runs of the built package,
+using the 'file://' protocol and the file TGZ output by `yarn pack` is the recommended strategy.
 Please see [Developing Node Modules](https://withjoy.atlassian.net/wiki/spaces/KNOW/pages/1545896147/Developing+Node+Modules).
+
+PS. it's okay to replace the `{ dependencies }` wildcard for testing purposes,
+but that **is not** the approach for upgrading to the published version -- see below.
+
+### The Published Module
+
+'server-core' and 'server-core-test' are interdependent in a way that makes `package.json` resolutions complicated.
+Each one advances forward on its own version timeline,
+while 'server-core-test' also provides a extended Test Suite for 'server-core'.
+
+To address this, our `package.json` files are configured as follows:
+```json
+{
+  "resolutions": {
+    "@withjoy/server-core": "^X.X.X",
+    ...
+  },
+  "dependencies": {
+    "@withjoy/server-core": "*", // <= wildcard
+    ...
+  },
+  "devDependencies": {
+    "@withjoy/server-core-test": "^X.X.X",
+    ...
+  }
+}
+```
+
+To upgrade 'server-core'
+
+- call out the new version in `{ resolutions }` -- *(leave the wildcard alone)*
+- `yarn install`
+- confirm that your `yarn.lock` has been updated accordingly
+
+If experience problems trying to `import { }` the newly-published code, you may need to
+
+- hand-edit the `yarn.lock` file and remove all the disparate '@withjoy/server-core' versions
+- `yarn install` again
+
+You should be in good shape after that.
+
+PS. upgrading 'server-core-test' is easy; it follows typical version specification patterns.
 
 
 ## Node 6 Support
