@@ -63,7 +63,8 @@ export class BatchPipelineExecutor<T> {
       return this;
     }
     this._items = this._items.concat(items);
-    this._executeOnPressure();
+
+    this._executeNextBatch(false); // pressure (vs. flushing)
     return this;
   }
 
@@ -118,27 +119,18 @@ export class BatchPipelineExecutor<T> {
   /**
    * @protected
    */
-  _executeOnPressure(): boolean {
-    const { _items, _options } = this;
-    if (_items.length < _options.batchSize) {
-      return false;
-    }
-
-    this._executeNextBatch();
-    return true;
-  }
-
-  /**
-   * @protected
-   */
-  _executeNextBatch(): void {
+  _executeNextBatch(isFlushing: boolean): void {
     const { operation, _options, _items, _activePromise } = this;
     const { batchSize, onError } = _options;
     if (_items.length === 0) {
       return;
     }
+    if ((! isFlushing) && (_items.length < batchSize)) {
+      // in pressure mode, only execute full batches
+      return;
+    }
     if (_activePromise) {
-      // we will get around to that
+      // @see "onto the next batch"
       return;
     }
 
@@ -147,9 +139,9 @@ export class BatchPipelineExecutor<T> {
     const batchPromise = new Promise<void>((resolve) => {
       operation(batch)
       .then(() => {
-        // onto the next batch
+        // onto the next batch, using the same mode
         this._activePromise = undefined;
-        this._executeNextBatch();
+        this._executeNextBatch(isFlushing);
 
         resolve();
       })
@@ -193,7 +185,7 @@ export class BatchPipelineExecutor<T> {
     // bail as soon as things go badly
     while (_unreportedErrors.length === 0) {
       // kick off all remaining batches
-      this._executeNextBatch();
+      this._executeNextBatch(true); // flushing
       if (! this._activePromise) {
         break;
       }

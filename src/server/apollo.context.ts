@@ -213,7 +213,7 @@ export class Context
   public readonly remoteAddress: string | undefined;
   public readonly isTrustedRequest: boolean;
 
-  //   "why readonly?  why not a getter?"
+  // "why readonly?  why not a getter?"
   //   https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-core/src/runHttpQuery.ts#L254
   //   "// TODO: We currently shallow clone the context for every request,"
   //   and their `cloneObject` doesn't seem to consider getters.
@@ -322,7 +322,7 @@ export class Context
 
     (this.isSuperAdmin as boolean) = getProperty(this.currentUser, 'superAdmin') || false;
     (this.isAuthenticated as boolean) = (this.userId && (this.userId !== NO_USER)) || false;
-    (this.isIdentifed as boolean) = (!! this.currentUser);
+    (this.isIdentifed as boolean) = Boolean(this.currentUser);
   }
 
   private _currentAuth0Id(): string | undefined {

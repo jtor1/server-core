@@ -81,13 +81,6 @@ describe('utils/execution/batch', () => {
       expect(operationSpy.callCount).toBe(2);
     });
 
-    it('executes in batches', async () => {
-      await executeOperationsInBatches([ 1, 2, 3, 4, 5 ], operationSpy, { batchSize: 3 });
-
-      expect(sink).toEqual([ 1, 2, 3, 4, 5 ]);
-      expect(operationSpy.callCount).toBe(2);
-    });
-
     describe('without an onError callback', () => {
       it('rejects due to poison', async () => {
         await expect(
@@ -158,30 +151,37 @@ describe('utils/execution/batch', () => {
     });
 
     describe('#push', () => {
-      it('triggers an execution once batchSize is reached', async () => {
-        const { executor } = _setupPipelineSink({ batchSize: 3 });
+      let executor: BatchPipelineExecutor<number>;
 
+      beforeEach(() => {
+        const setup = _setupPipelineSink({ batchSize: 3 });
+        executor = setup.executor;
+      });
+
+      afterEach(async () => {
+        await _teardownPipelineSink(executor);
+      });
+
+      it('triggers an execution once batchSize is reached', async () => {
         executor.push(1).push(2);
         expect(executor._items).toEqual([ 1, 2 ]);
         expect(executor._activePromise).toBeUndefined();
 
         executor.push(3);
         expect(executor._activePromise).not.toBeUndefined();
-
         expect(executor._unreportedErrors.length).toBe(0);
-        await _teardownPipelineSink(executor);
       });
 
       it('will not push when the Executor is cordoned off', async () => {
-        const { executor } = _setupPipelineSink({ batchSize: 3 });
-
-        executor.push(1).cordon(true);
+        executor.push(1);
+        executor.cordon(true);
         expect(executor.isCordoned).toBe(true);
         expect(executor._items).toEqual([ 1 ]);
         expect(executor._activePromise).toBeUndefined();
         expect(executor._unreportedErrors.length).toBe(0);
 
-        executor.push(2).cordon(false);
+        executor.push(2);
+        executor.cordon(false);
         expect(executor.isCordoned).toBe(false);
         expect(executor._items).toEqual([ 1 ]);
         expect(executor._activePromise).toBeUndefined();
@@ -192,36 +192,46 @@ describe('utils/execution/batch', () => {
         expect(executor._activePromise).toBeUndefined();
         // it('does not forget the prior Error')
         expect(executor._unreportedErrors.length).toBe(1);
-
-        await _teardownPipelineSink(executor);
       });
     });
 
     describe('#pushAll', () => {
-      it('triggers an execution once batchSize is reached', async () => {
-        const { executor } = _setupPipelineSink({ batchSize: 5 });
+      let executor: BatchPipelineExecutor<number>;
 
+      beforeEach(() => {
+        const setup = _setupPipelineSink({ batchSize: 5 });
+        executor = setup.executor;
+      });
+
+      afterEach(async () => {
+        await _teardownPipelineSink(executor);
+      });
+
+      it('triggers an execution once batchSize is reached', async () => {
         executor.pushAll([ 1, 2 ]).pushAll([ 3, 4 ]);
         expect(executor._items).toEqual([ 1, 2, 3, 4 ]);
         expect(executor._activePromise).toBeUndefined();
 
-        executor.pushAll([ 5 ]);
+        executor.pushAll([ 5, 6 ]);
         expect(executor._activePromise).not.toBeUndefined();
-
         expect(executor._unreportedErrors.length).toBe(0);
-        await _teardownPipelineSink(executor);
+
+        // it('will not cause a partial batch to be executed')
+        await _allowExecution();
+        expect(executor._activePromise).toBeUndefined();
+        expect(executor._items).toEqual([ 6 ]);
       });
 
       it('will not push when the Executor is cordoned off', async () => {
-        const { executor } = _setupPipelineSink({ batchSize: 5 });
-
-        executor.pushAll([ 1, 2 ]).cordon(true);
+        executor.pushAll([ 1, 2 ]);
+        executor.cordon(true);
         expect(executor.isCordoned).toBe(true);
         expect(executor._items).toEqual([ 1, 2 ]);
         expect(executor._activePromise).toBeUndefined();
         expect(executor._unreportedErrors.length).toBe(0);
 
-        executor.pushAll([ 3, 4 ]).cordon(false);
+        executor.pushAll([ 3, 4 ]);
+        executor.cordon(false);
         expect(executor.isCordoned).toBe(false);
         expect(executor._items).toEqual([ 1, 2 ]);
         expect(executor._activePromise).toBeUndefined();
@@ -232,8 +242,6 @@ describe('utils/execution/batch', () => {
         expect(executor._activePromise).toBeUndefined();
         // it('does not forget the prior Error')
         expect(executor._unreportedErrors.length).toBe(1);
-
-        await _teardownPipelineSink(executor);
       });
     });
 
@@ -260,7 +268,8 @@ describe('utils/execution/batch', () => {
       it('queues up an Error when cordoned off', () => {
         const { executor } = _setupPipelineSink();
 
-        expect(executor.cordon(true)._enforceCordoning(ITEMS)).toBe(true);
+        executor.cordon(true);
+        expect(executor._enforceCordoning(ITEMS)).toBe(true);
         expect(executor.isCordoned).toBe(true);
         expect(executor._unreportedErrors.length).toBe(1);
 
@@ -274,7 +283,8 @@ describe('utils/execution/batch', () => {
 
         // it('does not abandon the prior Error once uncordoned')
         //   eg. you cannot simply undo the past
-        expect(executor.cordon(false)._enforceCordoning(ITEMS)).toBe(false);
+        executor.cordon(false);
+        expect(executor._enforceCordoning(ITEMS)).toBe(false);
         expect(executor._unreportedErrors.length).toBe(2);
       });
 
@@ -284,7 +294,8 @@ describe('utils/execution/batch', () => {
           onError
         });
 
-        expect(executor.cordon(true)._enforceCordoning(ITEMS)).toBe(true);
+        executor.cordon(true);
+        expect(executor._enforceCordoning(ITEMS)).toBe(true);
         // it('assumes that it has handled the Error')
         expect(executor._unreportedErrors.length).toBe(0);
 
@@ -294,24 +305,6 @@ describe('utils/execution/batch', () => {
       });
     });
 
-
-    describe('#_executeOnPressure', () => {
-      it('triggers an execution once batchSize is reached', async () => {
-        const { executor } = _setupPipelineSink({ batchSize: 3 });
-
-        expect(executor._executeOnPressure()).toBe(false);
-        expect(executor._activePromise).toBeUndefined();
-
-        expect(executor.pushAll([ 1, 2 ])._executeOnPressure()).toBe(false);
-
-        // pushing would release the pressure, so ...
-        executor._items.push(3);
-        expect(executor._executeOnPressure()).toBe(true);
-        expect(executor._activePromise).not.toBeUndefined();
-
-        await _teardownPipelineSink(executor);
-      });
-    });
 
     describe('#_executeNextBatch', () => {
       let executor: BatchPipelineExecutor<number>;
@@ -334,103 +327,193 @@ describe('utils/execution/batch', () => {
       it('does nothing without any items', async () => {
         expect(executor._items.length).toBe(0);
 
-        executor._executeNextBatch();
+        // it('works that way in pressure mode')
+        executor._executeNextBatch(false);
+        expect(executor._activePromise).toBeUndefined();
+        expect(operationSpy.callCount).toBe(0);
+
+        // it('works that way in flush mode')
+        executor._executeNextBatch(true);
         expect(executor._activePromise).toBeUndefined();
         expect(operationSpy.callCount).toBe(0);
       });
 
-      it('executes the next batch of items', async () => {
-        // avoid #push operations, since they act under pressure
-        executor._items = [ 1, 2, 3, 4 ];
-        expect(executor._activePromise).toBeUndefined();
+      describe('in pressure mode', () => {
+        it('executes the next batch of items', async () => {
+          // avoid #push operations, since they act under pressure
+          executor._items = [ 1, 2, 3, 4 ];
+          expect(executor._activePromise).toBeUndefined();
 
-        executor._executeNextBatch();
-        expect(executor._activePromise).not.toBeUndefined();
-        expect(executor._items).toEqual([ 4 ]);
-        // it('has started an operation')
-        expect(operationSpy.callCount).toBe(1);
+          executor._executeNextBatch(false);
+          expect(executor._activePromise).not.toBeUndefined();
+          expect(executor._items).toEqual([ 4 ]);
+          // it('has started an operation')
+          expect(operationSpy.callCount).toBe(1);
 
-        // it('will not take on a new batch until the current one has finished')
-        executor.pushAll([ 5, 6, 7 ])._executeNextBatch();
-        expect(executor._items).toEqual([ 4, 5, 6, 7 ]);
-        expect(sink).toEqual([]);
-        expect(operationSpy.callCount).toBe(1);
+          // it('will not take on a new batch until the current one has finished')
+          executor.pushAll([ 5, 6, 7 ])._executeNextBatch(false);
+          expect(executor._items).toEqual([ 4, 5, 6, 7 ]);
+          expect(sink).toEqual([]);
+          expect(operationSpy.callCount).toBe(1);
 
-        // it('will ultimately execute all batches')
-        //   including a partial batch
-        await _allowExecution();
-        expect(executor._activePromise).toBeUndefined();
-        expect(executor._items).toEqual([ ]);
-        expect(sink).toEqual([ 1, 2, 3, 4, 5, 6, 7 ]);
-        expect(operationSpy.callCount).toBe(3);
+          // it('will execute every full batch it can produce')
+          //   but not a partial batch
+          await _allowExecution();
+          expect(executor._activePromise).toBeUndefined();
+          expect(executor._items).toEqual([ 7 ]);
+          expect(sink).toEqual([ 1, 2, 3, 4, 5, 6 ]);
+          expect(operationSpy.callCount).toBe(2);
 
-        expect(executor._unreportedErrors.length).toBe(0);
-      });
-
-      it('retries failed work', async () => {
-        // avoid #push operations, since they act under pressure
-        executor._items = [ 1, 2, POISON, 4 ];
-        expect(executor._activePromise).toBeUndefined();
-
-        executor._executeNextBatch();
-        expect(executor._activePromise).not.toBeUndefined();
-        expect(executor._items).toEqual([ 4 ]);
-        expect(sink).toEqual([]);
-        expect(operationSpy.callCount).toBe(1);
-
-        // it('restores the failed items to the batch')
-        await _allowExecution();
-        expect(executor._activePromise).toBeUndefined();
-        expect(executor._items).toEqual([ 1, 2, POISON, 4 ]);
-        expect(executor._unreportedErrors.length).toBe(1);
-        expect(sink).toEqual([]);
-        expect(operationSpy.callCount).toBe(1);
-
-        const [ error ] = executor._unreportedErrors;
-        expect(error.message).toMatch(/POISON/);
-
-        // it('gets the same results a second time')
-        executor._executeNextBatch();
-        await _allowExecution();
-        expect(executor._items).toEqual([ 1, 2, POISON, 4 ]);
-        expect(executor._unreportedErrors.length).toBe(2);
-        expect(operationSpy.callCount).toBe(2);
-
-        // it('does fine once the poison is removed')
-        executor._items[2] = 3;
-        executor._executeNextBatch();
-        await _allowExecution();
-        expect(executor._activePromise).toBeUndefined();
-        expect(executor._items).toEqual([]);
-        expect(executor._unreportedErrors.length).toBe(2);
-        expect(sink).toEqual([ 1, 2, 3, 4 ]);
-        expect(operationSpy.callCount).toBe(4);
-      });
-
-      it('notifies the callback of an Error', async () => {
-        // not the usual setup
-        const onError = sandbox.spy();
-        const setup = _setupPipelineSink<number>({
-          batchSize: 3,
-          poisonItem: POISON,
-          onError,
+          expect(executor._unreportedErrors.length).toBe(0);
         });
-        executor = setup.executor; // for `afterEach` purposes
 
-        // avoid #push operations, since they act under pressure
-        executor._items = [ 1, 2, POISON, 4 ];
+        it('retries failed work', async () => {
+          // avoid #push operations, since they act under pressure
+          executor._items = [ 1, 2, POISON, 4 ];
+          expect(executor._activePromise).toBeUndefined();
 
-        executor._executeNextBatch();
-        await _allowExecution();
-        // it('does not attempt a retry')
-        expect(executor._items).toEqual([ 4 ]);
-        expect(sink).toEqual([]);
-        // it('assumes that it has handled the Error')
-        expect(executor._unreportedErrors.length).toBe(0);
+          executor._executeNextBatch(false);
+          expect(executor._activePromise).not.toBeUndefined();
+          expect(executor._items).toEqual([ 4 ]);
+          expect(sink).toEqual([]);
+          expect(operationSpy.callCount).toBe(1);
 
-        expect(onError.callCount).toBe(1);
-        expect(onError.args[0][0].message).toMatch(/POISON/);
-        expect(onError.args[0][1]).toEqual([ 1, 2, POISON ]);
+          // it('restores the failed items to the batch')
+          await _allowExecution();
+          expect(executor._activePromise).toBeUndefined();
+          expect(executor._items).toEqual([ 1, 2, POISON, 4 ]);
+          expect(executor._unreportedErrors.length).toBe(1);
+          expect(sink).toEqual([]);
+          expect(operationSpy.callCount).toBe(1);
+
+          const [ error ] = executor._unreportedErrors;
+          expect(error.message).toMatch(/POISON/);
+
+          // it('gets the same results a second time')
+          executor._executeNextBatch(false);
+          await _allowExecution();
+          expect(executor._items).toEqual([ 1, 2, POISON, 4 ]);
+          expect(executor._unreportedErrors.length).toBe(2);
+          expect(operationSpy.callCount).toBe(2);
+
+          // it('does fine once the poison is removed')
+          executor._items[2] = 3;
+          executor._executeNextBatch(false);
+          await _allowExecution();
+          expect(executor._activePromise).toBeUndefined();
+          expect(executor._items).toEqual([ 4 ]);
+          expect(executor._unreportedErrors.length).toBe(2);
+          expect(sink).toEqual([ 1, 2, 3 ]);
+          expect(operationSpy.callCount).toBe(3);
+        });
+
+        it('notifies the callback of an Error', async () => {
+          // not the usual setup
+          const onError = sandbox.spy();
+          const setup = _setupPipelineSink<number>({
+            batchSize: 3,
+            poisonItem: POISON,
+            onError,
+          });
+          executor = setup.executor; // for `afterEach` purposes
+
+          // avoid #push operations, since they act under pressure
+          executor._items = [ 1, 2, POISON, 4 ];
+
+          executor._executeNextBatch(false);
+          await _allowExecution();
+          // it('does not attempt a retry')
+          expect(executor._items).toEqual([ 4 ]);
+          expect(sink).toEqual([]);
+          // it('assumes that it has handled the Error')
+          expect(executor._unreportedErrors.length).toBe(0);
+
+          expect(onError.callCount).toBe(1);
+          expect(onError.args[0][0].message).toMatch(/POISON/);
+          expect(onError.args[0][1]).toEqual([ 1, 2, POISON ]);
+        });
+      });
+
+      describe('in flush mode', () => {
+        // a bit foreshortened -- most of this is covered in describe('batch')
+
+        it('will execute a partial batch of items', async () => {
+          // avoid #push operations, since they act under pressure
+          executor._items = [ 1, 2, 3, 4, 5, 6, 7 ];
+          expect(executor._activePromise).toBeUndefined();
+
+          executor._executeNextBatch(true);
+          expect(executor._activePromise).not.toBeUndefined();
+          expect(executor._items).toEqual([ 4, 5, 6, 7 ]);
+          // it('has started an operation')
+          expect(operationSpy.callCount).toBe(1);
+
+          await _allowExecution();
+          expect(executor._activePromise).toBeUndefined();
+          expect(executor._items).toEqual([ ]);
+          expect(sink).toEqual([ 1, 2, 3, 4, 5, 6, 7 ]);
+          expect(operationSpy.callCount).toBe(3);
+          expect(executor._unreportedErrors.length).toBe(0);
+        });
+
+        it('retries failed work', async () => {
+          // avoid #push operations, since they act under pressure
+          executor._items = [ 1, 2, POISON, 4 ];
+          expect(executor._activePromise).toBeUndefined();
+
+          executor._executeNextBatch(true);
+          expect(executor._activePromise).not.toBeUndefined();
+          expect(executor._items).toEqual([ 4 ]);
+          expect(sink).toEqual([]);
+          expect(operationSpy.callCount).toBe(1);
+
+          // it('restores the failed items to the batch')
+          await _allowExecution();
+          expect(executor._activePromise).toBeUndefined();
+          expect(executor._items).toEqual([ 1, 2, POISON, 4 ]);
+          expect(executor._unreportedErrors.length).toBe(1);
+          expect(sink).toEqual([]);
+          expect(operationSpy.callCount).toBe(1);
+
+          const [ error ] = executor._unreportedErrors;
+          expect(error.message).toMatch(/POISON/);
+
+          // it('does fine once the poison is removed')
+          executor._items[2] = 3;
+          executor._executeNextBatch(true);
+          await _allowExecution();
+          expect(executor._activePromise).toBeUndefined();
+          expect(executor._items).toEqual([]);
+          expect(executor._unreportedErrors.length).toBe(1);
+          expect(sink).toEqual([ 1, 2, 3, 4 ]);
+          expect(operationSpy.callCount).toBe(3);
+        });
+
+        it('notifies the callback of an Error', async () => {
+          // not the usual setup
+          const onError = sandbox.spy();
+          const setup = _setupPipelineSink<number>({
+            batchSize: 3,
+            poisonItem: POISON,
+            onError,
+          });
+          executor = setup.executor; // for `afterEach` purposes
+
+          // avoid #push operations, since they act under pressure
+          executor._items = [ 1, 2, POISON, 4 ];
+
+          executor._executeNextBatch(true);
+          await _allowExecution();
+          // it('does not attempt a retry')
+          expect(executor._items).toEqual([ 4 ]);
+          expect(sink).toEqual([]);
+          // it('assumes that it has handled the Error')
+          expect(executor._unreportedErrors.length).toBe(0);
+
+          expect(onError.callCount).toBe(1);
+          expect(onError.args[0][0].message).toMatch(/POISON/);
+          expect(onError.args[0][1]).toEqual([ 1, 2, POISON ]);
+        });
       });
     });
 
@@ -449,6 +532,8 @@ describe('utils/execution/batch', () => {
         // it('is flushable by the end of each Test Case')
         await executor.flush();
         expect(executor.isFlushed).toBe(true);
+
+        await _teardownPipelineSink(executor);
       });
 
       it('requires no unprocessed items', async () => {
@@ -462,7 +547,7 @@ describe('utils/execution/batch', () => {
 
       it('requires no batches to be in-flight', async () => {
         executor.push(1);
-        executor._executeNextBatch();
+        executor._executeNextBatch(true);
 
         expect(executor._items.length).toBe(0);
         expect(executor._activePromise).not.toBeUndefined();
@@ -473,7 +558,7 @@ describe('utils/execution/batch', () => {
 
       it('requires no batches to be in-flight', async () => {
         executor.push(POISON);
-        executor._executeNextBatch();
+        executor._executeNextBatch(true);
         await _allowExecution();
         executor._items.shift();
 
@@ -504,6 +589,8 @@ describe('utils/execution/batch', () => {
       });
       afterEach(async () => {
         expect(executor.isFlushed).toBe(true);
+
+        await _teardownPipelineSink(executor);
       });
 
       it('kicks off a batch', async () => {
@@ -524,7 +611,9 @@ describe('utils/execution/batch', () => {
 
       describe('without an onError callback', () => {
         it('rejects due to cordoning', async () => {
-          executor.pushAll([ 1, 2, 3, 4 ]).cordon(true).push(5);
+          executor.pushAll([ 1, 2, 3, 4 ]);
+          executor.cordon(true);
+          executor.push(5);
 
           await expect( executor.flush() ).rejects.toThrow(/rejected new items/);
           expect(sink).toEqual([ 1, 2, 3 ]);
@@ -554,7 +643,9 @@ describe('utils/execution/batch', () => {
         });
 
         it('has a really bad day', async () => {
-          executor.pushAll([ 1, 2, 3, 4, POISON ]).cordon(true).push(6);
+          executor.pushAll([ 1, 2, 3, 4, POISON ]);
+          executor.cordon(true);
+          executor.push(6);
 
           await expect( executor.flush() ).rejects.toThrow(/rejected new items/);
           await expect( executor.flush() ).rejects.toThrow(/POISON/);
@@ -583,7 +674,9 @@ describe('utils/execution/batch', () => {
         });
 
         it('notifies of Errors due to cordoning', async () => {
-          executor.pushAll([ 1, 2, 3, 4 ]).cordon(true).push(5);
+          executor.pushAll([ 1, 2, 3, 4 ]);
+          executor.cordon(true);
+          executor.push(5);
 
           await executor.flush()
           expect(sink).toEqual([ 1, 2, 3, 4 ]);
@@ -607,7 +700,9 @@ describe('utils/execution/batch', () => {
         });
 
         it('has a really bad day', async () => {
-          executor.pushAll([ 1, 2, 3, 4, POISON ]).cordon(true).push(6);
+          executor.pushAll([ 1, 2, 3, 4, POISON ]);
+          executor.cordon(true);
+          executor.push(6);
 
           await executor.flush()
           expect(sink).toEqual([ 1, 2, 3 ]);
@@ -621,5 +716,4 @@ describe('utils/execution/batch', () => {
       });
     });
   });
-
 });
