@@ -1,8 +1,11 @@
 import { PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, VersionColumn, Column, Generated, Index } from 'typeorm';
 
-// this is useful for when you want to clone a Model,
+// useful for when you want to clone a Model,
 //   while excluding all the internal Model aspects that are not appropriate to clone
 export const MODEL_TEMPLATE_COMMON_PROPERTIES = [ 'key', 'id', 'createAt', 'updateAt', 'version', 'deleted' ];
+
+// useful for Exclude<T, U> syntax
+export type ModelTemplateCommonPropertyType = 'key' | 'id' | 'createAt' | 'updateAt' | 'version' | 'deleted';
 
 export abstract class ModelTemplate  {
 
