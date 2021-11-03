@@ -87,9 +87,19 @@ import { loadDotEnv, configStringToBoolean, deriveConfigFeatureFlags } from './u
 import { createGraphQLEnumValues } from './utils/graphql.enum';
 import { EdgeWrapper, edgeWrapperType } from './utils/edge.wrapper';
 import {
+  ParallelOperation,
+  ParallelExecutorOptions,
+  executeOperationsInParallel,
+} from './utils/execution/parallel';
+import {
+  BatchPipelineOperation,
+  BatchPipelineExecutor,
+  BatchPipelineExecutorOptions,
+  executeOperationsInBatches,
+} from './utils/execution/batch';
+import {
   NULL_STRING,
   isUUID,
-  executeOperationsInParallel,
 } from './utils/miscellaneous';
 import { hasEntityBeenPersisted } from './utils/typeorm/helpers';
 import { logTypeORMConfig } from './utils/typeorm/logging';
@@ -231,9 +241,16 @@ export {
   EdgeWrapper,
   edgeWrapperType,
 
+  ParallelOperation,
+  ParallelExecutorOptions,
+  executeOperationsInParallel,
+  BatchPipelineOperation,
+  BatchPipelineExecutor,
+  BatchPipelineExecutorOptions,
+  executeOperationsInBatches,
+
   NULL_STRING,
   isUUID,
-  executeOperationsInParallel,
 
   // `import * as pg from '@withjoy/server-core/dist/utils/pg'`
   //   because TypeScript definitions can't be exported in a namespace

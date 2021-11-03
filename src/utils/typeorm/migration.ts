@@ -4,7 +4,7 @@
 import { QueryRunner } from 'typeorm';
 const { prepareValue: pgPrepareValue } = require('pg/lib/utils');
 
-import { executeOperationsInParallel } from '../miscellaneous';
+import { executeOperationsInParallel } from '../execution/parallel';
 
 
 export type MigrationPostgresSettings = Record<string, any> & {
