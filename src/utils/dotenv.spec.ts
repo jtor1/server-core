@@ -56,7 +56,6 @@ FILEPATH=default
         loadDotEnv();
 
         const loaded = loadDotEnv();
-
         expect(loaded.env.FILEPATH).toBe('default');
         expect(process.env.FILEPATH).toBe('default');
       });
@@ -72,7 +71,6 @@ FILEPATH=specified
         });
 
         const loaded = loadDotEnv();
-
         expect(loaded.env.FILEPATH).toBe('specified');
         expect(process.env.FILEPATH).toBe('specified');
       });
@@ -94,7 +92,6 @@ FILEPATH=specified
         });
 
         loadDotEnv();
-
         expect(env).toMatchObject(OVERRIDING_CONFIG);
       });
 
@@ -105,7 +102,6 @@ FILEPATH=specified
         });
 
         loadDotEnv();
-
         expect(env).toMatchObject(OVERRIDING_CONFIG);
       });
 
@@ -116,8 +112,82 @@ FILEPATH=specified
         });
 
         loadDotEnv();
-
         expect(env).toMatchObject(PREEXISTING_CONFIG);
+      });
+    });
+
+
+    describe('after the load', () => {
+      describe('under test', () => {
+        beforeEach(() => {
+          env.NODE_ENV = 'ci'; // <= which should be interpreted as 'test'
+        });
+
+        it('rejects a reasonable database name', () => {
+          mockFs({
+            '.env': `
+POSTGRES_DATABASE=live
+            `,
+          });
+
+          expect(loadDotEnv).toThrow(/loadDotEnv/);
+        });
+
+        it('accepts no database name', () => {
+          mockFs({
+            '.env': `
+POSTGRES_DATABASE=
+            `,
+          });
+
+          loadDotEnv();
+        });
+
+        it('accepts a "_test" name"', () => {
+          mockFs({
+            '.env': `
+POSTGRES_DATABASE=its_a_test
+            `,
+          });
+
+          loadDotEnv();
+        });
+      });
+
+      describe('when not under test', () => {
+        beforeEach(() => {
+          env.NODE_ENV = 'development';
+        });
+
+        it('accepts a reasonable database name', () => {
+          mockFs({
+            '.env': `
+POSTGRES_DATABASE=live
+            `,
+          });
+
+          loadDotEnv();
+        });
+
+        it('accepts no database name', () => {
+          mockFs({
+            '.env': `
+POSTGRES_DATABASE=
+            `,
+          });
+
+          loadDotEnv();
+        });
+
+        it('rejects a "_test" name"', () => {
+          mockFs({
+            '.env': `
+POSTGRES_DATABASE=its_a_test
+            `,
+          });
+
+          expect(loadDotEnv).toThrow(/loadDotEnv/);
+        });
       });
     });
 
@@ -129,7 +199,6 @@ FILEPATH=specified
         });
 
         const loaded = loadDotEnv();
-
         expect(loaded).toMatchObject({
           isProduction: true,
           isTest: false,
@@ -142,7 +211,6 @@ FILEPATH=specified
         });
 
         const loaded = loadDotEnv();
-
         expect(loaded).toMatchObject({
           isProduction: false,
           isTest: true,
@@ -155,7 +223,6 @@ FILEPATH=specified
         });
 
         const loaded = loadDotEnv();
-
         expect(loaded).toMatchObject({
           isProduction: false,
           isTest: true,
@@ -168,7 +235,6 @@ FILEPATH=specified
         });
 
         const loaded = loadDotEnv();
-
         expect(loaded).toMatchObject({
           isProduction: false,
           isTest: false,

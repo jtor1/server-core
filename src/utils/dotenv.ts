@@ -44,10 +44,24 @@ export function loadDotEnv(): LoadDotEnvResult {
   });
 
   const env = process.env;
+  const isProduction = (env.NODE_ENV === 'production');
+  const isTest = ((env.NODE_ENV === 'test') || (env.NODE_ENV === 'ci'));
+
+  // database naming convention to avoid deleting real-world data
+  const { POSTGRES_DATABASE } = env;
+  const dbHasName = Boolean(POSTGRES_DATABASE);
+  const dbIsNamedTest = Boolean(POSTGRES_DATABASE?.endsWith('_test'));
+  if (isTest && dbHasName && (! dbIsNamedTest)) {
+    throw new Error("loadDotEnv:  the Test Suite POSTGRES_DATABASE name must end with '_test'");
+  }
+  else if ((! isTest) && dbIsNamedTest)  {
+    throw new Error("loadDotEnv:  the POSTGRES_DATABASE name cannot end with '_test'");
+  }
+
   return {
     env,
-    isProduction: (env.NODE_ENV === 'production'),
-    isTest: ((env.NODE_ENV === 'test') || (env.NODE_ENV === 'ci')),
+    isProduction,
+    isTest,
   };
 }
 
