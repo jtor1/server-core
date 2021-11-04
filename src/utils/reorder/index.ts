@@ -1,8 +1,8 @@
-import { pick, difference } from 'lodash';
+import { difference } from 'lodash';
 import { gql } from 'apollo-server';
 import { DocumentNode } from 'graphql';
 
-import { ModelTemplate } from '../templates/model.template';
+import { ModelTemplate } from '../../templates/model.template';
 
 
 export interface IModelReorderPayload {
