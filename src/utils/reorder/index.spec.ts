@@ -1,12 +1,8 @@
-import { ModelTemplate } from '../templates/model.template';
+import { ModelTemplate } from '../../templates/model.template';
 import {
-  IModelReorderNeighbors,
-  IModelReorderBisection,
-
   deriveModelReorderNeighbors,
   bisectReorderModels,
-
-} from './reorder';
+} from './index';
 
 class Model extends ModelTemplate {
 }
