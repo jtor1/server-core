@@ -3,4 +3,5 @@
 
 export * from './batch.support';
 export * from './batch.pg';
+export * from './inserts';
 export * from './migration';

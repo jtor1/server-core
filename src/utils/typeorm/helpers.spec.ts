@@ -30,6 +30,6 @@ describe('util/typeorm/helpers', () => {
       expect(hasEntityBeenPersisted(null)).toBe(false);
     });
 
-    it('is covered in @withjoy/server-core-test, with a backing database', noop);
+    it('is further covered in @withjoy/server-core-test, with a backing database', noop);
   });
 });
