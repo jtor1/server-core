@@ -24,7 +24,7 @@ jobs:
           #   `yarn.lock` enforcement, just like the Dockerfile
           command: >
             cp ./.npmrc /tmp/.npmrc;
-            echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ./.npmrc;
+            echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ./.npmrc;
 
             rm -f npm-shrinkwrap.json;
             yarn install --frozen-lockfile;
@@ -80,7 +80,7 @@ jobs:
           #     "If the package has a ... shrinkwrap file, the installation of dependencies will be driven by that."
           command: >
             cp ./.npmrc /tmp/.npmrc;
-            echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ./.npmrc;
+            echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ./.npmrc;
 
             rm -f yarn.lock;
             npm install;
@@ -123,7 +123,7 @@ jobs:
           #   `yarn` doesn't need to run 'prepare', 'prepublish', etc.; they've already been covered
           command: >
             cp ./.npmrc /tmp/.npmrc;
-            echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ./.npmrc;
+            echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ./.npmrc;
 
             export SEMVER=$( echo "$CIRCLE_BRANCH" | sed s/^v// );
             echo "publishing version $SEMVER ..."
