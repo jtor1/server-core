@@ -101,7 +101,15 @@ import {
   NULL_STRING,
   isUUID,
 } from './utils/miscellaneous';
+// a limited subset of 'typeorm' components;
+//   the rest are path-referenced -- @see top-of-file
 import { hasEntityBeenPersisted } from './utils/typeorm/helpers';
+import {
+  insertQueryBuilderForModels,
+  upsertQueryBuilderForModels,
+  upsertForInsertQueryBuilder,
+  executeInsertQueryBuilderForModels,
+} from './utils/typeorm/inserts';
 import { logTypeORMConfig } from './utils/typeorm/logging';
 import {
   VirtualEventLinkParseResult,
@@ -258,6 +266,10 @@ export {
   // `import * as typeorm from '@withjoy/server-core/dist/utils/typeorm'`
   //   because TypeScript definitions can't be exported in a namespace
   hasEntityBeenPersisted,
+  insertQueryBuilderForModels,
+  upsertQueryBuilderForModels,
+  upsertForInsertQueryBuilder,
+  executeInsertQueryBuilderForModels,
   logTypeORMConfig,
 
   VirtualEventLinkParseResult,
