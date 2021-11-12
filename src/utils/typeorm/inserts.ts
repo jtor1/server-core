@@ -36,16 +36,20 @@ export function insertQueryBuilderForModels<T extends ModelTemplate>(models: T[]
  * CONFLICT handling is identical for each Model.
  *
  * @param models {ModelTemplate[]}
+ * @param [options] {UpsertQueryBuilderOptions}
  * @returns {InsertQueryBuilder} a QueryBuilder which `INSERT ... ON CONFLICT`s all of the Models in one query
  */
-export function upsertQueryBuilderForModels<T extends ModelTemplate>(models: T[]): InsertQueryBuilder<T> {
+export function upsertQueryBuilderForModels<T extends ModelTemplate>(
+  models: T[],
+  options?: UpsertQueryBuilderOptions<T>
+): InsertQueryBuilder<T> {
   const insertQueryBuilder = insertQueryBuilderForModels(models);
 
   const Model = (<unknown>models[0].constructor as ModelTemplateClass<T>);
-  return upsertForInsertQueryBuilder(Model, insertQueryBuilder);
+  return upsertForInsertQueryBuilder(Model, insertQueryBuilder, options);
 }
 
-type UpsertForInsertQueryBuilderOptions<T extends ModelTemplate> = {
+type UpsertQueryBuilderOptions<T extends ModelTemplate> = {
   criteriaProperties?: Array<keyof T>;
 };
 
@@ -58,12 +62,13 @@ type UpsertForInsertQueryBuilderOptions<T extends ModelTemplate> = {
  *
  * @param Model {ModelTemplateClass} the Model Class, for metadata extraction purposes
  * @param queryBuilder {InsertQueryBuilder}
+ * @param [options] {UpsertQueryBuilderOptions}
  * @returns {InsertQueryBuilder} `queryBuilder`, cloned, with support for `INSERT ... ON CONFLICT`
  */
 export function upsertForInsertQueryBuilder<T extends ModelTemplate>(
   Model: ModelTemplateClass<T>,
   queryBuilder: InsertQueryBuilder<T>,
-  options?: UpsertForInsertQueryBuilderOptions<T>
+  options?: UpsertQueryBuilderOptions<T>
 ): InsertQueryBuilder<T> {
   const repository = getRepository(Model);
   const criteriaProperties = options?.criteriaProperties || [ 'id' ];
