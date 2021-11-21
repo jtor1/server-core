@@ -10,12 +10,17 @@ import {
 // one property is sufficiently representative
 const PREEXISTING_CONFIG = Object.freeze({
   POSTGRES_HOST: 'ENVIRONMENT',
+  CHANGED: '',
   UNCHANGED: 'UNCHANGED',
 } as Record<string, any>);
-const OVERRIDING_FILE_CONTENTS = `POSTGRES_HOST=OVERRIDING`;
+const OVERRIDING_FILE_CONTENTS = `
+POSTGRES_HOST=OVERRIDING
+CHANGED="OVERRIDING"
+`;
 const OVERRIDING_CONFIG = Object.freeze({
-  POSTGRES_HOST: 'OVERRIDING',
-  UNCHANGED: 'UNCHANGED', // we don't touch it
+  POSTGRES_HOST: 'OVERRIDING', // the "important" setting
+  CHANGED: 'OVERRIDING', // any average setting
+  UNCHANGED: 'UNCHANGED', // we didn't touch it
 });
 
 
@@ -85,10 +90,24 @@ FILEPATH=specified
         });
       });
 
-      it('overrides pre-existing configuration in a Test environment', () => {
+      it('preserves pre-existing configuration in a Test environment without a file being specified', () => {
         env.NODE_ENV = 'test';
         mockFs({
+          // it('gets ignored without a file reference')
           '.env': OVERRIDING_FILE_CONTENTS,
+        });
+
+        loadDotEnv();
+        expect(env).toMatchObject(PREEXISTING_CONFIG);
+      });
+
+      it('overrides pre-existing configuration in a Test environment', () => {
+        env.NODE_ENV = 'test';
+
+        const FILEPATH = '/path/to/.env';
+        env.DOTENV_CONFIG_PATH = FILEPATH;
+        mockFs({
+          [ FILEPATH ]: OVERRIDING_FILE_CONTENTS,
         });
 
         loadDotEnv();
@@ -97,8 +116,11 @@ FILEPATH=specified
 
       it('overrides pre-existing configuration in a CI environment', () => {
         env.NODE_ENV = 'test';
+
+        const FILEPATH = '/path/to/.env';
+        env.DOTENV_CONFIG_PATH = FILEPATH;
         mockFs({
-          '.env': OVERRIDING_FILE_CONTENTS,
+          [ FILEPATH ]: OVERRIDING_FILE_CONTENTS,
         });
 
         loadDotEnv();

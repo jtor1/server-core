@@ -5,7 +5,7 @@ import { PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, VersionColu
 export const MODEL_TEMPLATE_COMMON_PROPERTIES = [ 'key', 'id', 'createAt', 'updateAt', 'version', 'deleted' ];
 
 // useful for Exclude<T, U> syntax
-export type ModelTemplateCommonPropertyType = 'key' | 'id' | 'createAt' | 'updateAt' | 'version' | 'deleted';
+export type ModelTemplateCommonPropertyType = keyof ModelTemplate;
 
 export abstract class ModelTemplate  {
 
