@@ -1,4 +1,5 @@
 import * as dotenv from 'dotenv';
+import fs from 'fs';
 
 
 export interface LoadDotEnvResult {
@@ -31,16 +32,22 @@ export function loadDotEnv(): LoadDotEnvResult {
   //     the configuration has no effect
   //   https://github.com/typeorm/typeorm/issues/3567 "Provide an options to prevent loading .env file"
   //     does not exist yet
-  //   inclusive test is safer (vs. exclusive; `!== 'production'`)
+  //   so we parse the file at the specified path
+  //     and erase any values pre-baked into the `process.env`
+  //     (due to `typeorm`s behavior)
+  const dotEnvPath = (process.env.DOTENV_CONFIG_PATH || undefined);
   if ((process.env.NODE_ENV === 'test') || (process.env.NODE_ENV === 'ci')) {
-    [ 'POSTGRES_HOST', 'POSTGRES_PORT', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DATABASE' ].forEach((key) => {
-      delete process.env[key];
-    });
+    if (dotEnvPath) {
+      const parsed = dotenv.parse(fs.readFileSync(dotEnvPath, { encoding: 'utf8' }))
+      Object.keys(parsed).forEach((key) => {
+        delete process.env[key];
+      });
+    }
   }
 
   // now we're good to go
   dotenv.config({
-    path: <string>(process.env.DOTENV_CONFIG_PATH || null),
+    path: dotEnvPath,
   });
 
   const env = process.env;
