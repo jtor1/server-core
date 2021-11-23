@@ -1,3 +1,32 @@
+import { isDate } from "lodash";
+import { URLSearchParams } from "url";
+
+export function urlSearchParamsFromObject(
+  struct: Record<string, any>,
+  maybeSearchParams?: URLSearchParams
+): URLSearchParams {
+  const searchParams = maybeSearchParams || new URLSearchParams("");
+
+  for (const key in struct) {
+    const value = struct[key];
+    if (isDate(value)) {
+      throw new TypeError('Url search parameter can not be raw Date Object');
+    }
+    if (value === null || value === undefined) {
+      searchParams.delete(key);
+    } else if (Array.isArray(value)) {
+      searchParams.delete(key);
+      for (const arrayValue of value) {
+        searchParams.append(key, String(arrayValue));
+      }
+    } else {
+      searchParams.set(key, String(value));
+    }
+  }
+
+  return searchParams;
+}
+
 export function sanitizeUrl(uri: string | null | undefined): string | null {
     if (!uri) {
         return null;
