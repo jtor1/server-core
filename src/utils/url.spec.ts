@@ -1,3 +1,4 @@
+import { URLSearchParams } from "url";
 import { urlSearchParamsFromObject, protocolizeUrl, sanitizeAndParseUrl, sanitizeUrl } from "./url";
 
 describe("urlSearchParamsFromObject", () => {
