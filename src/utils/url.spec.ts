@@ -1,5 +1,5 @@
 import { URLSearchParams } from "url";
-import { urlSearchParamsFromObject, protocolizeUrl, sanitizeAndParseUrl, sanitizeUrl } from "./url";
+import { urlSearchParamsFromObject, sanitizeAndParseURL, sanitizeURLString } from "./url";
 
 describe("urlSearchParamsFromObject", () => {
     describe("without a UrlSearchParams to modify", () => {
@@ -82,7 +82,7 @@ describe("urlSearchParamsFromObject", () => {
     });
   });
 
-describe("sanitizeUrl", () => {
+describe("sanitizeURLString", () => {
     it('sanitize url', () => {
         const urls = [
             "http:// https://www.example.com",
@@ -109,29 +109,17 @@ describe("sanitizeUrl", () => {
         ];
 
         urls.forEach((uri, index) => {
-            const parsed = sanitizeUrl(uri);
+            const parsed = sanitizeURLString(uri);
             expect(parsed).toEqual(outputUrls[index]);
         });
     });
 
     it('return null if uri is not found', () => {
-        expect(sanitizeUrl(null)).toBeNull();
+        expect(sanitizeURLString(null)).toBeNull();
     });
 });
 
-describe("protocolizeUrl", () => {
-    it('adds a protocol to a URL', () => {
-        expect(protocolizeUrl('//domain.com/path')).toEqual('https://domain.com/path');
-        expect(protocolizeUrl('domain.com/path')).toEqual('https://domain.com/path');
-    });
-
-    it('does not need to transform some URLs', () => {
-        expect(protocolizeUrl('http://domain.com/path')).toEqual('http://domain.com/path');
-        expect(protocolizeUrl('https://domain.com/path')).toEqual('https://domain.com/path');
-    });
-});
-
-describe("sanitizeAndParseUrl", () => {
+describe("sanitizeAndParseURL", () => {
     it('sanitize and parse url', () => {
         const urls = [
             "http:// https://www.example.com",
@@ -156,16 +144,16 @@ describe("sanitizeAndParseUrl", () => {
         ];
 
         urls.forEach((uri, index) => {
-            const parsed = sanitizeAndParseUrl(uri);
+            const parsed = sanitizeAndParseURL(uri);
             expect(parsed?.toString()).toEqual(outputUrls[index]);
         });
     });
 
     it('return null url is not found', () => {
-        expect(sanitizeAndParseUrl(null)).toBeNull();
+        expect(sanitizeAndParseURL(null)).toBeNull();
     });
 
     it('return null if error while parsing url', () => {
-        expect(sanitizeAndParseUrl("#@")).toBeNull();
+        expect(sanitizeAndParseURL("#@")).toBeNull();
     });
 });

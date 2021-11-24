@@ -27,32 +27,51 @@ export function urlSearchParamsFromObject(
   return searchParams;
 }
 
-export function sanitizeUrl(uri: string | null | undefined): string | null {
-    if (!uri) {
-        return null;
-    }
-    const urlParts = uri.split(/http[s]?:\/{0,}/g);
-    const deprotocoled = urlParts[urlParts.length - 1].trim();
-    return protocolizeUrl(deprotocoled);
+/**
+ * This method performs transformations on a URL String to make it "sane",
+ * such as ensuring that it has a protocol, etc.
+ *
+ * It only respects HTTP protocols;
+ *   given an '<ftp://'> URL string, it will get sanitized to '<https://ftp://'.>
+ *
+ * @param maybeUrl {String} a URL in String form
+ * @returns {String} `maybeUrl`, sanitized
+ */
+export function sanitizeURLString(maybeUrl: string | null | undefined): string | null {
+  if (!maybeUrl) {
+		return null;
+	}
+	maybeUrl = maybeUrl.trim()
+  const urlParts = maybeUrl.split(/http[s]?:\/{0,}/g);
+	const deprotocoled = urlParts[urlParts.length - 1]
+	return _protocolizeURLString(deprotocoled);
 }
 
-export function protocolizeUrl(maybeUrl: string | null): string | null {
-    // return as it is if null or already protocolizedUrl
-    if (!maybeUrl || maybeUrl.match(/http[s]?:\/{2,}/g)) {
-        return maybeUrl;
-    }
-    return maybeUrl.startsWith('//') ? `https:${maybeUrl}` : `https://${maybeUrl}`;
+/* @private */
+function _protocolizeURLString(maybeUrl: string | null): string | null {
+  // return as it is if null or already protocolizedUrl
+  if (!maybeUrl || maybeUrl.match(/http[s]?:\/{2,}/g)) {
+    return maybeUrl;
+  }
+  return maybeUrl.startsWith('//') ? `https:${maybeUrl}` : `https://${maybeUrl}`;
 }
 
-export function sanitizeAndParseUrl(maybeUrl: string | null | undefined): URL | null {
-    try {
-        const sanitizedUrl = sanitizeUrl(maybeUrl);
-        if (!sanitizedUrl) {
-            return null;
-        }
-        const url = new URL(sanitizedUrl);
-        return url;
-    } catch (error) {
-        return null;
+/**
+ * This method performs `sanitizeURLString` on a URL String
+ *   and then parses it with the WHATWG URL API.
+ *
+ * @param maybeUrl {String} a URL in String form
+ * @returns {URL} `maybeUrl`, sanitized and parsed
+ */
+export function sanitizeAndParseURL(maybeUrl: string | null | undefined): URL | null {
+  try {
+    const sanitizedUrl = sanitizeURLString(maybeUrl);
+    if (!sanitizedUrl) {
+      return null;
     }
+    const url = new URL(sanitizedUrl);
+    return url;
+} catch (error) {
+    return null;
+  }
 }
