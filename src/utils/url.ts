@@ -1,8 +1,10 @@
 import { isDate } from "lodash";
 import { URL, URLSearchParams } from "url";
 
-// we tend to hand parameter key-values pairs around like this
-export type ParameterTuples = Record<string, any>;
+// these are the URL properties that we actually care about
+export type RestrictedURL = Pick<URL, 'protocol' | 'hostname' | 'pathname' | 'search' | 'searchParams'>;
+type PartialRestrictedURL = Partial<RestrictedURL>;
+type BuildRestrictedURL = PartialRestrictedURL & Pick<URL, 'hostname'>; // re-Require<>d
 
 /**
  * @param struct {Object} an Object / Struct / Record / POJO
@@ -84,11 +86,6 @@ export function sanitizeAndParseURL(maybeUrl: string | null | undefined): URL | 
   }
 }
 
-// these are the URL properties that we actually care about
-export type RestrictedURL = Pick<URL, 'protocol' | 'hostname' | 'pathname' | 'search' | 'searchParams'>;
-type PartialRestrictedURL = Partial<RestrictedURL>;
-type BuildRestrictedURL = PartialRestrictedURL & Pick<URL, 'hostname'>; // re-Require<>d
-
 /**
  * @param url {URL}
  * @param mutations {Partial<URL>} properties to be changed in `url`
@@ -134,7 +131,7 @@ export function buildURL(struct: BuildRestrictedURL): URL {
  * @returns {Object} the contents of `urlSearchParams`, as an Object / Struct / Record / POJO
  */
 export function objectFromURLSearchParams(urlSearchParams: URLSearchParams): Record<string, any> {
-  let result: ParameterTuples = {};
+  let result: Record<string, any> = {};
   for (let [key, value] of urlSearchParams) {
     result[key] = value;
   }

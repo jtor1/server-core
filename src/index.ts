@@ -179,7 +179,6 @@ import {
   buildURL,
   objectFromURLSearchParams,
   rootRelativePathFromURL,
-  ParameterTuples
 } from "./utils/url";
 
 
@@ -345,7 +344,6 @@ export {
   sanitizeURLString,
   mutateURL,
   buildURL,
-  ParameterTuples,
   objectFromURLSearchParams,
   rootRelativePathFromURL
 
