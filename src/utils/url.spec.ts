@@ -5,7 +5,7 @@ import {
   sanitizeURLString,
   mutateURL,
   buildURL,
-  objectFromURLSearchParams,
+  buildObjectFromURLSearchParams,
   rootRelativePathFromURL
 } from "./url";
 
@@ -21,6 +21,7 @@ describe("urls", () => {
           string: "string",
           number: 23,
           null: null,
+          undefined: undefined,
           array: ["string", false],
         }).toString()).toBe(
           `string=string&number=23&array=string&array=false`
@@ -34,6 +35,10 @@ describe("urls", () => {
       beforeEach(() => {
         searchParams = new URLSearchParams("param=value");
       });
+      afterEach(() => {
+        // it('does not mutate the original')
+        expect(searchParams.toString()).toBe("param=value");
+      });
 
       it("makes no changes", () => {
         expect(buildURLSearchParamsFromObject({
@@ -41,7 +46,6 @@ describe("urls", () => {
       });
 
       it("modifies the UrlSearchParams", () => {
-        // it('mutates the URL in-place')
         const built = buildURLSearchParamsFromObject({
           string: "string",
           number: 23,
@@ -49,35 +53,35 @@ describe("urls", () => {
           undefined: undefined,
           array: ["string", false],
         }, searchParams);
-        expect(built).toBe(searchParams);
 
-        expect(searchParams.toString()).toBe(
+        expect(built.toString()).toBe(
           `param=value&string=string&number=23&array=string&array=false`
         );
       });
 
       it("removes a specific parameter", () => {
-        buildURLSearchParamsFromObject({
-          param: null,
-        }, searchParams);
+        const built = buildURLSearchParamsFromObject({
+          null: null,
+          undefined: undefined,
+        }, new URLSearchParams("param=value&null=present&undefined=present"));
 
-        expect(searchParams.toString()).toBe("");
+        expect(built.toString()).toBe("param=value");
       });
 
       it("changes a specific parameter to a value", () => {
-        buildURLSearchParamsFromObject({
+        const built = buildURLSearchParamsFromObject({
           param: "changed",
         }, searchParams);
 
-        expect(searchParams.toString()).toBe("param=changed");
+        expect(built.toString()).toBe("param=changed");
       });
 
       it("changes a specific parameter to multiple values", () => {
-        buildURLSearchParamsFromObject({
+        const built = buildURLSearchParamsFromObject({
           param: ["string", 23],
         }, searchParams);
 
-        expect(searchParams.toString()).toBe(`param=string&param=23`);
+        expect(built.toString()).toBe(`param=string&param=23`);
       });
 
       it('does not allow raw Date object', () => {
@@ -100,13 +104,13 @@ describe("urls", () => {
         "http://https://m.example.com",
         "http:https://www.example.com",
         "http://example.com",
-        "https://example.com",
+        "https://example.com ",
         "example.com",
         "//example.com"
       ];
 
       const outputUrls = [
-        "https://www.example.com",
+        "https://www.example.com", // it('only considers the last URL')
         "https://www.example.com",
         "https://m.example.com",
         "https://m.example.com",
@@ -124,7 +128,14 @@ describe("urls", () => {
     });
 
     it('return null if uri is not found', () => {
+      expect(sanitizeURLString("")).toBeNull();
       expect(sanitizeURLString(null)).toBeNull();
+    });
+
+    it('is only built to respect HTTP protocols', () => {
+      // which is reasonable, but may not be optimal behavior
+
+      expect(sanitizeURLString("ftp://example.com")).toBe("https://ftp://example.com");
     });
   });
 
@@ -159,11 +170,18 @@ describe("urls", () => {
     });
 
     it('return null url is not found', () => {
+      expect(sanitizeAndParseURL("")).toBeNull();
       expect(sanitizeAndParseURL(null)).toBeNull();
     });
 
     it('return null if error while parsing url', () => {
       expect(sanitizeAndParseURL("#@")).toBeNull();
+    });
+
+    it('is only built to respect HTTP protocols', () => {
+      // which is reasonable, but may not be optimal behavior
+
+      expect(sanitizeAndParseURL("ftp://example.com")?.toString()).toBe("https://ftp//example.com");
     });
   });
 
@@ -286,18 +304,18 @@ describe("urls", () => {
     });
   });
 
-  describe("#objectFromURLSearchParams", () => {
+  describe("#buildObjectFromURLSearchParams", () => {
     it('provided tuples -- key-value pairs -- from URLSearchParams', async () => {
       const QUERY_PAYLOAD = {
         param: "value",
         param1: "value1"
       };
-      expect(objectFromURLSearchParams(
+      expect(buildObjectFromURLSearchParams(
         new URLSearchParams(QUERY_PAYLOAD)
       )).toEqual(QUERY_PAYLOAD);
 
       // it('handles an empty URLSearchParams')
-      expect(objectFromURLSearchParams(
+      expect(buildObjectFromURLSearchParams(
         new URLSearchParams()
       )).toEqual({});
     });
@@ -311,7 +329,7 @@ describe("urls", () => {
       searchParams.append('append', 'A2');
 
       expect(searchParams.toString()).toBe('append=A1&set=B&append=A2');
-      expect(objectFromURLSearchParams(searchParams)).toEqual({
+      expect(buildObjectFromURLSearchParams(searchParams)).toEqual({
         append: 'A2', // 'A1' is nowhere to be found
         set: 'B',
       });
@@ -351,7 +369,7 @@ describe("urls", () => {
       ))).toBe("/#hash");
     });
 
-    it("produces the root-relative URI of a URL from `safelyBuildURL`", () => {
+    it("produces the root-relative URI of a URL from `buildURL`", () => {
       expect(rootRelativePathFromURL(buildURL({
         hostname: "absolute.com",
       }))).toBe("/");

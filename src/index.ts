@@ -171,14 +171,14 @@ import {
   LocationView,
   DecoratedLocationView,
 } from './data/location/view';
-import { 
-  buildURLSearchParamsFromObject,
-  sanitizeAndParseURL, 
-  sanitizeURLString,
-  mutateURL,
+import {
   buildURL,
-  objectFromURLSearchParams,
+  mutateURL,
+  sanitizeAndParseURL,
+  sanitizeURLString,
   rootRelativePathFromURL,
+  buildURLSearchParamsFromObject,
+  buildObjectFromURLSearchParams,
 } from "./utils/url";
 
 
@@ -339,12 +339,12 @@ export {
   LocationView,
   DecoratedLocationView,
 
-  buildURLSearchParamsFromObject,
-  sanitizeAndParseURL, 
-  sanitizeURLString,
-  mutateURL,
   buildURL,
-  objectFromURLSearchParams,
-  rootRelativePathFromURL
+  mutateURL,
+  sanitizeAndParseURL,
+  sanitizeURLString,
+  rootRelativePathFromURL,
+  buildURLSearchParamsFromObject,
+  buildObjectFromURLSearchParams,
 
 };

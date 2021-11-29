@@ -7,18 +7,19 @@ type PartialRestrictedURL = Partial<RestrictedURL>;
 type BuildRestrictedURL = PartialRestrictedURL & Pick<URL, 'hostname'>; // re-Require<>d
 
 /**
- * @param struct {Object} an Object / Struct / Record / POJO
+ * @param object {Object} an Object / Struct / Record / POJO
  * @param [maybeSearchParams] {URLSearchParams} an optional baseline upon which `struct` will be applied
  * @returns {URLSearchParams} the contents of `struct` injected into a URLSearchParams
  */
 export function buildURLSearchParamsFromObject(
-  struct: Record<string, any>,
+  object: Record<string, any>,
   maybeSearchParams?: URLSearchParams
 ): URLSearchParams {
-  const searchParams = maybeSearchParams || new URLSearchParams("");
+  // a "build" method should not mutate its original
+  const searchParams = new URLSearchParams(maybeSearchParams ? maybeSearchParams.toString() : "");
 
-  for (const key in struct) {
-    const value = struct[key];
+  for (const key in object) {
+    const value = object[key];
     if (isDate(value)) {
       throw new TypeError('Url search parameter can not be raw Date Object');
     }
@@ -49,8 +50,8 @@ export function buildURLSearchParamsFromObject(
  */
 export function sanitizeURLString(maybeUrl: string | null | undefined): string | null {
   if (!maybeUrl) {
-		return null;
-	}
+    return null;
+  }
 	maybeUrl = maybeUrl.trim()
   const urlParts = maybeUrl.split(/http[s]?:\/{0,}/g);
 	const deprotocoled = urlParts[urlParts.length - 1]
@@ -79,9 +80,8 @@ export function sanitizeAndParseURL(maybeUrl: string | null | undefined): URL | 
     if (!sanitizedUrl) {
       return null;
     }
-    const url = new URL(sanitizedUrl);
-    return url;
-} catch (error) {
+    return new URL(sanitizedUrl);
+  } catch (error) {
     return null;
   }
 }
@@ -130,12 +130,12 @@ export function buildURL(struct: BuildRestrictedURL): URL {
  * @param urlSearchParams {URLSearchParams}
  * @returns {Object} the contents of `urlSearchParams`, as an Object / Struct / Record / POJO
  */
-export function objectFromURLSearchParams(urlSearchParams: URLSearchParams): Record<string, any> {
-  let result: Record<string, any> = {};
+export function buildObjectFromURLSearchParams(urlSearchParams: URLSearchParams): Record<string, any> {
+  let object: Record<string, any> = {};
   for (let [key, value] of urlSearchParams) {
-    result[key] = value;
+    object[key] = value;
   }
-  return result;
+  return object;
 }
 
 /**
@@ -147,6 +147,7 @@ export function objectFromURLSearchParams(urlSearchParams: URLSearchParams): Rec
  export function rootRelativePathFromURL(url: URL): string {
   const full = url.toString();
 
+  // only { protocol, hostname } remains
   const absolute = new URL(full);
   absolute.hash = '';
   absolute.pathname = '/';
