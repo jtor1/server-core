@@ -171,6 +171,15 @@ import {
   LocationView,
   DecoratedLocationView,
 } from './data/location/view';
+import {
+  buildURL,
+  mutateURL,
+  sanitizeAndParseURL,
+  sanitizeURLString,
+  rootRelativePathFromURL,
+  buildURLSearchParamsFromObject,
+  buildObjectFromURLSearchParams,
+} from "./utils/url";
 
 
 export {
@@ -329,5 +338,13 @@ export {
   LocationModelTemplate,
   LocationView,
   DecoratedLocationView,
+
+  buildURL,
+  mutateURL,
+  sanitizeAndParseURL,
+  sanitizeURLString,
+  rootRelativePathFromURL,
+  buildURLSearchParamsFromObject,
+  buildObjectFromURLSearchParams,
 
 };
