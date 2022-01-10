@@ -7,6 +7,16 @@ jobs:
     docker:
       - image: &image node:10
 
+    # 3 vCPUs, 6GB RAM
+    #   you *also* need `node --expose-gc --max-old-space-size=6144`
+    #   but we don't need an 8GB 'large' juet yet
+    #   ...
+    #   chosen because we experienced opaque failures during Test Coverage execution.
+    #   as of commit d6428dd, we saw "Too long with no output (exceeded 10m0s): context deadline exceeded"
+    #   which evolved over time into "error Command failed with exit code 137."
+    #   did research, but no one area of the code seemed to cause it; it just seems cumulative
+    resource_class: "medium+"
+
     working_directory: &working_directory ~/tmp-node10
 
     steps:
