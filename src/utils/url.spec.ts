@@ -95,35 +95,52 @@ describe("urls", () => {
     });
   });
 
+
+  const INSANE_URLS = [
+    "http:// https://www.example.com", // it('only considers the last URL')
+    "Custom URL https://www.example.com",
+    "http:// http://m.example.com",
+    "http://https://m.example.com",
+    "http:https://www.example.com",
+    " http://example.com", // it('trims whitespace')
+    "https://example.com ",
+    "http:///example.com", // it('normalizes slashes')
+    "https:////example.com",
+    "example.com", // it('ensures a protocol')
+    "//example.com",
+    // ... whereas these are *too* insane
+    "///example.com",
+    "http://example.com http:",
+    "https://example.com https:/",
+    "http://example.com http://",
+    "https://example.com https:///x",
+  ];
+
   describe("#sanitizeURLString", () => {
     it('sanitize url', () => {
-      const urls = [
-        "http:// https://www.example.com",
-        "Custom URL https://www.example.com",
-        "http:// http://m.example.com",
-        "http://https://m.example.com",
-        "http:https://www.example.com",
+      const SANITIZED_URLS = [
+        "https://www.example.com",
+        "https://www.example.com",
+        "http://m.example.com",
+        "https://m.example.com",
+        "https://www.example.com",
         "http://example.com",
-        "https://example.com ",
-        "example.com",
-        "//example.com"
+        "https://example.com",
+        "http://example.com",
+        "https://example.com",
+        "https://example.com",
+        "https://example.com",
+        // ... this is just what happens
+        "https:///example.com",
+        "http://example.com http:",
+        "https://example.com https:/",
+        "http://",
+        "https://x",
       ];
 
-      const outputUrls = [
-        "https://www.example.com", // it('only considers the last URL')
-        "https://www.example.com",
-        "https://m.example.com",
-        "https://m.example.com",
-        "https://www.example.com",
-        "https://example.com",
-        "https://example.com",
-        "https://example.com",
-        "https://example.com"
-      ];
-
-      urls.forEach((uri, index) => {
+      INSANE_URLS.forEach((uri, index) => {
         const parsed = sanitizeURLString(uri);
-        expect(parsed).toEqual(outputUrls[index]);
+        expect(parsed).toEqual(SANITIZED_URLS[index]);
       });
     });
 
@@ -141,31 +158,29 @@ describe("urls", () => {
 
   describe("#sanitizeAndParseURL", () => {
     it('sanitize and parse url', () => {
-      const urls = [
-        "http:// https://www.example.com",
-        "Custom URL https://www.example.com",
-        "http:// http://m.example.com",
-        "http://https://m.example.com",
-        "http:https://www.example.com",
-        "http://example.com",
-        "https://example.com",
-        "example.com"
-      ];
-
-      const outputUrls = [
+      const SANITIZED_URLS = [
+        "https://www.example.com/", // note the trailing slashes!
         "https://www.example.com/",
-        "https://www.example.com/",
-        "https://m.example.com/",
+        "http://m.example.com/",
         "https://m.example.com/",
         "https://www.example.com/",
+        "http://example.com/",
+        "https://example.com/",
+        "http://example.com/",
         "https://example.com/",
         "https://example.com/",
-        "https://example.com/"
+        "https://example.com/",
+        // ... this is just what happens
+        "https://example.com/", // <= a bit better than `sanitizeURLString`
+        undefined, // unparseable => null
+        undefined,
+        undefined,
+        "https://x/", // <= a bit better than `sanitizeURLString`
       ];
 
-      urls.forEach((uri, index) => {
+      INSANE_URLS.forEach((uri, index) => {
         const parsed = sanitizeAndParseURL(uri);
-        expect(parsed?.toString()).toEqual(outputUrls[index]);
+        expect(parsed?.toString()).toEqual(SANITIZED_URLS[index]);
       });
     });
 

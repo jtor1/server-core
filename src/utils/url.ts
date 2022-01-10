@@ -42,6 +42,9 @@ export function buildURLSearchParamsFromObject(
  * This method performs transformations on a URL String to make it "sane",
  * such as ensuring that it has a protocol, etc.
  *
+ * When multiple HTTP-ish protocol strings are found within the URL String,
+ * the last one is returned.
+ *
  * It only respects HTTP protocols;
  *   given an '<ftp://'> URL string, it will get sanitized to '<https://ftp://'.>
  *
@@ -52,17 +55,31 @@ export function sanitizeURLString(maybeUrl: string | null | undefined): string |
   if (!maybeUrl) {
     return null;
   }
-	maybeUrl = maybeUrl.trim()
-  const urlParts = maybeUrl.split(/http[s]?:\/{0,}/g);
-	const deprotocoled = urlParts[urlParts.length - 1]
-	return _protocolizeURLString(deprotocoled);
+	maybeUrl = maybeUrl.trim();
+
+  // find the last occurrance of an http-ish protocol
+  //   Node 10 does not support String#matchAll
+  //   and remember that RegExp#exec mutates itself!
+  const regexp = /http[s]?:\/{2,}/g;
+  let exec: RegExpExecArray | null;
+  let lastExec: RegExpExecArray | null = null;
+  while (exec = regexp.exec(maybeUrl)) {
+    lastExec = exec;
+  }
+
+  const found = (lastExec ? maybeUrl.substring(lastExec.index) : maybeUrl);
+	return _protocolizeURLString(found); // just to be sure
 }
 
 /* @private */
+const REGEXP_HTTP_ISH = /^(http[s]?):\/{2,}(.*)$/;
 function _protocolizeURLString(maybeUrl: string | null): string | null {
   // return as it is if null or already protocolizedUrl
-  if (!maybeUrl || maybeUrl.match(/http[s]?:\/{2,}/g)) {
+  if (! maybeUrl) {
     return maybeUrl;
+  }
+  if (maybeUrl.match(REGEXP_HTTP_ISH)) {
+    return maybeUrl.replace(REGEXP_HTTP_ISH, '$1://$2');
   }
   return maybeUrl.startsWith('//') ? `https:${maybeUrl}` : `https://${maybeUrl}`;
 }
