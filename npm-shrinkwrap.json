@@ -2517,9 +2517,6 @@
       "from": "buffer-writer@2.0.0",
       "resolved": "https://registry.npmjs.org/buffer-writer/-/buffer-writer-2.0.0.tgz"
     },
-    "bufferutil": {
-      "version": "4.0.1"
-    },
     "busboy": {
       "version": "0.3.1",
       "from": "busboy@https://registry.npmjs.org/busboy/-/busboy-0.3.1.tgz",
@@ -2588,9 +2585,6 @@
       "version": "4.1.0",
       "from": "camelcase@https://registry.npmjs.org/camelcase/-/camelcase-4.1.0.tgz",
       "resolved": "https://registry.npmjs.org/camelcase/-/camelcase-4.1.0.tgz"
-    },
-    "canvas": {
-      "version": "2.5.0"
     },
     "capital-case": {
       "version": "1.0.3",
@@ -7831,9 +7825,6 @@
       "from": "use@https://registry.npmjs.org/use/-/use-3.1.1.tgz",
       "resolved": "https://registry.npmjs.org/use/-/use-3.1.1.tgz",
       "dev": true
-    },
-    "utf-8-validate": {
-      "version": "5.0.2"
     },
     "util-deprecate": {
       "version": "1.0.2",
