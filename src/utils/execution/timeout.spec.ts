@@ -30,19 +30,19 @@ describe('utils/execution/batch', () => {
     const ERROR = new Error('REJECTED');
 
     it('executes the Promise', async () => {
-      const resolved = await executePromiseOrTimeout(1000, Promise.resolve('RESOLVED'));
+      const resolved = await executePromiseOrTimeout(1000, () => Promise.resolve('RESOLVED'));
       expect(resolved).toBe(resolved);
     });
 
     it('fails the Promise', async () => {
       await expect(
-        executePromiseOrTimeout(1000, Promise.reject(ERROR))
+        executePromiseOrTimeout(1000, () => Promise.reject(ERROR))
       ).rejects.toBe(ERROR);
     });
 
     it('times out', async () => {
       try {
-        const promise = executePromiseOrTimeout(1000, Promise.resolve('RESOLVED'));
+        const promise = executePromiseOrTimeout(1000, () => Promise.resolve('RESOLVED'));
         fakeTimers.tick(1500);
 
         await promise;
@@ -57,7 +57,7 @@ describe('utils/execution/batch', () => {
       try {
         const promise = executePromiseOrTimeout(
           1000,
-          Promise.resolve('RESOLVED'),
+          () => Promise.resolve('RESOLVED'),
           () => ERROR
         );
         fakeTimers.tick(1500);
