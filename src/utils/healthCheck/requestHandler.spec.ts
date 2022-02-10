@@ -4,6 +4,7 @@ import {
   match as sinonMatcher,
   SinonExpectation,
   SinonMock,
+  SinonFakeTimers,
 } from 'sinon';
 import { noop } from 'lodash';
 import {
@@ -17,6 +18,7 @@ import { Request, Response } from 'express';
 import { Context, injectContextIntoRequestMiddleware } from '../../server/apollo.context';
 import { HealthCheckState } from './utils';
 import { HealthChecker } from './types';
+import { FAKE_TIMERS_MS } from '../../../test/helpers/const';
 import {
   createHealthCheckRequestHandler,
 } from './requestHandler';
@@ -36,6 +38,14 @@ const BOOM_CHECKER: HealthChecker = () => Promise.reject(new Error('BOOM'));
 
 describe('utils/healthCheck', () => {
   const sandbox = createSandbox();
+  let fakeTimers: SinonFakeTimers;
+
+  beforeEach(() => {
+    fakeTimers = sandbox.useFakeTimers({
+      now: FAKE_TIMERS_MS,
+      // toFake:  **everything** ... to make Promises go!
+    });
+  });
 
   afterEach(() => {
     sandbox.verifyAndRestore();
@@ -129,6 +139,37 @@ describe('utils/healthCheck', () => {
         // it('still performs all the checks')
         success: true,
         boom: false,
+      }));
+    });
+
+    it('fails on timeout', async () => {
+      telemetryMock.expects('error').once().withArgs(
+        'requestHandler: failure',
+        sinonMatcher({
+          error: {
+            code: 'ETIMEDOUT',
+          },
+          key: 'success',
+        })
+      );
+
+      const requestHandler = createHealthCheckRequestHandler({
+        checkers: {
+          success: GOOD.healthChecker,
+        },
+        timeoutMs: 1000,
+      });
+      _injectContext(req, res);
+      const promise = requestHandler(req, res, next);
+      fakeTimers.tick(1500);
+      await promise;
+
+      expect(res._getStatusCode()).toBe(500);
+      expect(res._getHeaders()).toMatchObject({
+        'content-type': 'application/json',
+      })
+      expect(res._getData()).toBe(JSON.stringify({
+        success: false,
       }));
     });
 

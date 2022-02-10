@@ -86,6 +86,9 @@ const { ... } = require("@withjoy/server-core/dist/node6");
 
 ### What To Do
 
+> The `npm-shrinkwrap.json` should be treated with care;
+> more on that below.
+
 You only need to worry about dealing with Node 6 Support when you're going to expose a new version to `app-server-api`.
 As long as the monorepo doesn't upgrade its version, you can pretend that Node 6 Support *isn't there*.
 
@@ -104,12 +107,9 @@ cd server-core
 
 nvm use 6  # ... obviously
 
-# install Node 6 modules, then rebuild the source & `npm-shrinkwrap.json`
+# install Node 6 modules from `npm-shrinkwrap.json`, then rebuild the source
 npm install
 npm run node6:build
-
-# or, when you're forced to update the shrinkwrap,
-npm run node6:build:relock
 
 # build & run the Test Suite
 npm run node6:test:build
@@ -118,7 +118,6 @@ npm run node6:test:run
 
 And once it's all passing,
 
-- commit the new `npm-shrinkwrap.json` (etc.)
 - push your changes
 - version + publish from within Node 10
 
@@ -138,13 +137,56 @@ It's somewhat fragile;
   - we publish the **Node 10 transpiled versions**, which work fine in Node 6
   - however, the *Test Suite* is written in TypeScript, and it is *not* built as part of `dist/*` --
     instead, it transpiles into `build/*`, which is *not* "dist"ributed
-- the `npm-shrinkwrap.json` generated from Node 10 depencies cannot be installed in Node 6
-  - so it has to be re-built from within the Node 6 engine
 
 These files are related, but won't change often (if ever)
 
 - `tsconfig.node6-test.json`
 - `.circleci/config.yml`
+
+
+
+
+### Be Careful With 'npm-shrinkwrap.json'
+
+Basically:  **leave it alone**.  It's stable (for now).
+
+It's a real hassle to rebuild it, and hard to communicate "how" in a README.
+The last time we needed to update it -- @see `git blame` --
+was because we forgot to pass `--dev`, so our devDependencies weren't being shrinkwrapped.
+And, of course, the Test Suite started to fail for no good reason.
+
+To rebuild the shrinkwrap from scratch, you'll want to:
+
+```bash
+# the `npm-shrinkwrap.json` generated from Node 10 depencies cannot be installed in Node 6
+nvm use 6
+
+npm install
+npm run node6:build
+npm run node6:build:relock
+```
+
+You'll get complaints, and you'll need to resolve them before it can generate the file.
+Some strategies that worked for me were:
+
+- for "ERR! invalid: have foo@1.2.3 (expected: ^4.5.6)"
+  - `npm install --save` the version it asks for ... even if it's `devDependencies`
+  - (it's that simple)
+- for "WARN foo@1.2.3 requires a peer of bar@^2.4.6 but none was installed"
+  - take steps above, if possible
+  - if you can't install it ... create a minimal 'node_modules/bar/package.json' based upon some other installed package.
+  - all you need are the lines / sections where it refers to the package name or desired version
+  - it only needs to be as good as the point where `npm shrinkwrap` will trust it
+  - then manually add the name + version combo to `dependencies`
+
+The end result *does not need to be representative* of the Node 10 installation.
+You just need to generate something roughly equivalent that works.
+
+And once it's all passing,
+
+- revert any changes to `package.json`
+- remove any hacked peerDependencies from `npm-shrinkwrap.json` (they're likely empty except for the version number)
+- commit the new `npm-shrinkwrap.json`
 
 
 ## CircleCI

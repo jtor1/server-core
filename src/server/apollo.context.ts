@@ -1,4 +1,4 @@
-import { get as getProperty, pick } from 'lodash';
+import { get as getProperty, isNil, omitBy, pick } from 'lodash';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
@@ -20,7 +20,7 @@ import {
 import { decodeUnverifiedToken } from '../authentication/verify.token';
 import { callService, IServiceCallerOverrides } from '../graphql/interservice.communication';
 import { GetMe, UserFragment } from '../graphql/generated.typings';
-import { SESSION_REQUEST_PROPERTY } from '../middleware/session';
+import { SESSION_REQUEST_PROPERTY, SESSION_HEADER_NAME } from '../middleware/session';
 import { deriveRemoteAddress } from '../utils/remoteAddress';
 import { isHealthCheckRoute } from '../utils/healthCheck';
 
@@ -53,7 +53,7 @@ const USER = gql`
 
 const IDENTITY_ME = gql`
   ${USER}
-  query GetMe {
+  query GetMeApolloContext {
     me {
       ...UserFragment
     }
@@ -392,7 +392,11 @@ export class Context
     const telemetryHeaders = deriveTelemetryHeadersFromContext(telemetry.context());
 
     const token = (overrides && overrides.token) || this.token;
-    const headers = Object.assign(telemetryHeaders, (overrides && overrides.headers));
+    const headers = omitBy({
+      ...telemetryHeaders,
+      [ SESSION_HEADER_NAME ]: this.sessionId,
+      ...overrides?.headers,
+    }, isNil);
 
     try {
       const result = await callService<GetMe>(

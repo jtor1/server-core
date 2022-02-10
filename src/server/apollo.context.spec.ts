@@ -14,6 +14,7 @@ import {
   Telemetry,
 } from '@withjoy/telemetry';
 import {
+  SESSION_HEADER_NAME,
   SESSION_REQUEST_PROPERTY,
 } from '../middleware/session';
 
@@ -554,7 +555,7 @@ describe('server/apollo.context', () => {
 
     it('does nothing when there is no data', async () => {
       nock(IDENTITY_URL)
-      .post('/', (body: any) => body.query.match(/GetMe/))
+      .post('/', (body: any) => body.query.match(/GetMeApolloContext/))
       .reply(200, {});
 
       await context.me();
@@ -568,7 +569,7 @@ describe('server/apollo.context', () => {
 
     it('does nothing upon Error', async () => {
       nock(IDENTITY_URL)
-      .post('/', (body: any) => body.query.match(/GetMe/))
+      .post('/', (body: any) => body.query.match(/GetMeApolloContext/))
       .reply(401);
 
       await context.me();
@@ -610,6 +611,7 @@ describe('server/apollo.context', () => {
           headers: {
             [ TELEMETRY_HEADER_REQUEST_ID ]: 'REQUEST_ID',
           },
+          [ SESSION_REQUEST_PROPERTY ]: 'SESSION_ID',
         }),
         token: TOKEN,
         identityUrl: IDENTITY_URL,
@@ -631,6 +633,8 @@ describe('server/apollo.context', () => {
 
           // it('passes along Telemetry headers')
           [ TELEMETRY_HEADER_REQUEST_ID ]: 'REQUEST_ID',
+          // it('passes along the Session ID')
+          [ SESSION_HEADER_NAME ]: 'SESSION_ID',
         },
       })
       .post('/', (body: any) => {
@@ -645,7 +649,7 @@ describe('server/apollo.context', () => {
             {
               operation: 'query',
               name: {
-                value: "GetMe"
+                value: "GetMeApolloContext"
               },
               selectionSet: {
                 selections: [
@@ -686,7 +690,7 @@ describe('server/apollo.context', () => {
 
     it('does nothing when there is no data', async () => {
       nock(IDENTITY_URL)
-      .post('/', (body: any) => body.query.match(/GetMe/))
+      .post('/', (body: any) => body.query.match(/GetMeApolloContext/))
       .reply(200, {});
 
       const meFragment = await context.fetchIdentityUser();
@@ -695,7 +699,7 @@ describe('server/apollo.context', () => {
 
     it('does nothing upon Error', async () => {
       nock(IDENTITY_URL)
-      .post('/', (body: any) => body.query.match(/GetMe/))
+      .post('/', (body: any) => body.query.match(/GetMeApolloContext/))
       .reply(401);
 
       const meFragment = await context.fetchIdentityUser();
@@ -710,7 +714,7 @@ describe('server/apollo.context', () => {
           'x-joy-custom': 'CUSTOM_HEADER',
         },
       })
-      .post('/', (body: any) => body.query.match(/GetMe/))
+      .post('/', (body: any) => body.query.match(/GetMeApolloContext/))
       .reply(200, {
         data: {
           me: ME_FRAGMENT,
