@@ -32,13 +32,17 @@ afterEach(() => {
     return;
   }
 
-  // https://github.com/nock/nock#isdone
-  //   verify expectations
-  assert.ok(nock.isDone(), `nock.pendingMocks: ${ JSON.stringify(nock.pendingMocks()) }`);
-
-  // https://github.com/nock/nock#enabling-requests
-  nock.cleanAll();
-  nock.enableNetConnect();
+  try {
+    // https://github.com/nock/nock#isdone
+    //   enforce that all mocks have been called
+    //   (nope, you can't get access to the `nock.Scope` itself -- you just get its 'name')
+    assert.ok(nock.isDone(), `nock.pendingMocks: ${ JSON.stringify(nock.pendingMocks()) }`);
+  }
+  finally {
+    // https://github.com/nock/nock#enabling-requests
+    nock.cleanAll();
+    nock.enableNetConnect();
+  }
 });
 
 afterAll(() => {

@@ -2,7 +2,8 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { deriveTelemetryContextFromError } from "@withjoy/telemetry";
 
 import { Context, deriveContextFromRequest } from '../../server/apollo.context';
-import { HealthCheckRequestHandlerOptions } from './types';
+import { executePromiseOrTimeout } from '../execution/timeout';
+import { HEALTH_CHECKER_TIMEOUT_MS, HealthCheckRequestHandlerOptions } from './types';
 
 
 // Configure Liveness, Readiness and Startup Probes
@@ -12,6 +13,7 @@ export function createHealthCheckRequestHandler<T extends Context = Context>(
   options: HealthCheckRequestHandlerOptions<T>
 ): RequestHandler {
   const { checkers } = options;
+  const timeoutMs = options.timeoutMs || HEALTH_CHECKER_TIMEOUT_MS;
   const successStatusCode = options.successStatusCode || 200;
   const failureStatusCode = options.failureStatusCode || 500;
   const nonCritical = new Set(options.nonCritical || []);
@@ -27,7 +29,12 @@ export function createHealthCheckRequestHandler<T extends Context = Context>(
     await Promise.all(Object.keys(checkers).map(async (key) => {
       const checker = checkers[key];
       try {
-        resultsByKey[key] = await checker(context);
+        // don't wait forever;
+        //   if we eventually get a success, we would appear to be healthy to our logs,
+        //   however ... k8s will have given up waiting, and we're actually failed
+        //   and been taken out of the load pool, or out behind the barn.
+        //   we need visiblity into our failure
+        resultsByKey[key] = await executePromiseOrTimeout(timeoutMs, checker(context));
       }
       catch (error) {
         // this is *not* expected;

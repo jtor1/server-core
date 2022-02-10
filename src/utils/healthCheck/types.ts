@@ -1,5 +1,7 @@
 import { Context } from '../../server/apollo.context';
 
+export const HEALTH_CHECKER_TIMEOUT_MS = 3000; // 3s
+
 export type HealthPredicate = () => Promise<boolean>;
 export type HealthChecker<T extends Context = Context> = (context: T) => Promise<boolean>;
 export interface HealthCheckProvider<T extends Context = Context> {
@@ -11,6 +13,8 @@ export type HealthCheckRequestHandlerOptions<T extends Context = Context> = {
   //   each HealthChecker is checked independently; any single failure doesn't impact the others.
   //   the HTTP payload returned by the endpoint will be a `Record<string, boolean>` of the results
   checkers: Record<string, HealthChecker<T>>;
+  // any HealthChecker not responding will be considered failed
+  timeoutMs?: number;
   // the HTTP endpoint returns this status code when
   //   all of the `HealthChecker`s pass / resolve `true`
   successStatusCode?: number;

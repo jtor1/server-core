@@ -98,6 +98,9 @@ import {
   executeOperationsInBatches,
 } from './utils/execution/batch';
 import {
+  executePromiseOrTimeout
+} from './utils/execution/timeout';
+import {
   NULL_STRING,
   isUUID,
 } from './utils/miscellaneous';
@@ -265,6 +268,7 @@ export {
   BatchPipelineExecutor,
   BatchPipelineExecutorOptions,
   executeOperationsInBatches,
+  executePromiseOrTimeout,
 
   NULL_STRING,
   isUUID,
