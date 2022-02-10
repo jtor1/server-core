@@ -34,7 +34,7 @@ export function createHealthCheckRequestHandler<T extends Context = Context>(
         //   however ... k8s will have given up waiting, and we're actually failed
         //   and been taken out of the load pool, or out behind the barn.
         //   we need visiblity into our failure
-        resultsByKey[key] = await executePromiseOrTimeout(timeoutMs, checker(context));
+        resultsByKey[key] = await executePromiseOrTimeout(timeoutMs, () => checker(context));
       }
       catch (error) {
         // this is *not* expected;
