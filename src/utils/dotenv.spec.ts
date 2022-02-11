@@ -8,6 +8,8 @@ import {
 
 
 // one property is sufficiently representative
+//   NOTE:  the fixtures use 'POSTGRES_HOST' vs. 'POSTGRES_DATABASE'
+//   because POSTGRES_DATABASE is used for sniff-test logic
 const PREEXISTING_CONFIG = Object.freeze({
   POSTGRES_HOST: 'ENVIRONMENT',
   CHANGED: '',
@@ -83,29 +85,41 @@ FILEPATH=specified
 
 
     describe('before the load', () => {
+      const FILEPATH = '/path/to/.env';
+
       beforeEach(() => {
         // pre-existing (colliding) properties in `process.env`
         Object.keys(PREEXISTING_CONFIG).forEach((key) => {
           env[key] = PREEXISTING_CONFIG[key];
         });
+
+        // nothing happens unless there's a `.env` filepath override
+        env.DOTENV_CONFIG_PATH = FILEPATH;
+
+        // and the sniff-test property,
+        //   which (conveniently) must follow the database naming convention
+        env.POSTGRES_DATABASE = 'sniff_test';
       });
 
-      it('preserves pre-existing configuration in a Test environment without a file being specified', () => {
+      it('preserves pre-existing configuration in a Test environment without DOTENV_CONFIG_PATH being specified', () => {
         env.NODE_ENV = 'test';
+
+        delete env.DOTENV_CONFIG_PATH;
         mockFs({
-          // it('gets ignored without a file reference')
+          // it('will not even load from the default filepath')
           '.env': OVERRIDING_FILE_CONTENTS,
         });
 
         loadDotEnv();
-        expect(env).toMatchObject(PREEXISTING_CONFIG);
+        expect(env).toMatchObject({
+          ...PREEXISTING_CONFIG,
+          POSTGRES_DATABASE: 'sniff_test',
+        });
       });
 
       it('overrides pre-existing configuration in a Test environment', () => {
         env.NODE_ENV = 'test';
 
-        const FILEPATH = '/path/to/.env';
-        env.DOTENV_CONFIG_PATH = FILEPATH;
         mockFs({
           [ FILEPATH ]: OVERRIDING_FILE_CONTENTS,
         });
@@ -117,8 +131,6 @@ FILEPATH=specified
       it('overrides pre-existing configuration in a CI environment', () => {
         env.NODE_ENV = 'test';
 
-        const FILEPATH = '/path/to/.env';
-        env.DOTENV_CONFIG_PATH = FILEPATH;
         mockFs({
           [ FILEPATH ]: OVERRIDING_FILE_CONTENTS,
         });
@@ -129,12 +141,32 @@ FILEPATH=specified
 
       it('preserves pre-existing configuration in other environments', () => {
         env.NODE_ENV = 'production';
+        env.POSTGRES_DATABASE = 'sniff_prod'; // it('must follow the database naming convention')
+
         mockFs({
-          '.env': OVERRIDING_FILE_CONTENTS,
+          [ FILEPATH ]: OVERRIDING_FILE_CONTENTS,
         });
 
         loadDotEnv();
-        expect(env).toMatchObject(PREEXISTING_CONFIG);
+        expect(env).toMatchObject({
+          ...PREEXISTING_CONFIG,
+          POSTGRES_DATABASE: 'sniff_prod',
+        });
+      });
+
+      it('does nothing unless it passes a sniff test', () => {
+        env.NODE_ENV = 'test';
+        env.POSTGRES_DATABASE = '';
+
+        mockFs({
+          [ FILEPATH ]: OVERRIDING_FILE_CONTENTS,
+        });
+
+        loadDotEnv();
+        expect(env).toMatchObject({
+          ...PREEXISTING_CONFIG,
+          POSTGRES_DATABASE: '',
+        });
       });
     });
 
