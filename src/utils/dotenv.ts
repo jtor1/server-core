@@ -35,8 +35,16 @@ export function loadDotEnv(): LoadDotEnvResult {
   //   so we parse the file at the specified path
   //     and erase any values pre-baked into the `process.env`
   //     (due to `typeorm`s behavior)
+  //   it also seems that the `typeorm`-driven load process does NOT honor collisions;
+  //     it overwrites anything provided by your shell's environment with `.env` values,
+  //     so there's no way to access your shell's original values :(
   const dotEnvPath = (process.env.DOTENV_CONFIG_PATH || undefined);
-  if ((process.env.NODE_ENV === 'test') || (process.env.NODE_ENV === 'ci')) {
+  if (
+    // a sniff test; it's likely empty unless `typeorm` has messed with things
+    //   in which case we preserve everything to allow for "true" collisions
+    (!! process.env.POSTGRES_DATABASE) &&
+    ((process.env.NODE_ENV === 'test') || (process.env.NODE_ENV === 'ci'))
+  ) {
     if (dotEnvPath) {
       const parsed = dotenv.parse(fs.readFileSync(dotEnvPath, { encoding: 'utf8' }))
       Object.keys(parsed).forEach((key) => {
