@@ -1,6 +1,13 @@
 import { Context } from '../../server/apollo.context';
 
-export const HEALTH_CHECKER_TIMEOUT_MS = 3000; // 3s
+// must be less than the following k8s settings
+// ```yaml
+// readiness:
+//   timeoutSeconds: 3
+// liveness:
+//   timeoutSeconds: 3
+// ```
+export const HEALTH_CHECKER_TIMEOUT_MS = 2500; // 2.5s
 
 export type HealthPredicate = () => Promise<boolean>;
 export type HealthChecker<T extends Context = Context> = (context: T) => Promise<boolean>;
