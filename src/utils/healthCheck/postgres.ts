@@ -10,6 +10,7 @@ import { Context } from '../../server/apollo.context';
 
 export async function healthCheckerPostgres(context: Context): Promise<boolean> {
   const { telemetry } = context;
+  const timeAtStart = Date.now();
 
   try {
     // Posgres should be able to tell us its current time-of-day
@@ -21,11 +22,14 @@ export async function healthCheckerPostgres(context: Context): Promise<boolean> 
     return true;
   }
   catch (error) {
+    const durationMs = Date.now() - timeAtStart; // mostly for timeouts
     telemetry.error('healthCheckerPostgres: failure', {
       ...deriveTelemetryContextFromError(error),
       source: 'healthCheck',
       action: 'postgres',
+      durationMs,
     });
+
     return false;
   }
 }

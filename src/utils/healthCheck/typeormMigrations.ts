@@ -13,6 +13,7 @@ import { Context } from '../../server/apollo.context';
 
 export async function healthCheckerTypeormMigrations(context: Context): Promise<boolean> {
   const { telemetry } = context;
+  const timeAtStart = Date.now();
 
   try {
     // officially part of `typeorm`
@@ -38,11 +39,14 @@ export async function healthCheckerTypeormMigrations(context: Context): Promise<
     return true;
   }
   catch (error) {
+    const durationMs = Date.now() - timeAtStart; // mostly for timeouts
     telemetry.error('healthCheckerTypeormMigrations: failure', {
       ...deriveTelemetryContextFromError(error),
       source: 'healthCheck',
       action: 'typeormMigrations',
+      durationMs,
     });
+
     return false;
   }
 }

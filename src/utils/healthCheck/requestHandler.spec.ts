@@ -149,13 +149,13 @@ describe('utils/healthCheck', () => {
           error: {
             code: 'ETIMEDOUT',
           },
-          key: 'success',
+          key: 'timeout',
         })
       );
 
       const requestHandler = createHealthCheckRequestHandler({
         checkers: {
-          success: GOOD.healthChecker,
+          timeout: GOOD.healthChecker,
         },
         timeoutMs: 1000,
       });
@@ -169,7 +169,7 @@ describe('utils/healthCheck', () => {
         'content-type': 'application/json',
       })
       expect(res._getData()).toBe(JSON.stringify({
-        success: false,
+        timeout: false,
       }));
     });
 
@@ -255,6 +255,139 @@ describe('utils/healthCheck', () => {
         bad: false,
         boom: false,
       }));
+    });
+
+
+    describe('when out-of-band', () => {
+      let outOfBandCalled: boolean;
+
+      beforeEach(() => {
+        outOfBandCalled = false;
+      });
+
+      function _outOfBandChecker(operation: () => boolean): HealthChecker {
+        return async (): Promise<boolean> => {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          outOfBandCalled = true;
+
+          return operation();
+        };
+      }
+
+      async function _outOfBandVerify(): Promise<void> {
+        expect(outOfBandCalled).toBe(false);
+
+        fakeTimers.tick(1000);
+        await Promise.resolve();
+        expect(outOfBandCalled).toBe(true);
+      }
+
+      it('succeeds with a successful check', async () => {
+        const requestHandler = createHealthCheckRequestHandler({
+          checkers: {
+            success: _outOfBandChecker(() => true),
+            // ... even when others fail
+            failure: BAD.healthChecker,
+          },
+          outOfBand: [ 'success' ],
+        });
+        _injectContext(req, res);
+        await requestHandler(req, res, next);
+
+        expect(res._getStatusCode()).toBe(500);
+        expect(res._getData()).toBe(JSON.stringify({
+          // it('does not include the out-of-band check');
+          failure: false,
+        }));
+
+        // it('gets executed out-of-band');
+        await _outOfBandVerify();
+      });
+
+      it('fails a check without impacting the aggregate', async () => {
+        const requestHandler = createHealthCheckRequestHandler({
+          checkers: {
+            failure: _outOfBandChecker(() => false),
+            // ... even when others succeed
+            success: GOOD.healthChecker,
+          },
+          outOfBand: [ 'failure' ],
+        });
+        _injectContext(req, res);
+        await requestHandler(req, res, next);
+
+        expect(res._getStatusCode()).toBe(200);
+        expect(res._getData()).toBe(JSON.stringify({
+          success: true,
+        }));
+
+        // it('gets executed out-of-band');
+        await _outOfBandVerify();
+      });
+
+      it('fails when a check throws', async () => {
+        // it('logs the Error')
+        telemetryMock.expects('error').once().withArgs(
+          'requestHandler: failure',
+          sinonMatcher({
+            error: {
+              message: sinonMatcher(/BOOM/),
+            },
+            key: 'boom',
+          })
+        );
+
+        const requestHandler = createHealthCheckRequestHandler({
+          checkers: {
+            success: GOOD.healthChecker,
+            boom: _outOfBandChecker(() => {
+              throw new Error('BOOM');
+            }),
+          },
+          outOfBand: [ 'boom' ],
+        });
+        _injectContext(req, res);
+        await requestHandler(req, res, next);
+
+        expect(res._getStatusCode()).toBe(200);
+        expect(res._getData()).toBe(JSON.stringify({
+          success: true,
+        }));
+
+        // it('gets executed out-of-band');
+        await _outOfBandVerify();
+      });
+
+      it('fails on timeout', async () => {
+        telemetryMock.expects('error').once().withArgs(
+          'requestHandler: failure',
+          sinonMatcher({
+            error: {
+              code: 'ETIMEDOUT',
+            },
+            key: 'timeout',
+          })
+        );
+
+        const requestHandler = createHealthCheckRequestHandler({
+          checkers: {
+            success: GOOD.healthChecker,
+            timeout: _outOfBandChecker(() => true),
+          },
+          outOfBand: [ 'timeout' ],
+          timeoutMs: 500,  // less than the out-of-band 1000ms
+        });
+        _injectContext(req, res);
+        await requestHandler(req, res, next);
+
+        expect(res._getStatusCode()).toBe(200);
+        expect(res._getData()).toBe(JSON.stringify({
+          success: true,
+        }));
+
+        // it('gets executed out-of-band');
+        await _outOfBandVerify();
+      });
     });
   });
 });
