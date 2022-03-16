@@ -17,18 +17,22 @@ export function isHealthCheckRoute(route: string): boolean {
 export function healthCheckForPredicate(healthPredicate: HealthPredicate): HealthChecker {
   return async (context) => {
     const { telemetry } = context;
+    const timeAtStart = Date.now();
 
     try {
       const healthy = await healthPredicate();
       return healthy;
     }
     catch (error) {
+      const durationMs = Date.now() - timeAtStart; // mostly for timeouts
       telemetry.error('healthCheckForPredicate: failure', {
         ...deriveTelemetryContextFromError(error),
         source: 'healthCheck',
         action: 'healthCheckForPredicate',
         predicate: healthPredicate.name,
+        durationMs,
       });
+
       return false;
     }
   };
